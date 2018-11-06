@@ -1,0 +1,15 @@
+work
+target
+.svn
+.classpath
+.project
+.settings
+*.iml
+*/*.iml
+*.ipr
+*.iws
+bin
+generated-sources
+.checkstyle
+.idea
+*.xml~
