@@ -43,6 +43,7 @@ import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -349,9 +350,11 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
          * @return FormValidation object that indicates ok or error.
          * @throws javax.servlet.ServletException Exception for servlet.
          */
+        @RequirePOST
         public FormValidation doTestConnection(@QueryParameter(SERVER_URI) final String uri,
                                                @QueryParameter(USERNAME) final String name,
                                                @QueryParameter(PASSWORD) final Secret pw) throws ServletException {
+            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
             UrlValidator urlValidator = new UrlValidator(getInstance().schemes, UrlValidator.ALLOW_LOCAL_URLS);
             FormValidation result = FormValidation.ok();
             if (urlValidator.isValid(uri)) {
