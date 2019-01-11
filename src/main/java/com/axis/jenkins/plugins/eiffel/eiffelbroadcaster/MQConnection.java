@@ -44,6 +44,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Creates an MQ connection.
@@ -243,6 +244,8 @@ public final class MQConnection implements ShutdownListener {
                 connection.addShutdownListener(this);
             } catch (IOException e) {
                 LOGGER.warn("Connection refused", e);
+            } catch (TimeoutException e) {
+                e.printStackTrace();
             }
         }
         return connection;
@@ -330,6 +333,8 @@ public final class MQConnection implements ShutdownListener {
                     }
                 } catch (IOException|AlreadyClosedException e) {
                     LOGGER.error("MQ Connection disconnected: ", e);
+                } catch (TimeoutException e) {
+                    e.printStackTrace();
                 } finally {
                     channel = null;
                     connection = null;

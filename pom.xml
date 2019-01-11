@@ -32,9 +32,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:ssh://gittools.se.axis.com/users/isachm/EiffelBroadcaster.git</connection>
-        <developerConnection>scm:git:ssh://gittools.se.axis.com/users/isachm/EiffelBroadcaster.git</developerConnection>
-        <url>https://gittools.se.axis.com/users/isachm/EiffelBroadcaster</url>
+        <connection>scm:git:ssh:github.com/Isacholm/EiffelBroadcaster.git</connection>
+        <developerConnection>scm:git:ssh:github.com/Isacholm/EiffelBroadcaster.git</developerConnection>
+        <url>https://github.com/Isacholm/EiffelBroadcaster.git</url>
         <tag>HEAD</tag>
     </scm>
     <repositories>
@@ -52,7 +52,7 @@
     <properties>
         <jmockit.version>1.5</jmockit.version>
         <junit.version>4.11</junit.version>
-        <amqp.client.version>3.4.1</amqp.client.version>
+        <amqp.client.version>4.8.0</amqp.client.version>
         <commons.validator.version>1.4.0</commons.validator.version>
         <commons.digester.version>2.1</commons.digester.version>
         <commons.lang3.version>3.4</commons.lang3.version>
