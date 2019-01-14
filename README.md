@@ -1,9 +1,47 @@
 # Eiffel Broadcaster Plugin
 
-This plugin sends an Eiffel event to a MQ e.g. RabbitMQ each time a build is started
+This plugin sends an Eiffel event to a MessageQueue, for now RabbitMQ, each time a build is started
 and finished. The plugin also sends a message every time a build is added and removed from the queue.
 By extending this plugin, developers can add events for when to send messages.
 Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffel
+
+## Jenkins events represented in Eiffel are:
+| Jenkins Event               | Eiffel Event                 |
+| --------------------------- |:----------------------------:|
+| Job Queued                  | EiffelActivityTriggeredEvent |
+| Job Dequeued, job canceled  | EiffelActivityCanceled       |
+| Job Starts                  | EiffelActivityStartedEvent   |
+| Job Finishes                | EiffelActivityFinishedEvent  |
+| Job Successful              | EiffelActivityFinishedEvent  |
+| Job unstable                | EiffelActivityFinishedEvent  |
+| Job failed                  | EiffelActivityFinishedEvent  |
+| Job Aborted                 | EiffelActivityFinishedEvent  |
+| job Artifact Saved          | EiffelArtifactCreatedEvent   |
+
+### Notes
+- EiffelArtifactPublishedEvent is not sent by this plugin.
+- Current versions of each event can be found in the getVersion() function in the [sourcecode.](https://github.com/Isacholm/EiffelBroadcaster/tree/master/src/main/java/com/axis/jenkins/plugins/eiffel/eiffelbroadcaster/eiffel)
+
+## How to build and install this plugin from source
+1. In the EiffelBroadcaster root folder, use maven to build the .hpi file.
+```
+$ mvn hpi:hpi
+```
+2. In the jenkins web interface go to: Manage Jenkins -> Plugin Manager -> Advanced
+3. At "Upload Plugin", Browse to the .hpi file located in the EiffelBroadcaster/target directory and press "uppload"
+
+The plugin should install without the need to reboot jenkins.
+
+
+## Read more about the Eiffel events used in this plugin
+[EiffelActivityTriggeredEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityTriggeredEvent.md)
+[EiffelActivityStartedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityStartedEvent.md)
+[EiffelActivityFinishedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityFinishedEvent.md)
+[EiffelActivityCanceledEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityCanceledEvent.md)
+[EiffelArtifactCreatedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelArtifactCreatedEvent.md)
+
+This plugin is part of the [Eiffel Community](https://github.com/eiffel-community/)
+
 ## Maintainers
 
 * Isac Holm
