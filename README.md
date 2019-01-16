@@ -9,7 +9,7 @@ Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffe
 | Jenkins Event               | Eiffel Event                 |
 | --------------------------- |:----------------------------:|
 | Job Queued                  | EiffelActivityTriggeredEvent |
-| Job Dequeued, job canceled  | EiffelActivityCanceled       |
+| Job Dequeued, job canceled  | EiffelActivityCanceledEvent  |
 | Job Starts                  | EiffelActivityStartedEvent   |
 | Job Finishes                | EiffelActivityFinishedEvent  |
 | Job Successful              | EiffelActivityFinishedEvent  |
