@@ -9,7 +9,7 @@ Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffe
 | Jenkins Event               | Eiffel Event                 |
 | --------------------------- |:----------------------------:|
 | Job Queued                  | EiffelActivityTriggeredEvent |
-| Job Dequeued, job canceled  | EiffelActivityCanceledEvent  |
+| Job Dequeued (canceled)     | EiffelActivityCanceledEvent  |
 | Job Starts                  | EiffelActivityStartedEvent   |
 | Job Finishes                | EiffelActivityFinishedEvent  |
 | Job Successful              | EiffelActivityFinishedEvent  |
@@ -23,12 +23,16 @@ Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffe
 - Current versions of each event can be found in the getVersion() function in the [sourcecode.](https://github.com/Isacholm/EiffelBroadcaster/tree/master/src/main/java/com/axis/jenkins/plugins/eiffel/eiffelbroadcaster/eiffel)
 
 ## How to build and install this plugin from source
-1. In the EiffelBroadcaster root folder, use maven to build the .hpi file.
+In the EiffelBroadcaster root folder, use maven to compile.
+```
+$ mvn compile
+```
+In the EiffelBroadcaster root folder, use maven to build the .hpi file.
 ```
 $ mvn hpi:hpi
 ```
 2. In the jenkins web interface go to: Manage Jenkins -> Plugin Manager -> Advanced
-3. At "Upload Plugin", Browse to the .hpi file located in the EiffelBroadcaster/target directory and press "uppload"
+3. At "Upload Plugin", Browse to the .hpi file located in the EiffelBroadcaster/target directory and press "Upload"
 
 The plugin should install without the need to reboot jenkins.
 
