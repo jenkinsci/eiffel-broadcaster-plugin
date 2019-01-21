@@ -1,13 +1,15 @@
 # Eiffel Broadcaster Plugin
 
-This plugin sends an Eiffel event to a MessageQueue, for now RabbitMQ, each time a build is started
-and finished. The plugin also sends a message every time a build is added and removed from the queue.
-By extending this plugin, developers can add events for when to send messages.
+This jenkins plugin sends Eiffel events to a Message Queue. For now, only RabbitMQ is supported.
+The plugin can be extended with more events and or more data but the required data is there.
+In addition to jobs, artifacts are represented in eiffel, these are the artifacts saved in the "Archive the artifacts"
+post build action. A detailed list of event representations can be found in the table below.
+
 Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffel
 
 ## Jenkins events represented in Eiffel are:
 | Jenkins Event               | Eiffel Event                 |
-| --------------------------- |:----------------------------:|
+| --------------------------- |------------------------------|
 | Job Queued                  | EiffelActivityTriggeredEvent |
 | Job Dequeued (canceled)     | EiffelActivityCanceledEvent  |
 | Job Starts                  | EiffelActivityStartedEvent   |
