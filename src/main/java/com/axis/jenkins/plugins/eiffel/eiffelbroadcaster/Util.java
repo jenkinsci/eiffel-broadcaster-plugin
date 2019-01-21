@@ -122,7 +122,7 @@ public final class Util {
     }
 
     /**
-     * Fetches the full name task name if available.
+     * Fetches time as Epoch in miliseconds.
      *
      * @return Epoch time in milliseconds
      */
@@ -131,7 +131,7 @@ public final class Util {
     }
 
     /**
-     * Fetches the full name task name if available.
+     * Translate Jenkins job status into corresponding eiffel status.
      *
      * @param status
      * jenkins job status to translate.

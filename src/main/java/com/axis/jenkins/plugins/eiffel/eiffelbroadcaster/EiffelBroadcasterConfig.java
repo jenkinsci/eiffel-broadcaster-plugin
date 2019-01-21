@@ -72,7 +72,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     private String userName;
     private Secret userPassword;
 
-    /* The notifier plugin sends messages to an exchange which will push the messages to one or several queues.*/
+    /* The plugin sends messages to an exchange which will push the messages to one or several queues.*/
     private String exchangeName;
 
     /* The virtual host which the connection intends to operate within. */
@@ -151,10 +151,10 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     /**
      * Sets flag whether this plugin is enabled or not.
      *
-     * @param enableNotifier true if this plugin is enabled.
+     * @param enableBroadcaster true if this plugin is enabled.
      */
-    public void setEnableBroadcaster(boolean enableNotifier) {
-        this.enableBroadcaster = enableNotifier;
+    public void setEnableBroadcaster(boolean enableBroadcaster) {
+        this.enableBroadcaster = enableBroadcaster;
     }
 
     /**
