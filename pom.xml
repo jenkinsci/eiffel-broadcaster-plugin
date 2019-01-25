@@ -22,7 +22,7 @@
     </licenses>
     <developers>
         <developer>
-            <id>isachm</id>
+            <id>isacholm</id>
             <name>Isac Holm</name>
             <email>isac.holm@axis.com</email>
             <roles>
@@ -32,9 +32,9 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:ssh:github.com/Isacholm/EiffelBroadcaster.git</connection>
-        <developerConnection>scm:git:ssh:github.com/Isacholm/EiffelBroadcaster.git</developerConnection>
-        <url>https://github.com/Isacholm/EiffelBroadcaster.git</url>
+        <connection>scm:git:https://github.com/jenkinsci/eiffel-broadcaster-plugin</connection>
+        <developerConnection>scm:git:https://github.com/jenkinsci/eiffel-broadcaster-plugin</developerConnection>
+        <url>https://github.com/jenkinsci/eiffel-broadcaster-plugin</url>
         <tag>HEAD</tag>
     </scm>
     <repositories>
