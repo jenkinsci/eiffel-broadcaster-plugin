@@ -65,8 +65,9 @@ public final class MQConnection implements ShutdownListener {
     private Connection connection = null;
     private Channel channel = null;
 
-    private static LinkedBlockingQueue messageQueue;
+    private static volatile LinkedBlockingQueue messageQueue;
     private static Thread messageQueueThread;
+    private static final Object lock = new Object();
 
     /**
      * Lazy-loaded singleton using the initialization-on-demand holder pattern.
@@ -165,12 +166,17 @@ public final class MQConnection implements ShutdownListener {
         }
 
         if (messageQueueThread == null || !messageQueueThread.isAlive()) {
-            messageQueueThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    sendMessages();
+            synchronized (lock) {
+                if (messageQueueThread == null) {
+                    messageQueueThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            sendMessages();
+                        }
+                    });
+
                 }
-            });
+            }
             messageQueueThread.start();
             LOGGER.info("messageQueueThread recreated since it was null or not alive.");
         }

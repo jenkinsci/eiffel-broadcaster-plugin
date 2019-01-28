@@ -328,7 +328,11 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
      */
     @Override
     public Descriptor<EiffelBroadcasterConfig> getDescriptor() {
-        return Jenkins.getInstance().getDescriptorOrDie(getClass());
+        Jenkins instance = Jenkins.getInstance();
+        if (instance != null) {
+            return instance.getDescriptorOrDie(getClass());
+        }
+        return null;
     }
 
     /**

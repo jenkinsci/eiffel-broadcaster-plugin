@@ -75,20 +75,26 @@ public class RunListenerImpl extends RunListener<Run> {
     public void onCompleted(Run r, TaskListener listener) {
         Result res = r.getResult();
         List<JSONObject> allEvents = new ArrayList<JSONObject>();
-        String status = Util.translateStatus(res.toString());
+        String status = "INCONCLUSIVE";
+        if (res != null) {
+            status = Util.translateStatus(res.toString());
+        }
+
         String targetEvent = EiffelJobTable.getInstance().getEventTrigger(r.getQueueId());
         EiffelActivityFinishedEvent actFinEvent = new EiffelActivityFinishedEvent(status, targetEvent);
         JSONObject actFinJson = actFinEvent.getJson();
 
         allEvents.add(actFinJson);
 
-        if (res.isBetterOrEqualTo(Result.UNSTABLE)) {
-            List<Run.Artifact> artifacts = r.getArtifacts();
-            for (Run.Artifact artifact:artifacts) {
-                String identifier;
-                identifier = Util.getArtifactIdentity(artifact, r.getUrl(), r.getNumber());
-                EiffelArtifactCreatedEvent artCreatedEvent = new EiffelArtifactCreatedEvent(identifier);
-                allEvents.add(artCreatedEvent.getJson());
+        if (status != "INCONCLUSIVE") {
+            if (res.isBetterOrEqualTo(Result.UNSTABLE)) {
+                List <Run.Artifact> artifacts = r.getArtifacts();
+                for (Run.Artifact artifact : artifacts) {
+                    String identifier;
+                    identifier = Util.getArtifactIdentity(artifact, r.getUrl(), r.getNumber());
+                    EiffelArtifactCreatedEvent artCreatedEvent = new EiffelArtifactCreatedEvent(identifier);
+                    allEvents.add(artCreatedEvent.getJson());
+                }
             }
         }
 
