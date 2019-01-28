@@ -128,6 +128,15 @@
                     <!-- Optional directory to put findbugs xdoc xml report -->
                     <!--<xmlOutputDirectory>target/site</xmlOutputDirectory>-->
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>findbugs</id>
+                        <goals>
+                            <goal>findbugs</goal>
+                        </goals>
+                        <phase>test</phase>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
