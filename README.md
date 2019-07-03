@@ -1,8 +1,8 @@
 # Eiffel Broadcaster Plugin
 
-This jenkins plugin sends Eiffel events to a Message Queue. For now, only RabbitMQ is supported.
+This Jenkins plugin sends Eiffel events to a Message Queue. For now, only RabbitMQ is supported.
 The plugin can be extended with more events and or more data but the required data is there.
-In addition to jobs, artifacts are represented in eiffel, these are the artifacts saved in the "Archive the artifacts"
+In addition to jobs, artifacts are represented in Eiffel, these are the artifacts saved in the "Archive the artifacts"
 post build action. A detailed list of event representations can be found in the table below.
 
 Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffel
@@ -15,10 +15,10 @@ Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffe
 | Job Starts                  | EiffelActivityStartedEvent   |
 | Job Finishes                | EiffelActivityFinishedEvent  |
 | Job Successful              | EiffelActivityFinishedEvent  |
-| Job unstable                | EiffelActivityFinishedEvent  |
-| Job failed                  | EiffelActivityFinishedEvent  |
+| Job Unstable                | EiffelActivityFinishedEvent  |
+| Job Failed                  | EiffelActivityFinishedEvent  |
 | Job Aborted                 | EiffelActivityFinishedEvent  |
-| job Artifact Saved          | EiffelArtifactCreatedEvent   |
+| Job Artifact Saved          | EiffelArtifactCreatedEvent   |
 
 ### Notes
 - EiffelArtifactPublishedEvent is not sent by this plugin.
@@ -33,10 +33,10 @@ In the EiffelBroadcaster root folder, use maven to build the .hpi file.
 ```
 $ mvn hpi:hpi
 ```
-2. In the jenkins web interface go to: Manage Jenkins -> Plugin Manager -> Advanced
+2. In the Jenkins web interface go to: Manage Jenkins -> Plugin Manager -> Advanced
 3. At "Upload Plugin", Browse to the .hpi file located in the EiffelBroadcaster/target directory and press "Upload"
 
-The plugin should install without the need to reboot jenkins.
+The plugin should install without the need to reboot Jenkins.
 
 
 ## Read more about the Eiffel events used in this plugin
