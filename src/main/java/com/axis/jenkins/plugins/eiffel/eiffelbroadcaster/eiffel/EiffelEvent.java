@@ -43,6 +43,7 @@ import net.sf.json.JSONObject;
  * @author Isac Holm &lt;isac.holm@axis.com&gt;
  */
 abstract class EiffelEvent {
+    public final static String META_SOURCE_NAME = "JENKINS_EIFFEL_BROADCASTER";
 
     /**
     * EiffelEvent Constants.
@@ -89,10 +90,14 @@ abstract class EiffelEvent {
     * Constructor for EiffelEvent.
     */
     public EiffelEvent() {
+        HashMap<String, String> metaSourceMap = new HashMap<>();
+        metaSourceMap.put("name", META_SOURCE_NAME);
+
         eventMeta.put("id", Util.getUUID());
         eventMeta.put("time", Util.getTime());
         eventMeta.put("type", this.getClass().getSimpleName());
         eventMeta.put("version", getVersion());
+        eventMeta.put("source", metaSourceMap);
     }
     /**
     * Get this event as Json.
