@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.axis.jenkins.plugins.eiffel</groupId>
     <artifactId>eiffel-broadcaster</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Eiffel Broadcaster Plugin</name>
     <description>Broadcasts Eiffel messages on an MQ server</description>
@@ -35,7 +35,7 @@
         <connection>scm:git:https://github.com/jenkinsci/eiffel-broadcaster-plugin</connection>
         <developerConnection>scm:git:https://github.com/jenkinsci/eiffel-broadcaster-plugin</developerConnection>
         <url>https://github.com/jenkinsci/eiffel-broadcaster-plugin</url>
-        <tag>eiffel-broadcaster-1.0.1</tag>
+        <tag>HEAD</tag>
     </scm>
     <repositories>
         <repository>
