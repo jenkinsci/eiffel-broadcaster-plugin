@@ -93,10 +93,11 @@ public final class Util {
     public static String getArtifactIdentity(Run.Artifact artifact, String buildUrl, Integer buildNumber) {
         String identity;
         identity = "pkg:";
-        identity += buildUrl;
         identity += resolveArtifactPath(artifact.toString());
         identity += "@";
         identity += String.valueOf(buildNumber);
+        identity += "?build_path=";
+        identity += buildUrl;
 
         return identity;
     }
