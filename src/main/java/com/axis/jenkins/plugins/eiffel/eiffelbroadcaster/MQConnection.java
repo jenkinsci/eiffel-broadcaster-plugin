@@ -66,9 +66,8 @@ public final class MQConnection implements ShutdownListener {
     private Connection connection = null;
     private Channel channel = null;
 
-    private static volatile LinkedBlockingQueue messageQueue;
-    private static Thread messageQueueThread;
-    private static final Object lock = new Object();
+    private volatile LinkedBlockingQueue messageQueue = new LinkedBlockingQueue(MESSAGE_QUEUE_SIZE);
+    private Thread messageQueueThread;
 
     /**
      * Lazy-loaded singleton using the initialization-on-demand holder pattern.
@@ -162,9 +161,6 @@ public final class MQConnection implements ShutdownListener {
      * @param body the message body
      */
     public void addMessageToQueue(String exchange, String routingKey, AMQP.BasicProperties props, byte[] body) {
-        if (messageQueue == null) {
-            messageQueue = new LinkedBlockingQueue(MESSAGE_QUEUE_SIZE);
-        }
         startMessageQueueThread();
         MessageData messageData = new MessageData(exchange, routingKey, props, body);
         if (!messageQueue.offer(messageData)) {
@@ -196,21 +192,19 @@ public final class MQConnection implements ShutdownListener {
      *
      * @return true if the message queue thread was started, otherwise false
      */
-    private boolean startMessageQueueThread() {
-        synchronized (lock) {
-            if (!initialized || (messageQueueThread != null && messageQueueThread.isAlive())) {
-                return false;
-            }
-            messageQueueThread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    sendMessages();
-                }
-            });
-            messageQueueThread.start();
-            logger.info("messageQueueThread recreated since it was null or not alive.");
-            return true;
+    private synchronized boolean startMessageQueueThread() {
+        if (!initialized || (messageQueueThread != null && messageQueueThread.isAlive())) {
+            return false;
         }
+        messageQueueThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                sendMessages();
+            }
+        });
+        messageQueueThread.start();
+        logger.info("messageQueueThread recreated since it was null or not alive.");
+        return true;
     }
 
     /**
