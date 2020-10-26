@@ -191,9 +191,7 @@ public final class MQConnection implements ShutdownListener {
                 MessageData messageData = (MessageData)messageQueue.poll(SENDMESSAGE_TIMEOUT,
                                                                          TimeUnit.MILLISECONDS);
                 if (messageData != null) {
-                    if (!getConnection().getAddress().isLoopbackAddress()) {
-                        channel.exchangeDeclarePassive(messageData.getExchange());
-                    }
+                    validateExchange(channel, messageData.getExchange());
                     getInstance().sendOnChannel(messageData.getExchange(), messageData.getRoutingKey(),
                             messageData.getProps(), messageData.getBody(), channel);
                 }
@@ -206,10 +204,26 @@ public final class MQConnection implements ShutdownListener {
                 } catch (InterruptedException ie) {
                     logger.error("Thread.sleep() was interrupted", ie);
                 }
-            } catch (IOException ioe) {
-                logger.error("the exchange do probably not exists: ", ioe);
+            } catch (IOException | IllegalArgumentException ioe) {
+                logger.error("error validating channel: ", ioe);
             }
         }
+    }
+
+    /**
+     * Validate the exchange.
+     *
+     * @param channel a channel that must contain the given exchange
+     * @param exchange the exchange to validate
+     *
+     * @throws IllegalArgumentException if the exchange is null
+     * @throws IOException if the exchange exists, but is invalid for the channel
+     */
+    private void validateExchange(Channel channel, String exchange) throws IOException, IllegalArgumentException {
+        if (exchange == null) {
+            throw new IllegalArgumentException("Invalid configuration, exchange must not be null.");
+        }
+        channel.exchangeDeclarePassive(exchange);
     }
 
     /**
@@ -331,11 +345,6 @@ public final class MQConnection implements ShutdownListener {
      */
     private void sendOnChannel(String exchange, String routingKey, AMQP.BasicProperties props, byte[] body,
                                Channel channel) {
-        if (exchange == null) {
-            logger.error("Invalid configuration, exchange must not be null.");
-            return;
-        }
-
         try {
             channel.basicPublish(exchange, routingKey, props, body);
         } catch (IOException e) {
