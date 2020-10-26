@@ -31,13 +31,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.ShutdownListener;
 import com.rabbitmq.client.ShutdownSignalException;
-
 import hudson.util.Secret;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -45,6 +39,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Creates an MQ connection.
@@ -64,10 +61,22 @@ public final class MQConnection implements ShutdownListener {
     private String serverUri;
     private String virtualHost;
     private Connection connection = null;
-    private Channel channel = null;
 
     private volatile LinkedBlockingQueue messageQueue = new LinkedBlockingQueue(MESSAGE_QUEUE_SIZE);
     private Thread messageQueueThread;
+
+    /**
+     * Throw on exceptions when creating a channel
+     */
+    private static class ChannelCreationException extends IOException {
+        public ChannelCreationException(String errorMessage) {
+            super(errorMessage);
+        }
+
+        public ChannelCreationException(String errorMessage, Throwable cause) {
+            super(errorMessage, cause);
+        }
+    }
 
     /**
      * Lazy-loaded singleton using the initialization-on-demand holder pattern.
@@ -172,17 +181,51 @@ public final class MQConnection implements ShutdownListener {
      * Sends messages from the message queue.
      */
     private void sendMessages() {
+        Channel channel = null;
+
         while (true) {
             try {
+                if(channel == null || !channel.isOpen()) {
+                    channel = createChannel();
+                }
                 MessageData messageData = (MessageData)messageQueue.poll(SENDMESSAGE_TIMEOUT,
                                                                          TimeUnit.MILLISECONDS);
                 if (messageData != null) {
-                    getInstance().send(messageData.getExchange(), messageData.getRoutingKey(),
-                            messageData.getProps(), messageData.getBody());
+                    if (!getConnection().getAddress().isLoopbackAddress()) {
+                        channel.exchangeDeclarePassive(messageData.getExchange());
+                    }
+                    getInstance().sendOnChannel(messageData.getExchange(), messageData.getRoutingKey(),
+                            messageData.getProps(), messageData.getBody(), channel);
                 }
             } catch (InterruptedException ie) {
                 logger.info("sendMessages() poll() was interrupted: ", ie);
+            } catch (ChannelCreationException cce) {
+                logger.error(cce.getMessage(), cce.getCause());
+                try {
+                    Thread.sleep(CONNECTION_WAIT);
+                } catch (InterruptedException ie) {
+                    logger.error("Thread.sleep() was interrupted", ie);
+                }
+            } catch (IOException ioe) {
+                logger.error("the exchange do probably not exists: ", ioe);
             }
+        }
+    }
+
+    /**
+     * Try to create a channel using a connection.
+     *
+     * @return a Channel
+     */
+    private Channel createChannel() throws ChannelCreationException {
+        try {
+            connection = getConnection();
+            if (connection != null) {
+                return connection.createChannel();
+            }
+            throw new ChannelCreationException("Cannot create channel, no connection found");
+        } catch (IOException | ShutdownSignalException e) {
+            throw new ChannelCreationException("Cannot create channel", e);
         }
     }
 
@@ -273,7 +316,6 @@ public final class MQConnection implements ShutdownListener {
         serverUri = uri;
         virtualHost = vh;
         connection = null;
-        channel = null;
         initialized = true;
         startMessageQueueThread();
     }
@@ -287,45 +329,19 @@ public final class MQConnection implements ShutdownListener {
      * @param props other properties for the message - routing headers etc
      * @param body the message body
      */
-    private void send(String exchange, String routingKey, AMQP.BasicProperties props, byte[] body) {
+    private void sendOnChannel(String exchange, String routingKey, AMQP.BasicProperties props, byte[] body,
+                               Channel channel) {
         if (exchange == null) {
             logger.error("Invalid configuration, exchange must not be null.");
             return;
         }
 
-        while (true) {
-            try {
-                if (channel == null || !channel.isOpen()) {
-                    connection = getConnection();
-                    if (connection != null) {
-                        channel = connection.createChannel();
-                        if (!getConnection().getAddress().isLoopbackAddress()) {
-                            channel.exchangeDeclarePassive(exchange);
-                        }
-                    }
-                }
-            } catch (IOException|ShutdownSignalException e) {
-                logger.error("Cannot create channel", e);
-                channel = null; // reset
-                break;
-            }
-            if (channel != null) {
-                try {
-                    channel.basicPublish(exchange, routingKey, props, body);
-                } catch (IOException e) {
-                    logger.error("Cannot publish message", e);
-                } catch (AlreadyClosedException e) {
-                    logger.error("Connection is already closed", e);
-                }
-
-                break;
-            } else {
-                try {
-                    Thread.sleep(CONNECTION_WAIT);
-                } catch (InterruptedException ie) {
-                    logger.error("Thread.sleep() was interrupted", ie);
-                }
-            }
+        try {
+            channel.basicPublish(exchange, routingKey, props, body);
+        } catch (IOException e) {
+            logger.error("Cannot publish message", e);
+        } catch (AlreadyClosedException e) {
+            logger.error("Connection is already closed", e);
         }
     }
 
@@ -338,15 +354,11 @@ public final class MQConnection implements ShutdownListener {
                     if (connection != null && connection.isOpen()) {
                         connection.close();
                     }
-                    if (channel != null && channel.isOpen()) {
-                        channel.close();
-                    }
-                } catch (IOException|AlreadyClosedException e) {
-                    logger.error("MQ Connection disconnected: ", e);
-                } catch (TimeoutException e) {
-                    e.printStackTrace();
+                } catch (IOException e) {
+                    logger.error("IOException: ", e);
+                } catch (AlreadyClosedException e) {
+                    logger.error("AlreadyClosedException: ", e);
                 } finally {
-                    channel = null;
                     connection = null;
                 }
             }
