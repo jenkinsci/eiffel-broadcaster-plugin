@@ -51,7 +51,6 @@ import org.slf4j.LoggerFactory;
 public final class MQConnection implements ShutdownListener {
     private static final Logger logger = LoggerFactory.getLogger(MQConnection.class);
     private static final int HEARTBEAT_INTERVAL = 30;
-    private static final int MESSAGE_QUEUE_SIZE = 1000;
     private static final int SENDMESSAGE_TIMEOUT = 100;
     private static final int CONNECTION_WAIT = 10000;
 
@@ -62,7 +61,7 @@ public final class MQConnection implements ShutdownListener {
     private String virtualHost;
     private Connection connection = null;
 
-    private volatile LinkedBlockingQueue messageQueue = new LinkedBlockingQueue(MESSAGE_QUEUE_SIZE);
+    private volatile LinkedBlockingQueue messageQueue = new LinkedBlockingQueue();
     private Thread messageQueueThread;
 
     /* False if messages should not be added to the queue */
@@ -185,9 +184,7 @@ public final class MQConnection implements ShutdownListener {
         startMessageQueueThread();
         MessageData messageData = new MessageData(exchange, routingKey, props, body);
         waitForQueue(); // Block execution until queue is available
-        if (!messageQueue.offer(messageData)) {
-            logger.error("addMessageToQueue() failed, RabbitMQ queue is full!");
-        }
+        messageQueue.offer(messageData);
     }
 
     /**
