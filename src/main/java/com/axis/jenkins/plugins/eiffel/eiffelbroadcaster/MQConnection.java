@@ -177,6 +177,15 @@ public final class MQConnection implements ShutdownListener {
     }
 
     /**
+     * Get the number of currently outstanding confirms.
+     *
+     * @return the number of currently outstanding confirms
+     */
+    public int getSizeOutstandingConfirms() {
+        return outstandingConfirms.size();
+    }
+
+    /**
      * Puts a message in the message queue.
      *
      * @param exchange the exchange to publish the message to
