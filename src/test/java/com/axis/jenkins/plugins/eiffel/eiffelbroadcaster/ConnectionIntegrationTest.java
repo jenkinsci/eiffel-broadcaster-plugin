@@ -25,6 +25,8 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import eu.rekawek.toxiproxy.model.ToxicDirection;
+import eu.rekawek.toxiproxy.model.toxic.Timeout;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -154,6 +156,82 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
+        assertEquals(expectedMessages, actualMessages);
+    }
+
+    /**
+     * Test that the publisher won't lose messages when upstream is closed, i.e. no acks.
+     */
+    @Test
+    public void testSendMessagesHandlesUpstreamTimeout() throws InterruptedException, IOException {
+        MQConnection conn = MQConnection.getInstance();
+        int messageCount = 1000;
+        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        getProxy().toxics().timeout("timeout", ToxicDirection.UPSTREAM, 8000);
+        executor.submit(() -> {
+            expectedMessages.forEach(this::publishSilently);
+        });
+        Thread.sleep(8000);
+        getProxy().toxics().get("timeout", Timeout.class).remove();
+        ArrayList<EiffelEvent> actualMessages = TestUtil.waitForMessages(
+                conn,
+                messageCount,
+                DEFAULT_MESSAGE_WAIT,
+                TestUtil.QUEUE_NAME
+        );
+        assertEquals( 0, conn.getSizeOutstandingConfirms());
+        assertEquals(expectedMessages, actualMessages);
+    }
+
+    /**
+     * Test that the publisher won't lose messages when the connection flickers
+     */
+    @Test
+    public void testSendMessagesHandlesConnectionFlicker() throws InterruptedException, IOException {
+        MQConnection conn = MQConnection.getInstance();
+        int messageCount = 1000;
+        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        executor.submit(() -> {
+            expectedMessages.subList(0,500).forEach(this::publishSilently);
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            expectedMessages.subList(messageCount / 2, messageCount).forEach(this::publishSilently);
+        });
+        Thread.sleep(1000);
+        getProxy().setConnectionCut(true);
+        Thread.sleep(5000);
+        getProxy().setConnectionCut(false);
+        ArrayList<EiffelEvent> actualMessages = TestUtil.waitForMessages(
+                conn,
+                messageCount,
+                DEFAULT_MESSAGE_WAIT,
+                TestUtil.QUEUE_NAME
+        );
+        assertEquals( 0, conn.getSizeOutstandingConfirms());
+        assertEquals(expectedMessages, actualMessages);
+    }
+
+    /**
+     * Test that the publisher won't lose messages on high latency
+     */
+    @Test
+    public void testSendMessagesHandlesLatency() throws InterruptedException, IOException {
+        MQConnection conn = MQConnection.getInstance();
+        int messageCount = 2;
+        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        getProxy().toxics().latency("latency", ToxicDirection.UPSTREAM, 2000).setJitter(2000);
+        executor.submit(() -> {
+            expectedMessages.forEach(this::publishSilently);
+        });
+        ArrayList<EiffelEvent> actualMessages = TestUtil.waitForMessages(
+                conn,
+                messageCount,
+                30,
+                TestUtil.QUEUE_NAME);
+        assertEquals( 0, conn.getSizeOutstandingConfirms());
         assertEquals(expectedMessages, actualMessages);
     }
 
