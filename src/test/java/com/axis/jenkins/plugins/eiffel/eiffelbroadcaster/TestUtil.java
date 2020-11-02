@@ -26,9 +26,6 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -39,10 +36,8 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import org.junit.AssumptionViolatedException;
 import org.testcontainers.containers.RabbitMQContainer;
 
 /**
@@ -106,7 +101,14 @@ public final class TestUtil {
             int secondsWaitPerEvent,
             String queueName
     ) throws IOException, InterruptedException {
-        Channel channel = conn.getConnection().openChannel().get();
+        Channel channel = null;
+
+        while (channel == null) {
+            try {
+                channel = conn.getConnection().createChannel();
+                Thread.sleep(1000);
+            } catch (Exception ignored){}
+        }
         LinkedBlockingQueue<EiffelEvent> foundMessages = new LinkedBlockingQueue<>();
         ArrayList<EiffelEvent> foundMessagesArray = new ArrayList<>();
 
@@ -139,27 +141,6 @@ public final class TestUtil {
     }
 
     /**
-     * Publish a list of events to RabbitMQ.
-     *
-     * @param events the events to be published to RabbitMQ
-     * @param waitTime the max time to wait for all events to be published
-     *
-     * @throws EventValidationFailedException if any event didn't pass the schema validation
-     * @throws InterruptedException if all events couldn't be published within the wait time
-     * @throws JsonProcessingException if there was an error serializing an event to JSON
-     * @throws SchemaUnavailableException if no schema was available for the event's type and version
-     */
-    public static void sendEventsWithinTimeframe(ArrayList<EiffelEvent> events, int waitTime)
-            throws EventValidationFailedException, InterruptedException, JsonProcessingException, SchemaUnavailableException {
-        for (EiffelEvent event : events) {
-            Util.mustPublishEvent(event);
-        }
-        if (!waitUntil(Duration.ofSeconds(waitTime), () -> MQConnection.getInstance().getSizeOutstandingConfirms() == 0)) {
-            throw new AssumptionViolatedException("All events could not be confirmed within the timeframe");
-        }
-    }
-
-    /**
      * Creates a list of x events. Useful for generating messages during testing.
      *
      * @param count the number of events to create
@@ -170,24 +151,6 @@ public final class TestUtil {
         return IntStream.range(1, count + 1)
                 .mapToObj(i -> new EiffelArtifactCreatedEvent(String.format("pkg:test@%d", i)))
                 .collect(Collectors.toCollection(ArrayList::new));
-    }
-
-    /**
-     * Busy wait until a condition becomes true
-     *
-     * @param timeout a timeout not to wait longer than.
-     * @param condition a condition to evaluate. Proceed if condition is true
-     *
-     * @return the return value of the condition
-     * @throws InterruptedException if the sleep is interrupted
-     */
-    public static boolean waitUntil(Duration timeout, BooleanSupplier condition) throws InterruptedException {
-        int waited = 0;
-        while (!condition.getAsBoolean() && waited < timeout.toMillis()) {
-            Thread.sleep(100L);
-            waited += 100;
-        }
-        return condition.getAsBoolean();
     }
 
 }
