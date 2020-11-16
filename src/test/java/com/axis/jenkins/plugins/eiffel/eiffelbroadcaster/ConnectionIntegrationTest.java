@@ -94,6 +94,14 @@ public class ConnectionIntegrationTest {
     }
 
     /**
+     * Clean up outstanding messages before running new tests.
+     */
+    @Before
+    public void clearOutstandingConfirms() {
+        MQConnection.getInstance().clearOutstandingConfirms();
+    }
+
+    /**
      * Format a URI to toxiproxy, which will be forwarded to RabbitMQ.
      */
     private String formatProxyServerUri() {
@@ -133,6 +141,7 @@ public class ConnectionIntegrationTest {
                 TestUtil.QUEUE_NAME
         );
         assertEquals(expectedMessages, actualMessages);
+        assertEquals( 0, conn.getSizeOutstandingConfirms());
     }
 
     /**
@@ -156,6 +165,7 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
+        assertEquals( 0, conn.getSizeOutstandingConfirms());
         assertEquals(expectedMessages, actualMessages);
     }
 

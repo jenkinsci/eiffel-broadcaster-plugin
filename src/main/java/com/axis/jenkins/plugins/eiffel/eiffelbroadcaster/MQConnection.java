@@ -186,6 +186,13 @@ public final class MQConnection implements ShutdownListener {
     }
 
     /**
+     * Clear the outstanding confirms list, useful when testing.
+     */
+    public void clearOutstandingConfirms() {
+        outstandingConfirms.clear();
+    }
+
+    /**
      * Puts a message in the message queue.
      *
      * @param exchange the exchange to publish the message to
