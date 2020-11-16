@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 public final class MQConnection implements ShutdownListener {
     private static final Logger logger = LoggerFactory.getLogger(MQConnection.class);
     private static final int HEARTBEAT_INTERVAL = 30;
+    private static final int MESSAGE_QUEUE_SIZE = 100000;
     private static final int SENDMESSAGE_TIMEOUT = 100;
     private static final int CONNECTION_WAIT = 10000;
 
@@ -64,12 +65,9 @@ public final class MQConnection implements ShutdownListener {
     private String virtualHost;
     private Connection connection = null;
 
-    private volatile LinkedBlockingQueue messageQueue = new LinkedBlockingQueue();
+    private volatile LinkedBlockingQueue messageQueue = new LinkedBlockingQueue(MESSAGE_QUEUE_SIZE);
     private volatile ConcurrentNavigableMap<Long, MessageData> outstandingConfirms = new ConcurrentSkipListMap<>();
     private Thread messageQueueThread;
-
-    /* False if messages should not be added to the queue */
-    private volatile boolean shouldAddToQueue = false;
 
     /**
      * Throw on exceptions when creating a channel
@@ -203,8 +201,9 @@ public final class MQConnection implements ShutdownListener {
     public void addMessageToQueue(String exchange, String routingKey, AMQP.BasicProperties props, byte[] body) {
         startMessageQueueThread();
         MessageData messageData = new MessageData(exchange, routingKey, props, body);
-        waitForQueue(); // Block execution until queue is available
-        messageQueue.offer(messageData);
+        if (!messageQueue.offer(messageData)) {
+            logger.error("addMessageToQueue() failed, internal RabbitMQ queue is full!");
+        }
     }
 
     /**
@@ -219,7 +218,6 @@ public final class MQConnection implements ShutdownListener {
                     channel = createChannel();
                     channel.confirmSelect();
                     addMessageConfirmListener(channel);
-                    setShouldAddToQueue(true);
                 }
                 MessageData messageData = (MessageData)messageQueue.poll(SENDMESSAGE_TIMEOUT,
                                                                          TimeUnit.MILLISECONDS);
@@ -231,7 +229,6 @@ public final class MQConnection implements ShutdownListener {
                 logger.info("sendMessages() poll() was interrupted: ", ie);
             } catch (ChannelCreationException | MessageDeliveryException transientException) {
                 logger.error(transientException.getMessage(), transientException.getCause());
-                setShouldAddToQueue(false);
                 try {
                     Thread.sleep(CONNECTION_WAIT);
                 } catch (InterruptedException ie) {
@@ -239,27 +236,6 @@ public final class MQConnection implements ShutdownListener {
                 }
             } catch (IOException | IllegalArgumentException ioe) {
                 logger.error("error validating channel: ", ioe);
-            }
-        }
-    }
-
-    /**
-     * Enable or disable adding messages to the queue.
-     */
-    private synchronized void setShouldAddToQueue(boolean enabled) {
-        this.shouldAddToQueue = enabled;
-        notifyAll();
-    }
-
-    /**
-     * Wait until it's ok to add messages to the queue again
-     */
-    public synchronized void waitForQueue() {
-        while (!this.shouldAddToQueue) {
-            try {
-                wait();
-            } catch (InterruptedException e)  {
-                Thread.currentThread().interrupt();
             }
         }
     }
