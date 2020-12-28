@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2018-2020 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.PossibleAuthenticationFailureException;
 
@@ -362,22 +363,32 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
             UrlValidator urlValidator = new UrlValidator(getInstance().schemes, UrlValidator.ALLOW_LOCAL_URLS);
             FormValidation result = FormValidation.ok();
             if (urlValidator.isValid(uri)) {
+                Connection conn = null;
                 try {
-                    ConnectionFactory conn = new ConnectionFactory();
-                    conn.setUri(uri);
+                    ConnectionFactory connFactory = new ConnectionFactory();
+                    connFactory.setUri(uri);
                     if (StringUtils.isNotEmpty(name)) {
-                        conn.setUsername(name);
+                        connFactory.setUsername(name);
                         if (StringUtils.isNotEmpty(Secret.toString(pw))) {
-                            conn.setPassword(Secret.toString(pw));
+                            connFactory.setPassword(Secret.toString(pw));
                         }
                     }
-                    conn.newConnection();
+                    conn = connFactory.newConnection();
                 } catch (URISyntaxException e) {
                     result = FormValidation.error("Invalid Uri");
                 } catch (PossibleAuthenticationFailureException e) {
                     result = FormValidation.error("Authentication Failure");
                 } catch (Exception e) {
                     result = FormValidation.error(e.getMessage());
+                }
+                // Close the connection outside the exception block above so spurious connection
+                // closure problems won't flag the configuration as invalid, but do log the exception.
+                if (conn != null && conn.isOpen()) {
+                    try {
+                        conn.close();
+                    } catch (IOException e) {
+                        LOGGER.warn("An error occurred when closing the AMQP connection", e);
+                    }
                 }
             } else {
                 result = FormValidation.error("Invalid Uri");
