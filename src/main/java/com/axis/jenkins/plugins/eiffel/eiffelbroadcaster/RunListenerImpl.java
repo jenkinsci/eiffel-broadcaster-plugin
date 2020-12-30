@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2018-2020 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.rabbitmq.client.AMQP;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFinishedEvent;
@@ -39,9 +38,7 @@ import hudson.model.listeners.RunListener;
 import net.sf.json.JSONObject;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 
 /**
@@ -74,7 +71,6 @@ public class RunListenerImpl extends RunListener<Run> {
     @Override
     public void onCompleted(Run r, TaskListener listener) {
         Result res = r.getResult();
-        List<JSONObject> allEvents = new ArrayList<JSONObject>();
         String status = "INCONCLUSIVE";
         if (res != null) {
             status = Util.translateStatus(res.toString());
@@ -82,25 +78,7 @@ public class RunListenerImpl extends RunListener<Run> {
 
         String targetEvent = EiffelJobTable.getInstance().getEventTrigger(r.getQueueId());
         EiffelActivityFinishedEvent actFinEvent = new EiffelActivityFinishedEvent(status, targetEvent);
-        JSONObject actFinJson = actFinEvent.getJson();
-
-        allEvents.add(actFinJson);
-
-        if (status != "INCONCLUSIVE") {
-            if (res.isBetterOrEqualTo(Result.UNSTABLE)) {
-                List <Run.Artifact> artifacts = r.getArtifacts();
-                for (Run.Artifact artifact : artifacts) {
-                    String identifier;
-                    identifier = Util.getArtifactIdentity(artifact, r.getUrl(), r.getNumber());
-                    EiffelArtifactCreatedEvent artCreatedEvent = new EiffelArtifactCreatedEvent(identifier);
-                    allEvents.add(artCreatedEvent.getJson());
-                }
-            }
-        }
-
-        for(JSONObject event:allEvents) {
-            publish(event);
-        }
+        publish(actFinEvent.getJson());
     }
 
     /**

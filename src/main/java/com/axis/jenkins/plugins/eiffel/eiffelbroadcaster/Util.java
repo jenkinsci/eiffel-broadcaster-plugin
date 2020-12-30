@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2018-2020 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -81,45 +81,6 @@ public final class Util {
     public static String getUUID() {
         UUID uuid = java.util.UUID.randomUUID();
         return uuid.toString();
-    }
-
-    /**
-     * Get identity of an Artifact.
-     * @param artifact artifact.
-     * @param buildUrl Url to the build.
-     * @param buildNumber jenkins run build number.
-     * @return purl formated identity as a string.
-     */
-    public static String getArtifactIdentity(Run.Artifact artifact, String buildUrl, Integer buildNumber) {
-        String identity;
-        identity = "pkg:";
-        identity += resolveArtifactPath(artifact.toString());
-        identity += "@";
-        identity += String.valueOf(buildNumber);
-        identity += "?build_path=";
-        identity += buildUrl;
-
-        return identity;
-    }
-
-    /**
-     * Resolve a path so that purl identity is correct.
-     * Because the path is relative to the workspace root, artifacts that are archived directly from the root
-     * gets a path of "/<artifact>" but if the artifacts are in a directory, the artifact gets a path of
-     * "archive/<artifact>", this means we need to remove the initial "/" if there is one.
-     * @param path Artifact path from Run.Artifact
-     * @return resolevedPath
-     */
-    private static String resolveArtifactPath(String path) {
-        String resolvedPath;
-        if (path.charAt(1) == '/'){
-            resolvedPath = path.substring(1);
-        }
-        else {
-            resolvedPath = path;
-        }
-
-        return resolvedPath;
     }
 
     /**

@@ -2,8 +2,7 @@
 
 This Jenkins plugin sends Eiffel events to a Message Queue. For now, only RabbitMQ is supported.
 The plugin can be extended with more events and or more data but the required data is there.
-In addition to jobs, artifacts are represented in Eiffel, these are the artifacts saved in the "Archive the artifacts"
-post build action. A detailed list of event representations can be found in the table below.
+A detailed list of event representations can be found in the table below.
 
 Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffel
 
@@ -18,10 +17,8 @@ Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffe
 | Job Unstable                | EiffelActivityFinishedEvent  |
 | Job Failed                  | EiffelActivityFinishedEvent  |
 | Job Aborted                 | EiffelActivityFinishedEvent  |
-| Job Artifact Saved          | EiffelArtifactCreatedEvent   |
 
 ### Notes
-- EiffelArtifactPublishedEvent is not sent by this plugin.
 - Current versions of each event can be found in the getVersion() function in the [sourcecode.](https://github.com/Isacholm/EiffelBroadcaster/tree/master/src/main/java/com/axis/jenkins/plugins/eiffel/eiffelbroadcaster/eiffel)
 
 ## How to build and install this plugin from source
@@ -44,7 +41,6 @@ The plugin should install without the need to reboot Jenkins.
 - [EiffelActivityStartedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityStartedEvent.md)
 - [EiffelActivityFinishedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityFinishedEvent.md)
 - [EiffelActivityCanceledEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityCanceledEvent.md)
-- [EiffelArtifactCreatedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelArtifactCreatedEvent.md)
 
 This plugin is part of the [Eiffel Community](https://github.com/eiffel-community/)
 
