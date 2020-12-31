@@ -51,7 +51,7 @@
     </pluginRepositories>
     <properties>
         <jmockit.version>1.5</jmockit.version>
-        <junit.version>4.11</junit.version>
+        <junit.version>4.13.1</junit.version>
         <amqp.client.version>4.8.0</amqp.client.version>
         <commons.validator.version>1.4.0</commons.validator.version>
         <commons.digester.version>2.1</commons.digester.version>
