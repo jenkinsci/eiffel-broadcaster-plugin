@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,60 +24,138 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.net.URI;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * EiffelEvent EiffelActivityStartedEvent representation.
+ * A Java representation of an Eiffel event of the
+ * <a href="https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityStartedEvent.md">
+ * EiffelActivityStartedEvent</a> (ActS) kind.
  *
- * Schema for this event can be found in the link below.
- * https://github.com/eiffel-community/eiffel/tree/master/schemas/EiffelActivityFinished
- * @author Isac Holm &lt;isac.holm@axis.com&gt;
+ * See the Eiffel event documentation for more on the meaning of the attributes.
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class EiffelActivityStartedEvent extends EiffelEvent {
-    /**
-     * Event Version implementation.
-     * @return Event Version
-     */
-    public String getVersion() {
-        return "1.1.0";
-    }
-    /**
-     * Constructor for EiffelActivityStartedEvent.
-     * @param activityExecutionId eiffel id of the link target event.
-     */
-    public EiffelActivityStartedEvent(String activityExecutionId) {
-        super();
-        super.setEventData(initEventData());
-        super.setEventLinks(initEventLinks(activityExecutionId));
-    }
-    /**
-     * Initiate eventData for this event.
-     * this returns an empty object for now beacuse eiffel expects it.
-     * It can be populated with not required information like executionUri and liveLogs.
-     * @return eventData object, currently empty.
-     */
-    private Map initEventData() {
-        Map<String, String> eventData = new HashMap<String, String>();
-        return eventData;
-    }
-    /**
-     * Initiate eventLinks for this event.
-     * @param activityExecutionId eiffel id of the link target event.
-     * @return eventLinks list of target eiffel events.
-     */
-    private List initEventLinks(String activityExecutionId) {
-        List<Map> eventLinks = new ArrayList<Map>();
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private final Data data;
 
-        Map<String, String> eventLink = new HashMap<String, String>();
-        eventLink.put("type", super.ACTIVITY_EXECUTION);
-        eventLink.put("target", activityExecutionId);
-
-        eventLinks.add(eventLink);
-
-        return eventLinks;
+    public EiffelActivityStartedEvent() {
+        super("EiffelActivityStartedEvent", "1.1.0");
+        this.data = new Data();
     }
 
+    public EiffelActivityStartedEvent(UUID activityID) {
+        this();
+        getLinks().add(new Link(Link.Type.ACTIVITY_EXECUTION, activityID));
+    }
+
+    public Data getData() {
+        return data;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        EiffelActivityStartedEvent that = (EiffelActivityStartedEvent) o;
+        return data.equals(that.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), data);
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("links", getLinks())
+                .append("meta", getMeta())
+                .append("data", data)
+                .toString();
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public static class Data {
+        private URI executionUri;
+
+        private final List<LiveLogs> liveLogs = new ArrayList<>();
+
+        public URI getExecutionUri() {
+            return executionUri;
+        }
+
+        public void setExecutionUri(URI executionUri) {
+            this.executionUri = executionUri;
+        }
+
+        public List<LiveLogs> getLiveLogs() {
+            return liveLogs;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Data data = (Data) o;
+            return Objects.equals(executionUri, data.executionUri) &&
+                    liveLogs.equals(data.liveLogs);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(executionUri, liveLogs);
+        }
+
+        @Override
+        public String toString() {
+            return new ToStringBuilder(this)
+                    .append("executionUri", executionUri)
+                    .append("liveLogs", liveLogs)
+                    .toString();
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        public static class LiveLogs {
+            @JsonInclude(JsonInclude.Include.ALWAYS)
+            private String name;
+
+            @JsonInclude(JsonInclude.Include.ALWAYS)
+            private URI uri;
+
+            public LiveLogs(@JsonProperty("name") String name, @JsonProperty("uri") URI uri) {
+                this.name = name;
+                this.uri = uri;
+            }
+
+            public String getName() {
+                return name;
+            }
+
+            public void setName(String name) {
+                this.name = name;
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                LiveLogs liveLogs = (LiveLogs) o;
+                return name.equals(liveLogs.name) &&
+                        uri.equals(liveLogs.uri);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(name, uri);
+            }
+        }
+    }
 }

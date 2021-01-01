@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,65 +24,90 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Objects;
+import java.util.UUID;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * EiffelEvent EiffelActivityCanceledEvent representation
+ * A Java representation of an Eiffel event of the
+ * <a href="https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityCanceledEvent.md">
+ * EiffelActivityCanceledEvent</a> (ActC) kind.
  *
- * Schema for this event can be found in the link below.
- * https://github.com/eiffel-community/eiffel/tree/master/schemas/EiffelActivityCanceledEvent
- *
- * @author Isac Holm &lt;isac.holm@axis.com&gt;
+ * See the Eiffel event documentation for more on the meaning of the attributes.
  */
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class EiffelActivityCanceledEvent extends EiffelEvent {
-    /**
-     * Event Version implementation.
-     * @return Event Version
-     */
-    public String getVersion() {
-        return "1.1.0";
-    }
-    /**
-    * Constructor of EiffelActivityCanceledEvent.
-    * @param activityExecutionId
-    * event id of the EiffelActivityStartedEvent that was canceled.
-    */
-    public EiffelActivityCanceledEvent(String activityExecutionId) {
-        super();
-        super.setEventData(initEventData());
-        super.setEventLinks(initEventLinks(activityExecutionId));
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private final Data data;
+
+    public EiffelActivityCanceledEvent() {
+        super("EiffelActivityCanceledEvent", "1.1.0");
+        this.data = new EiffelActivityCanceledEvent.Data();
     }
 
-    /**
-     * set data key in the eiffel event.
-     * no data is required for this event but the objects need to be there.
-     * see eiffel schema in the link above.
-     * @return eventData map that was set.
-     */
-    private Map initEventData() {
-        Map<String, String> eventData = new HashMap<String, String>();
-        return eventData;
+    public EiffelActivityCanceledEvent(UUID activityID) {
+        this();
+        getLinks().add(new Link(Link.Type.ACTIVITY_EXECUTION, activityID));
     }
 
-    /**
-     * set the links of this event.
-     * @param activityExecutionId
-     * event id of the EiffelActivityStartedEvent that was canceled.
-     * @return eventLinks list that was set.
-     */
-    private List initEventLinks(String activityExecutionId) {
-        List<Map> eventLinks = new ArrayList<Map>();
-
-        Map<String, String> eventLink = new HashMap<String, String>();
-        eventLink.put("type", super.ACTIVITY_EXECUTION);
-        eventLink.put("target", activityExecutionId);
-
-        eventLinks.add(eventLink);
-
-        return eventLinks;
+    public Data getData() {
+        return data;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        EiffelActivityCanceledEvent that = (EiffelActivityCanceledEvent) o;
+        return data.equals(that.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), data);
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("links", getLinks())
+                .append("meta", getMeta())
+                .append("data", data)
+                .toString();
+    }
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    public static class Data {
+        private String reason;
+
+        public String getReason() {
+            return reason;
+        }
+
+        public void setReason(String reason) {
+            this.reason = reason;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Data data = (Data) o;
+            return Objects.equals(reason, data.reason);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(reason);
+        }
+
+        @Override
+        public String toString() {
+            return new ToStringBuilder(this)
+                    .append("reason", reason)
+                    .toString();
+        }
+    }
 }

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2020 Axis Communications AB.
+ Copyright 2018-2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,34 +24,37 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFinishedEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.rabbitmq.client.AMQP;
 import hudson.model.AbstractItem;
 import hudson.model.Queue;
-import hudson.model.Run;
-
+import java.nio.charset.StandardCharsets;
+import java.util.Calendar;
 import java.util.HashMap;
-import java.util.UUID;
-import java.time.Instant;
-import java.net.InetAddress;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Constants and helper functions.
  * @author Isac Holm &lt;isac.holm@axis.com&gt;
  */
 public final class Util {
-    /** Translate jenkins exit status to eiffel status */
-    private static final HashMap<String, String> STATUS_TRANSLATION = new HashMap<>();
-    static {
-        STATUS_TRANSLATION.put("SUCCESS", "SUCCESSFUL");
-        STATUS_TRANSLATION.put("UNSTABLE", "UNSUCCESSFUL");
-        STATUS_TRANSLATION.put("FAILURE", "FAILED");
-        STATUS_TRANSLATION.put("ABORTED", "ABORTED");
-        STATUS_TRANSLATION.put("x", "TIMED_OUT");
-        STATUS_TRANSLATION.put("INCONCLUSIVE", "INCONCLUSIVE");
-    }
+    private static final Logger logger = LoggerFactory.getLogger(Util.class);
+    private static final int NON_PERSISTENT_DELIVERY = 1;
+    private static final int PERSISTENT_DELIVERY = 2;
 
-    /**Content Type. */
-    public static final String CONTENT_TYPE = "application/json";
+    /** Translate jenkins exit status to eiffel status */
+    private static final HashMap<String, EiffelActivityFinishedEvent.Data.Outcome.Conclusion> STATUS_TRANSLATION = new HashMap<>();
+    static {
+        STATUS_TRANSLATION.put("SUCCESS", EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL);
+        STATUS_TRANSLATION.put("UNSTABLE", EiffelActivityFinishedEvent.Data.Outcome.Conclusion.UNSUCCESSFUL);
+        STATUS_TRANSLATION.put("FAILURE", EiffelActivityFinishedEvent.Data.Outcome.Conclusion.FAILED);
+        STATUS_TRANSLATION.put("ABORTED", EiffelActivityFinishedEvent.Data.Outcome.Conclusion.ABORTED);
+        STATUS_TRANSLATION.put("x", EiffelActivityFinishedEvent.Data.Outcome.Conclusion.TIMED_OUT);
+        STATUS_TRANSLATION.put("INCONCLUSIVE", EiffelActivityFinishedEvent.Data.Outcome.Conclusion.INCONCLUSIVE);
+    }
 
     /**
      * Utility classes should not have a public or default constructor.
@@ -73,23 +76,23 @@ public final class Util {
             return t.getName();
         }
     }
-    /**
-     * Generate a UIID.
-     *
-     * @return UUID as a string.
-     */
-    public static String getUUID() {
-        UUID uuid = java.util.UUID.randomUUID();
-        return uuid.toString();
-    }
 
-    /**
-     * Fetches time as Epoch in miliseconds.
-     *
-     * @return Epoch time in milliseconds
-     */
-    public static long getTime() {
-        return Instant.now().toEpochMilli();
+    public static void publishEvent(EiffelEvent event) {
+        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        if (config != null && config.isBroadcasterEnabled()) {
+            AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                    .appId(config.getAppId())
+                    .deliveryMode(config.getPersistentDelivery() ? PERSISTENT_DELIVERY : NON_PERSISTENT_DELIVERY)
+                    .contentType("application/json")
+                    .timestamp(Calendar.getInstance().getTime())
+                    .build();
+            try {
+                MQConnection.getInstance().addMessageToQueue(config.getExchangeName(), config.getRoutingKey(),
+                        props, event.toJSON().getBytes(StandardCharsets.UTF_8));
+            } catch (JsonProcessingException e) {
+                logger.error("Unable to serialize object to JSON: {}: {}", e.getMessage(), event);
+            }
+        }
     }
 
     /**
@@ -99,8 +102,8 @@ public final class Util {
      * jenkins job status to translate.
      * @return translated status.
      */
-    public static String translateStatus(String status) {
-        String statusTranslated;
+    public static EiffelActivityFinishedEvent.Data.Outcome.Conclusion translateStatus(String status) {
+        EiffelActivityFinishedEvent.Data.Outcome.Conclusion statusTranslated;
         if (STATUS_TRANSLATION.get(status) == null) {
             statusTranslated = STATUS_TRANSLATION.get("inconclusive");
         } else {

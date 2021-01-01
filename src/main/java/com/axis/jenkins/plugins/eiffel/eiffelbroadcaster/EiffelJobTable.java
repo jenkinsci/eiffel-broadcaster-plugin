@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2018-2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 /**
  * Contains eiffel event map for jobs {@link EiffelJobTable}.
@@ -37,14 +38,14 @@ import java.util.HashMap;
  */
 public final class EiffelJobTable {
     private static EiffelJobTable instance = null;
-    private HashMap<Long, String> table;
+    private HashMap<Long, UUID> table;
 
     /**
      * EiffelJobTable Constructor.
      *
      */
      private EiffelJobTable() {
-        this.table = new HashMap<Long, String>();
+        this.table = new HashMap<Long, UUID>();
     }
 
     /**
@@ -62,7 +63,7 @@ public final class EiffelJobTable {
      * Get table HashMap method.
      * @return HashMap
      */
-    private HashMap<Long, String> getTable() {
+    private HashMap<Long, UUID> getTable() {
         return table;
     }
 
@@ -72,7 +73,7 @@ public final class EiffelJobTable {
      * @param jenkinsID
      * uniqe id of a jenkins job.
      */
-    public String getEventTrigger(Long jenkinsID) {
+    public UUID getEventTrigger(Long jenkinsID) {
         return getTable().get(jenkinsID);
     }
 
@@ -83,7 +84,7 @@ public final class EiffelJobTable {
      * @param eiffelEventID
      * uniqe id of an eiffel event.
      */
-    public void setEventTrigger(Long jenkinsID, String eiffelEventID) {
+    public void setEventTrigger(Long jenkinsID, UUID eiffelEventID) {
         getTable().put(jenkinsID, eiffelEventID);
     }
 

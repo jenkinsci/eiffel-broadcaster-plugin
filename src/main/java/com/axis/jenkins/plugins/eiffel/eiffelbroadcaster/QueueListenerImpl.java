@@ -26,14 +26,11 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityCanceledEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
-import com.rabbitmq.client.AMQP;
 import hudson.Extension;
 import hudson.model.BuildableItem;
 import hudson.model.Queue;
 import hudson.model.queue.QueueListener;
-import java.nio.charset.StandardCharsets;
-import java.util.Calendar;
-import net.sf.json.JSONObject;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +42,6 @@ import org.slf4j.LoggerFactory;
 @Extension
 public class QueueListenerImpl extends QueueListener {
     private static final Logger logger = LoggerFactory.getLogger(QueueListenerImpl.class);
-
-    private static EiffelBroadcasterConfig config;
 
     @Override
     public void onEnterWaiting(Queue.WaitingItem wi) {
@@ -60,48 +55,22 @@ public class QueueListenerImpl extends QueueListener {
             return;
         }
 
-        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent(taskName);
-        EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getEventMeta().get("id").toString());
-        JSONObject json = event.getJson();
-        publish(json);
+        EiffelActivityTriggeredEvent.Data data = new EiffelActivityTriggeredEvent.Data(taskName);
+        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent(data);
+        EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getMeta().getId());
+        Util.publishEvent(event);
     }
 
     @Override
     public void onLeft(Queue.LeftItem li) {
-        EiffelActivityCanceledEvent event;
         if (li.isCancelled()) {
-            String targetEvent = EiffelJobTable.getInstance().getEventTrigger(li.getId());
+            UUID targetEvent = EiffelJobTable.getInstance().getEventTrigger(li.getId());
             if (targetEvent == null) {
                 logger.debug("A cancelled queue item could not be mapped to an emitted ActT event: {}", li);
                 return;
             }
-            event = new EiffelActivityCanceledEvent(targetEvent);
-            JSONObject json = event.getJson();
-            publish(json);
-        }
-    }
-
-    /**
-     * Publish json message on configured MQ server.
-     *
-     * @param json the message in json format
-     */
-    private void publish(JSONObject json) {
-        if (config == null) {
-            config = EiffelBroadcasterConfig.getInstance();
-        }
-        if (config != null && config.isBroadcasterEnabled()) {
-            AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
-            int dm = 1;
-            if (config.getPersistentDelivery()) {
-                dm = 2;
-            }
-            bob.appId(config.getAppId());
-            bob.deliveryMode(dm);
-            bob.contentType(Util.CONTENT_TYPE);
-            bob.timestamp(Calendar.getInstance().getTime());
-            MQConnection.getInstance().addMessageToQueue(config.getExchangeName(), config.getRoutingKey(),
-                    bob.build(), json.toString().getBytes(StandardCharsets.UTF_8));
+            EiffelActivityCanceledEvent event = new EiffelActivityCanceledEvent(targetEvent);
+            Util.publishEvent(event);
         }
     }
 }

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2020 Axis Communications AB.
+ Copyright 2018-2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,22 +24,14 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
-import com.rabbitmq.client.AMQP;
-
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFinishedEvent;
-
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
 import hudson.Extension;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
-
-import net.sf.json.JSONObject;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Calendar;
-
+import java.util.UUID;
 
 /**
  * Receives notifications about builds and publish messages on configured MQ server.
@@ -48,9 +40,6 @@ import java.util.Calendar;
  */
 @Extension
 public class RunListenerImpl extends RunListener<Run> {
-
-    private static EiffelBroadcasterConfig config;
-
     /**
      * Constructor for RunListenerImpl.
      */
@@ -60,48 +49,23 @@ public class RunListenerImpl extends RunListener<Run> {
 
     @Override
     public void onStarted(Run r, TaskListener listener) {
-        JSONObject json;
-        EiffelActivityStartedEvent event;
-        String targetEvent = EiffelJobTable.getInstance().getEventTrigger(r.getQueueId());
-        event = new EiffelActivityStartedEvent(targetEvent);
-        json = event.getJson();
-        publish(json);
+        UUID targetEvent = EiffelJobTable.getInstance().getEventTrigger(r.getQueueId());
+        EiffelActivityStartedEvent event = new EiffelActivityStartedEvent(targetEvent);
+        Util.publishEvent(event);
     }
 
     @Override
     public void onCompleted(Run r, TaskListener listener) {
         Result res = r.getResult();
-        String status = "INCONCLUSIVE";
+        EiffelActivityFinishedEvent.Data.Outcome.Conclusion conclusion =
+                EiffelActivityFinishedEvent.Data.Outcome.Conclusion.INCONCLUSIVE;
         if (res != null) {
-            status = Util.translateStatus(res.toString());
+            conclusion = Util.translateStatus(res.toString());
         }
 
-        String targetEvent = EiffelJobTable.getInstance().getEventTrigger(r.getQueueId());
-        EiffelActivityFinishedEvent actFinEvent = new EiffelActivityFinishedEvent(status, targetEvent);
-        publish(actFinEvent.getJson());
-    }
-
-    /**
-     * Publish json message on configured MQ server.
-     *
-     * @param json the message in json format
-     */
-    private void publish(JSONObject json) {
-        if (config == null) {
-            config = EiffelBroadcasterConfig.getInstance();
-        }
-        if (config != null && config.isBroadcasterEnabled()) {
-            AMQP.BasicProperties.Builder bob = new AMQP.BasicProperties.Builder();
-            int dm = 1;
-            if (config.getPersistentDelivery()) {
-                dm = 2;
-            }
-            bob.appId(config.getAppId());
-            bob.deliveryMode(dm);
-            bob.contentType(Util.CONTENT_TYPE);
-            bob.timestamp(Calendar.getInstance().getTime());
-            MQConnection.getInstance().addMessageToQueue(config.getExchangeName(), config.getRoutingKey(),
-                    bob.build(), json.toString().getBytes(StandardCharsets.UTF_8));
-        }
+        EiffelActivityFinishedEvent event = new EiffelActivityFinishedEvent(
+                new EiffelActivityFinishedEvent.Data.Outcome(conclusion),
+                EiffelJobTable.getInstance().getEventTrigger(r.getQueueId()));
+        Util.publishEvent(event);
     }
 }

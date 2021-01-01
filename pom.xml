@@ -55,6 +55,7 @@
         <amqp.client.version>4.8.0</amqp.client.version>
         <commons.lang3.version>3.11</commons.lang3.version>
         <commons.validator.version>1.7</commons.validator.version>
+        <jackson2-api.version>2.11.1</jackson2-api.version>
         <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
         <jmockit.version>1.41</jmockit.version>
     </properties>
@@ -68,6 +69,11 @@
             <groupId>commons-validator</groupId>
             <artifactId>commons-validator</artifactId>
             <version>${commons.validator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>jackson2-api</artifactId>
+            <version>${jackson2-api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -150,7 +156,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>animal-sniffer-maven-plugin</artifactId>
-                <version>1.15</version>
+                <version>1.16</version>
                 <configuration>
                     <signature>
                         <groupId>org.codehaus.mojo.signature</groupId>
