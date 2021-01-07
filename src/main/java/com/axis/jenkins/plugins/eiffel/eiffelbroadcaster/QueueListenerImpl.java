@@ -71,6 +71,10 @@ public class QueueListenerImpl extends QueueListener {
         EiffelActivityCanceledEvent event;
         if (li.isCancelled()) {
             String targetEvent = EiffelJobTable.getInstance().getEventTrigger(li.getId());
+            if (targetEvent == null) {
+                logger.debug("A cancelled queue item could not be mapped to an emitted ActT event: {}", li);
+                return;
+            }
             event = new EiffelActivityCanceledEvent(targetEvent);
             JSONObject json = event.getJson();
             publish(json);
