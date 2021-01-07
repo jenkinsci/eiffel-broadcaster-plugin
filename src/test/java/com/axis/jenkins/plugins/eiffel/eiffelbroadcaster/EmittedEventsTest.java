@@ -87,6 +87,6 @@ public class EmittedEventsTest {
         job.setDefinition(new CpsFlowDefinition("node { echo 'hello' }", true));
         jenkins.buildAndAssertSuccess(job);
 
-        assertThat(Mocks.messages.size(), is(4));
+        assertThat(Mocks.messages.size(), is(3));
     }
 }

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2018-2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,17 +26,16 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityCanceledEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
-
 import com.rabbitmq.client.AMQP;
-
 import hudson.Extension;
+import hudson.model.BuildableItem;
 import hudson.model.Queue;
 import hudson.model.queue.QueueListener;
-
-import net.sf.json.JSONObject;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
+import net.sf.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Receives notifications about when tasks are submitted to the
@@ -45,11 +44,23 @@ import java.util.Calendar;
  */
 @Extension
 public class QueueListenerImpl extends QueueListener {
+    private static final Logger logger = LoggerFactory.getLogger(QueueListenerImpl.class);
+
     private static EiffelBroadcasterConfig config;
 
     @Override
     public void onEnterWaiting(Queue.WaitingItem wi) {
-        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent(Util.getFullName(wi.task));
+        String taskName = Util.getFullName(wi.task);
+
+        // Filter out queue items we're not interested in, e.g. pipeline steps (modeled as
+        // ExecutorStepExecution$PlaceholderTask).
+        if (!(wi.task instanceof BuildableItem)) {
+            logger.debug("Not emitting ActT event for {} object since it's not a BuildableItem: {}",
+                    wi.task.getClass().getName(), taskName);
+            return;
+        }
+
+        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent(taskName);
         EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getEventMeta().get("id").toString());
         JSONObject json = event.getJson();
         publish(json);
