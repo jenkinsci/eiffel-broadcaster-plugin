@@ -32,8 +32,12 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import hudson.matrix.Axis;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixProject;
+import hudson.model.Cause;
+import hudson.model.CauseAction;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.tasks.BuildTrigger;
+import java.util.Collections;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Before;
@@ -70,13 +74,16 @@ public class EmittedEventsTest {
     public void testEventsForSuccessfulFreestyleBuild() throws Exception {
         FreeStyleProject job = jenkins.createFolder("testfolder")
                 .createProject(FreeStyleProject.class, "test");
-        jenkins.buildAndAssertSuccess(job);
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0, new Cause.UserIdCause()).get());
 
         EventSet events = new EventSet(Mocks.messages);
 
         EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
         EiffelActivityTriggeredEvent.Data actTData = new EiffelActivityTriggeredEvent.Data("testfolder/test");
-        assertThat(actT.getData(), is(actTData));
+        assertThat(actT.getData().getName(), is("testfolder/test"));
+        assertThat(actT,
+                hasTrigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER, "SYSTEM"));
+        assertThat(actT.getData().getCategories(), is(empty()));
 
         EiffelActivityStartedEvent actS = events.findNext(EiffelActivityStartedEvent.class);
         EiffelActivityStartedEvent.Data actSData = new EiffelActivityStartedEvent.Data();
@@ -89,6 +96,37 @@ public class EmittedEventsTest {
                         EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL));
         assertThat(actF.getData(), is(actFData));
         assertThat(actF, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
+
+        assertThat(events.isEmpty(), is(true));
+    }
+
+    @Test
+    public void testEventsForSuccessfulFreestyleBuildSequence() throws Exception {
+        FreeStyleProject downstreamJob = jenkins.createProject(FreeStyleProject.class, "downstream");
+
+        FreeStyleProject upstreamJob = jenkins.createProject(FreeStyleProject.class, "upstream");
+        upstreamJob.getPublishersList().add(new BuildTrigger(Collections.singletonList(downstreamJob), Result.SUCCESS));
+
+        jenkins.jenkins.rebuildDependencyGraph();
+        upstreamJob.scheduleBuild2(0);
+        jenkins.waitUntilNoActivity();
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        EiffelActivityTriggeredEvent upstreamActT = events.findNext(EiffelActivityTriggeredEvent.class);
+        // Ignore the contents of the ActT event and the subsequent ActS and ActF events for
+        // the upstream job. We're verifying them in other test cases and this test cases focuses
+        // on trigger information for the downstream job's events.
+        events.findNext(EiffelActivityStartedEvent.class);
+        events.findNext(EiffelActivityFinishedEvent.class);
+
+        EiffelActivityTriggeredEvent downstreamActT = events.findNext(EiffelActivityTriggeredEvent.class);
+        assertThat(downstreamActT,
+                hasTrigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.EIFFEL_EVENT, "upstream"));
+        assertThat(downstreamActT, linksTo(upstreamActT, EiffelEvent.Link.Type.CAUSE));
+
+        events.findNext(EiffelActivityStartedEvent.class);
+        events.findNext(EiffelActivityFinishedEvent.class);
 
         assertThat(events.isEmpty(), is(true));
     }
@@ -111,8 +149,7 @@ public class EmittedEventsTest {
         EventSet events = new EventSet(Mocks.messages);
 
         EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
-        EiffelActivityTriggeredEvent.Data actTData = new EiffelActivityTriggeredEvent.Data("testfolder/test");
-        assertThat(actT.getData(), is(actTData));
+        // Ignore the contents of the ActT event; we're verifying its contents elsewhere.
 
         EiffelActivityCanceledEvent actC = events.findNext(EiffelActivityCanceledEvent.class);
         assertThat(actC, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
@@ -128,14 +165,17 @@ public class EmittedEventsTest {
         // but we'd have to spend more effort evaluating the resulting events.
         String axisValue = "value1";
         job.setAxes(new AxisList(new Axis("axislabel", axisValue)));
-        jenkins.buildAndAssertSuccess(job);
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0, new Cause.UserIdCause()).get());
 
         EventSet events = new EventSet(Mocks.messages);
 
         // First check the ActT/ActS/ActF sequence of the top-level build.
         EiffelActivityTriggeredEvent toplevelActT = events.findNext(EiffelActivityTriggeredEvent.class);
         EiffelActivityTriggeredEvent.Data actTData = new EiffelActivityTriggeredEvent.Data("testfolder/test");
-        assertThat(toplevelActT.getData(), is(actTData));
+        assertThat(toplevelActT.getData().getName(), is("testfolder/test"));
+        assertThat(toplevelActT,
+                hasTrigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER, "SYSTEM"));
+        assertThat(toplevelActT.getData().getCategories(), is(empty()));
 
         EiffelActivityStartedEvent actS = events.findNext(EiffelActivityStartedEvent.class,
                 linksTo(toplevelActT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
@@ -149,13 +189,15 @@ public class EmittedEventsTest {
                         EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL));
         assertThat(actF.getData(), is(actFData));
 
-        // Check that we get a child activity. Eventually it should have a CAUSE link
-        // pointing to the top-level activity.
+        // Check that we get a child activity that has a CAUSE link to the main build's ActT event.
         EiffelActivityTriggeredEvent childActT = events.findNext(EiffelActivityTriggeredEvent.class);
         // To avoid tight coupling to the exact build name let's just perform a sanity check
-        // to make sure it contains the job name and the matrix axis name.
+        // to make sure it contains the job name and the matrix axis value.
         assertThat(childActT.getData().getName(), containsString("test"));
         assertThat(childActT.getData().getName(), containsString(axisValue));
+        assertThat(childActT,
+                hasTrigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.EIFFEL_EVENT, "upstream"));
+        assertThat(childActT, linksTo(toplevelActT, EiffelEvent.Link.Type.CAUSE));
 
         EiffelActivityStartedEvent childActS = events.findNext(EiffelActivityStartedEvent.class,
                 linksTo(childActT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
@@ -177,13 +219,17 @@ public class EmittedEventsTest {
         WorkflowJob job = jenkins.createFolder("testfolder")
                 .createProject(WorkflowJob.class, "test");
         job.setDefinition(new CpsFlowDefinition("node { echo 'hello' }", true));
-        jenkins.buildAndAssertSuccess(job);
+        jenkins.assertBuildStatus(Result.SUCCESS,
+                job.scheduleBuild2(0, new CauseAction(new Cause.UserIdCause())).get());
 
         EventSet events = new EventSet(Mocks.messages);
 
         EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
         EiffelActivityTriggeredEvent.Data actTData = new EiffelActivityTriggeredEvent.Data("testfolder/test");
-        assertThat(actT.getData(), is(actTData));
+        assertThat(actT.getData().getName(), is("testfolder/test"));
+        assertThat(actT,
+                hasTrigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER, "SYSTEM"));
+        assertThat(actT.getData().getCategories(), is(empty()));
 
         EiffelActivityStartedEvent actS = events.findNext(EiffelActivityStartedEvent.class);
         EiffelActivityStartedEvent.Data actSData = new EiffelActivityStartedEvent.Data();
@@ -201,6 +247,38 @@ public class EmittedEventsTest {
     }
 
     @Test
+    public void testEventsForSuccessfulPipelineBuildSequence() throws Exception {
+        WorkflowJob downstreamJob = jenkins.createProject(WorkflowJob.class, "downstream");
+        downstreamJob.setDefinition(new CpsFlowDefinition("echo 'hello'", true));
+
+        WorkflowJob upstreamJob = jenkins.createProject(WorkflowJob.class, "upstream");
+        String upstreamPipelineCode = String.format("build '%s'", downstreamJob.getFullName());
+        upstreamJob.setDefinition(new CpsFlowDefinition(upstreamPipelineCode, true));
+
+        upstreamJob.scheduleBuild2(0);
+        jenkins.waitUntilNoActivity();
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        EiffelActivityTriggeredEvent upstreamActT = events.findNext(EiffelActivityTriggeredEvent.class);
+        // Ignore the contents of the ActT event and the subsequent ActS and ActF events for
+        // the upstream job. We're verifying them in other test cases and this test case focuses
+        // on trigger information for the downstream job's events.
+        events.findNext(EiffelActivityStartedEvent.class);
+        events.findNext(EiffelActivityFinishedEvent.class);
+
+        EiffelActivityTriggeredEvent downstreamActT = events.findNext(EiffelActivityTriggeredEvent.class);
+        assertThat(downstreamActT,
+                hasTrigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.EIFFEL_EVENT, "upstream"));
+        assertThat(downstreamActT, linksTo(upstreamActT, EiffelEvent.Link.Type.CAUSE));
+
+        events.findNext(EiffelActivityStartedEvent.class);
+        events.findNext(EiffelActivityFinishedEvent.class);
+
+        assertThat(events.isEmpty(), is(true));
+    }
+
+    @Test
     public void testEventsForFailingPipelineBuild() throws Exception {
         WorkflowJob job = jenkins.createFolder("testfolder")
                 .createProject(WorkflowJob.class, "test");
@@ -210,8 +288,7 @@ public class EmittedEventsTest {
         EventSet events = new EventSet(Mocks.messages);
 
         EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
-        EiffelActivityTriggeredEvent.Data actTData = new EiffelActivityTriggeredEvent.Data("testfolder/test");
-        assertThat(actT.getData(), is(actTData));
+        // Ignore the contents of the ActT event; we're verifying its contents elsewhere.
 
         EiffelActivityStartedEvent actS = events.findNext(EiffelActivityStartedEvent.class);
         EiffelActivityStartedEvent.Data actSData = new EiffelActivityStartedEvent.Data();

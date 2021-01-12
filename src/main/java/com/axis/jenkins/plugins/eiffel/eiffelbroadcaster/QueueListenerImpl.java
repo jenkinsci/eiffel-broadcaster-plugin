@@ -26,11 +26,18 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityCanceledEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
 import hudson.model.BuildableItem;
+import hudson.model.Cause;
 import hudson.model.Queue;
+import hudson.model.Run;
 import hudson.model.queue.QueueListener;
+import hudson.triggers.SCMTrigger;
+import hudson.triggers.TimerTrigger;
 import java.util.UUID;
+import javax.annotation.CheckForNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +65,33 @@ public class QueueListenerImpl extends QueueListener {
         EiffelActivityTriggeredEvent.Data data = new EiffelActivityTriggeredEvent.Data(taskName);
         EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent(data);
         EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getMeta().getId());
+
+        for (Cause cause : wi.getCauses()) {
+            // Default to OTHER as the default trigger type and override it for specific known causes.
+            EiffelActivityTriggeredEvent.Data.Trigger trigger = new EiffelActivityTriggeredEvent.Data.Trigger(
+                    EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER);
+            trigger.setDescription(cause.getShortDescription());
+
+            if (cause instanceof TimerTrigger.TimerTriggerCause) {
+                trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.TIMER);
+            } else if (cause instanceof SCMTrigger.SCMTriggerCause) {
+                trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.SOURCE_CHANGE);
+            } else if (cause instanceof Cause.UpstreamCause) {
+                UUID triggerId = getUpstreamTriggerId((Cause.UpstreamCause) cause);
+                if (triggerId != null) {
+                    event.getLinks().add(new EiffelEvent.Link(EiffelEvent.Link.Type.CAUSE, triggerId));
+                    trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.EIFFEL_EVENT);
+                }
+            }
+            data.getTriggers().add(trigger);
+        }
+
+        try {
+            wi.addOrReplaceAction(new EiffelActivityTriggerAction(event));
+        } catch (JsonProcessingException e) {
+            // If there's a problem serializing the event it'll get logged when we try
+            // to publish the event. No need to log the same error message twice.
+        }
         Util.publishEvent(event);
     }
 
@@ -71,6 +105,31 @@ public class QueueListenerImpl extends QueueListener {
             }
             EiffelActivityCanceledEvent event = new EiffelActivityCanceledEvent(targetEvent);
             Util.publishEvent(event);
+        }
+    }
+
+    /**
+     * Locates the ID of the EiffelActivityTriggeredEvent for the build referenced by
+     * an {@link hudson.model.Cause.UpstreamCause}, or null if no such event was found.
+     *
+     * @param cause the cause for which to locate the Eiffel event
+     */
+    @CheckForNull
+    private UUID getUpstreamTriggerId(Cause.UpstreamCause cause) {
+        Run upstreamRun = cause.getUpstreamRun();
+        if (upstreamRun == null) {
+            return null;
+        }
+        EiffelActivityTriggerAction upstreamAction = upstreamRun.getAction(EiffelActivityTriggerAction.class);
+        if (upstreamAction == null) {
+            return null;
+        }
+        try {
+            return upstreamAction.getEvent().getMeta().getId();
+        } catch (JsonProcessingException e) {
+            logger.warn("JSON payload stored in {} in {} couldn't be deserialized ({}): {}",
+                    upstreamAction.getClass().getSimpleName(), upstreamRun, e, upstreamAction.getEventJSON());
+            return null;
         }
     }
 }

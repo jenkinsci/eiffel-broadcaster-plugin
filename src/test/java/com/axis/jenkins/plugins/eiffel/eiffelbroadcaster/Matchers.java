@@ -24,14 +24,14 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
 /**
- * A Hamcrest {@link Matcher} that checks whether an Eiffel event has
- * a link of a particular type to another Eiffel event.
+ * A collection of Hamcrest {@link Matcher} functions that inspect the state of Eiffel events.
  */
 public class Matchers {
     /**
@@ -52,6 +52,48 @@ public class Matchers {
             @Override
             public void describeTo(Description description) {
                 description.appendText("event containing link: ").appendValue(expectedLink);
+            }
+        };
+    }
+
+    /**
+     * Returns a matcher that checks whether the subject {@link EiffelActivityTriggeredEvent}
+     * has a trigger with the specified type.
+     *
+     * @param type the desired type of the trigger
+     */
+    public static Matcher<EiffelActivityTriggeredEvent> hasTrigger(
+            EiffelActivityTriggeredEvent.Data.Trigger.Type type) {
+        return hasTrigger(type, "");
+    }
+
+    /**
+     * Returns a matcher that checks whether the subject {@link EiffelActivityTriggeredEvent}
+     * has a trigger with the specified type.
+     *
+     * @param type the type that the trigger is expected to have
+     * @param descriptionSubstring a string that should appear in the trigger's description
+     */
+    public static Matcher<EiffelActivityTriggeredEvent> hasTrigger(
+            EiffelActivityTriggeredEvent.Data.Trigger.Type type, String descriptionSubstring) {
+        return new TypeSafeMatcher<EiffelActivityTriggeredEvent>() {
+            @Override
+            protected boolean matchesSafely(EiffelActivityTriggeredEvent eiffelEvent) {
+                return eiffelEvent.getData().getTriggers().stream()
+                        .anyMatch(t -> t.getDescription() != null
+                                && t.getDescription().contains(descriptionSubstring)
+                                && t.getType() == type);
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                if (descriptionSubstring.isEmpty()) {
+                    description.appendText(String.format("event containing a %s trigger", type));
+                } else {
+                    description.appendText(String.format(
+                            "event containing a %s trigger and the substring \"%s\" in the description",
+                            type, descriptionSubstring));
+                }
             }
         };
     }
