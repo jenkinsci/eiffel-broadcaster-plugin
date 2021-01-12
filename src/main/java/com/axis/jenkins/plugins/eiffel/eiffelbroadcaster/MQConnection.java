@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2018-2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -52,7 +52,7 @@ import java.util.concurrent.TimeoutException;
  * @author Isac Holm &lt;isac.holm@axis..com&gt;
  */
 public final class MQConnection implements ShutdownListener {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MQConnection.class);
+    private static final Logger logger = LoggerFactory.getLogger(MQConnection.class);
     private static final int HEARTBEAT_INTERVAL = 30;
     private static final int MESSAGE_QUEUE_SIZE = 1000;
     private static final int SENDMESSAGE_TIMEOUT = 100;
@@ -178,12 +178,12 @@ public final class MQConnection implements ShutdownListener {
                 }
             }
             messageQueueThread.start();
-            LOGGER.info("messageQueueThread recreated since it was null or not alive.");
+            logger.info("messageQueueThread recreated since it was null or not alive.");
         }
 
         MessageData messageData = new MessageData(exchange, routingKey, props, body);
         if (!messageQueue.offer(messageData)) {
-            LOGGER.error("addMessageToQueue() failed, RabbitMQ queue is full!");
+            logger.error("addMessageToQueue() failed, RabbitMQ queue is full!");
         }
     }
 
@@ -200,7 +200,7 @@ public final class MQConnection implements ShutdownListener {
                             messageData.getProps(), messageData.getBody());
                 }
             } catch (InterruptedException ie) {
-                LOGGER.info("sendMessages() poll() was interrupted: ", ie);
+                logger.info("sendMessages() poll() was interrupted: ", ie);
             }
         }
     }
@@ -222,11 +222,11 @@ public final class MQConnection implements ShutdownListener {
                     LazyRabbit.CF.setVirtualHost(virtualHost);
                 }
             } catch (KeyManagementException e) {
-                LOGGER.error("KeyManagementException: ", e);
+                logger.error("KeyManagementException: ", e);
             } catch (NoSuchAlgorithmException e) {
-                LOGGER.error("NoSuchAlgorithmException: ", e);
+                logger.error("NoSuchAlgorithmException: ", e);
             } catch (URISyntaxException e) {
-                LOGGER.error("URISyntaxException: ", e);
+                logger.error("URISyntaxException: ", e);
             }
             if (StringUtils.isNotEmpty(userName)) {
                 LazyRabbit.CF.setUsername(userName);
@@ -249,7 +249,7 @@ public final class MQConnection implements ShutdownListener {
                 connection = getConnectionFactory().newConnection();
                 connection.addShutdownListener(this);
             } catch (IOException e) {
-                LOGGER.warn("Connection refused", e);
+                logger.warn("Connection refused", e);
             } catch (TimeoutException e) {
                 e.printStackTrace();
             }
@@ -285,7 +285,7 @@ public final class MQConnection implements ShutdownListener {
      */
     private void send(String exchange, String routingKey, AMQP.BasicProperties props, byte[] body) {
         if (exchange == null) {
-            LOGGER.error("Invalid configuration, exchange must not be null.");
+            logger.error("Invalid configuration, exchange must not be null.");
             return;
         }
 
@@ -301,7 +301,7 @@ public final class MQConnection implements ShutdownListener {
                     }
                 }
             } catch (IOException|ShutdownSignalException e) {
-                LOGGER.error("Cannot create channel", e);
+                logger.error("Cannot create channel", e);
                 channel = null; // reset
                 break;
             }
@@ -309,9 +309,9 @@ public final class MQConnection implements ShutdownListener {
                 try {
                     channel.basicPublish(exchange, routingKey, props, body);
                 } catch (IOException e) {
-                    LOGGER.error("Cannot publish message", e);
+                    logger.error("Cannot publish message", e);
                 } catch (AlreadyClosedException e) {
-                    LOGGER.error("Connection is already closed", e);
+                    logger.error("Connection is already closed", e);
                 }
 
                 break;
@@ -319,7 +319,7 @@ public final class MQConnection implements ShutdownListener {
                 try {
                     Thread.sleep(CONNECTION_WAIT);
                 } catch (InterruptedException ie) {
-                    LOGGER.error("Thread.sleep() was interrupted", ie);
+                    logger.error("Thread.sleep() was interrupted", ie);
                 }
             }
         }
@@ -329,7 +329,7 @@ public final class MQConnection implements ShutdownListener {
     public void shutdownCompleted(ShutdownSignalException cause) {
         if (cause.isHardError()) {
             if (!cause.isInitiatedByApplication()) {
-                LOGGER.warn("MQ connection was suddenly disconnected.");
+                logger.warn("MQ connection was suddenly disconnected.");
                 try {
                     if (connection != null && connection.isOpen()) {
                         connection.close();
@@ -338,7 +338,7 @@ public final class MQConnection implements ShutdownListener {
                         channel.close();
                     }
                 } catch (IOException|AlreadyClosedException e) {
-                    LOGGER.error("MQ Connection disconnected: ", e);
+                    logger.error("MQ Connection disconnected: ", e);
                 } catch (TimeoutException e) {
                     e.printStackTrace();
                 } finally {
@@ -347,7 +347,7 @@ public final class MQConnection implements ShutdownListener {
                 }
             }
         } else {
-            LOGGER.warn("MQ channel was suddenly disconnected.");
+            logger.warn("MQ channel was suddenly disconnected.");
         }
     }
 }

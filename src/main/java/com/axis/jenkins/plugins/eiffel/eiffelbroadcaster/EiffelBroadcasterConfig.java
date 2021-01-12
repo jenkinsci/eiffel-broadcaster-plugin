@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2020 Axis Communications AB.
+ Copyright 2018-2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +59,7 @@ import java.net.URISyntaxException;
  */
 @Extension
 public final class EiffelBroadcasterConfig extends Plugin implements Describable<EiffelBroadcasterConfig> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EiffelBroadcasterConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(EiffelBroadcasterConfig.class);
     private final String[] schemes = {"amqp", "amqps"};
     private static final String SERVER_URI = "serverUri";
     private static final String USERNAME = "userName";
@@ -119,7 +119,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     @Override
     public void start() throws Exception {
         super.start();
-        LOGGER.info("Starting EiffelBroadcaster Plugin");
+        logger.info("Starting EiffelBroadcaster Plugin");
         load();
         MQConnection.getInstance().initialize(userName, userPassword, serverUri, virtualHost);
     }
@@ -225,7 +225,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
         if (jenkins != null) {
             return jenkins.getPlugin(EiffelBroadcasterConfig.class);
         } else {
-            LOGGER.error("Error, Jenkins could not be found, so no plugin!");
+            logger.error("Error, Jenkins could not be found, so no plugin!");
             return null;
         }
     }
@@ -387,7 +387,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
                     try {
                         conn.close();
                     } catch (IOException e) {
-                        LOGGER.warn("An error occurred when closing the AMQP connection", e);
+                        logger.warn("An error occurred when closing the AMQP connection", e);
                     }
                 }
             } else {

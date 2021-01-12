@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018 Axis Communications AB.
+ Copyright 2018-2021 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 @Extension
 public class ItemListenerImpl extends ItemListener {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ItemListenerImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(ItemListenerImpl.class);
 
     /**
      * Create instance.
@@ -49,7 +49,7 @@ public class ItemListenerImpl extends ItemListener {
 
     @Override
     public final void onLoaded() {
-        LOGGER.info("All jobs have been loaded.");
+        logger.info("All jobs have been loaded.");
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
         if (config != null && config.isBroadcasterEnabled()) {
             MQConnection.getInstance().initialize(config.getUserName(), config.getUserPassword(),
