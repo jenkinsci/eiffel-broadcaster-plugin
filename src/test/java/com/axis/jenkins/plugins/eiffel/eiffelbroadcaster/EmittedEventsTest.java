@@ -86,15 +86,20 @@ public class EmittedEventsTest {
         assertThat(actT.getData().getCategories(), is(empty()));
 
         EiffelActivityStartedEvent actS = events.findNext(EiffelActivityStartedEvent.class);
-        EiffelActivityStartedEvent.Data actSData = new EiffelActivityStartedEvent.Data();
-        assertThat(actS.getData(), is(actSData));
+        assertThat(actS.getData().getExecutionUri().getPath(), containsString("testfolder/job/test/1"));
+        assertThat(actS.getData().getLiveLogs(), not(emptyIterable()));
+        EiffelActivityStartedEvent.Data.LiveLogs liveLog = actS.getData().getLiveLogs().get(0);
+        assertThat(liveLog.getName(), is(RunListenerImpl.CONSOLE_LOG_NAME));
+        assertThat(liveLog.getURI().getPath(), containsString("testfolder/job/test/1/consoleText"));
         assertThat(actS, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
 
         EiffelActivityFinishedEvent actF = events.findNext(EiffelActivityFinishedEvent.class);
-        EiffelActivityFinishedEvent.Data actFData = new EiffelActivityFinishedEvent.Data(
-                new EiffelActivityFinishedEvent.Data.Outcome(
-                        EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL));
-        assertThat(actF.getData(), is(actFData));
+        assertThat(actF.getData().getOutcome().getConclusion(),
+                is(EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL));
+        assertThat(actF.getData().getPersistentLogs(), not(emptyIterable()));
+        EiffelActivityFinishedEvent.Data.PersistentLogs persistentLog = actF.getData().getPersistentLogs().get(0);
+        assertThat(persistentLog.getName(), is(RunListenerImpl.CONSOLE_LOG_NAME));
+        assertThat(persistentLog.getURI().getPath(), containsString("testfolder/job/test/1/consoleText"));
         assertThat(actF, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
 
         assertThat(events.isEmpty(), is(true));
@@ -179,15 +184,11 @@ public class EmittedEventsTest {
 
         EiffelActivityStartedEvent actS = events.findNext(EiffelActivityStartedEvent.class,
                 linksTo(toplevelActT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
-        EiffelActivityStartedEvent.Data actSData = new EiffelActivityStartedEvent.Data();
-        assertThat(actS.getData(), is(actSData));
+        // Ignore the data members of the ActS event; we're verifying them elsewhere.
 
         EiffelActivityFinishedEvent actF = events.findNext(EiffelActivityFinishedEvent.class,
                 linksTo(toplevelActT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
-        EiffelActivityFinishedEvent.Data actFData = new EiffelActivityFinishedEvent.Data(
-                new EiffelActivityFinishedEvent.Data.Outcome(
-                        EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL));
-        assertThat(actF.getData(), is(actFData));
+        // Ignore the data members of the ActF event; we're verifying them elsewhere.
 
         // Check that we get a child activity that has a CAUSE link to the main build's ActT event.
         EiffelActivityTriggeredEvent childActT = events.findNext(EiffelActivityTriggeredEvent.class);
@@ -199,17 +200,13 @@ public class EmittedEventsTest {
                 hasTrigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.EIFFEL_EVENT, "upstream"));
         assertThat(childActT, linksTo(toplevelActT, EiffelEvent.Link.Type.CAUSE));
 
-        EiffelActivityStartedEvent childActS = events.findNext(EiffelActivityStartedEvent.class,
+        events.findNext(EiffelActivityStartedEvent.class,
                 linksTo(childActT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
-        EiffelActivityStartedEvent.Data childActSData = new EiffelActivityStartedEvent.Data();
-        assertThat(childActS.getData(), is(childActSData));
+        // Ignore the data members of the ActS event; we're verifying them elsewhere.
 
         EiffelActivityFinishedEvent childActF = events.findNext(EiffelActivityFinishedEvent.class,
                 linksTo(childActT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
-        EiffelActivityFinishedEvent.Data childActFData = new EiffelActivityFinishedEvent.Data(
-                new EiffelActivityFinishedEvent.Data.Outcome(
-                        EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL));
-        assertThat(childActF.getData(), is(childActFData));
+        // Ignore the contents of the ActF event; we're verifying its contents elsewhere.
 
         assertThat(events.isEmpty(), is(true));
     }
@@ -232,15 +229,16 @@ public class EmittedEventsTest {
         assertThat(actT.getData().getCategories(), is(empty()));
 
         EiffelActivityStartedEvent actS = events.findNext(EiffelActivityStartedEvent.class);
-        EiffelActivityStartedEvent.Data actSData = new EiffelActivityStartedEvent.Data();
-        assertThat(actS.getData(), is(actSData));
+        // Ignore the data members of the ActS event; we're verifying them elsewhere.
         assertThat(actS, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
 
         EiffelActivityFinishedEvent actF = events.findNext(EiffelActivityFinishedEvent.class);
-        EiffelActivityFinishedEvent.Data actFData = new EiffelActivityFinishedEvent.Data(
-                new EiffelActivityFinishedEvent.Data.Outcome(
-                        EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL));
-        assertThat(actF.getData(), is(actFData));
+        assertThat(actF.getData().getOutcome().getConclusion(),
+                is(EiffelActivityFinishedEvent.Data.Outcome.Conclusion.SUCCESSFUL));
+        assertThat(actF.getData().getPersistentLogs(), not(emptyIterable()));
+        EiffelActivityFinishedEvent.Data.PersistentLogs persistentLog = actF.getData().getPersistentLogs().get(0);
+        assertThat(persistentLog.getName(), is(RunListenerImpl.CONSOLE_LOG_NAME));
+        assertThat(persistentLog.getURI().getPath(), containsString("testfolder/job/test/1/consoleText"));
         assertThat(actF, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
 
         assertThat(events.isEmpty(), is(true));
@@ -291,15 +289,16 @@ public class EmittedEventsTest {
         // Ignore the contents of the ActT event; we're verifying its contents elsewhere.
 
         EiffelActivityStartedEvent actS = events.findNext(EiffelActivityStartedEvent.class);
-        EiffelActivityStartedEvent.Data actSData = new EiffelActivityStartedEvent.Data();
-        assertThat(actS.getData(), is(actSData));
+        // Ignore the data members of the ActS event; we're verifying them elsewhere.
         assertThat(actS, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
 
         EiffelActivityFinishedEvent actF = events.findNext(EiffelActivityFinishedEvent.class);
-        EiffelActivityFinishedEvent.Data actFData = new EiffelActivityFinishedEvent.Data(
-                new EiffelActivityFinishedEvent.Data.Outcome(
-                        EiffelActivityFinishedEvent.Data.Outcome.Conclusion.FAILED));
-        assertThat(actF.getData(), is(actFData));
+        assertThat(actF.getData().getOutcome().getConclusion(),
+                is(EiffelActivityFinishedEvent.Data.Outcome.Conclusion.FAILED));
+        assertThat(actF.getData().getPersistentLogs(), not(emptyIterable()));
+        EiffelActivityFinishedEvent.Data.PersistentLogs persistentLog = actF.getData().getPersistentLogs().get(0);
+        assertThat(persistentLog.getName(), is(RunListenerImpl.CONSOLE_LOG_NAME));
+        assertThat(persistentLog.getURI().getPath(), containsString("testfolder/job/test/1/consoleText"));
         assertThat(actF, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
 
         assertThat(events.isEmpty(), is(true));
