@@ -143,6 +143,14 @@ public class EiffelActivityStartedEvent extends EiffelEvent {
                 this.name = name;
             }
 
+            public URI getURI() {
+                return uri;
+            }
+
+            public void setURI(URI uri) {
+                this.uri = uri;
+            }
+
             @Override
             public boolean equals(Object o) {
                 if (this == o) return true;
