@@ -141,7 +141,25 @@ public class ConnectionIntegrationTest {
                 TestUtil.QUEUE_NAME
         );
         assertEquals(expectedMessages, actualMessages);
-        assertEquals( 0, conn.getSizeOutstandingConfirms());
+    }
+
+    /**
+     * Test that the publisher receives ACKs.
+     */
+    @Test
+    public void testSentMessagesReceiveACKs() throws IOException, InterruptedException {
+        MQConnection conn = MQConnection.getInstance();
+        int messageCount = 25;
+        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        expectedMessages.forEach(this::publishSilently);
+        TestUtil.waitForMessages(
+                conn,
+                messageCount,
+                DEFAULT_MESSAGE_WAIT,
+                TestUtil.QUEUE_NAME
+        );
+        Thread.sleep(2000); // Make sure the ACKs have some time to get processed.
+        assertEquals(0, conn.getSizeOutstandingConfirms());
     }
 
     /**
@@ -165,7 +183,6 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
-        assertEquals( 0, conn.getSizeOutstandingConfirms());
         assertEquals(expectedMessages, actualMessages);
     }
 
@@ -189,7 +206,6 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
-        assertEquals( 0, conn.getSizeOutstandingConfirms());
         assertEquals(expectedMessages, actualMessages);
     }
 
@@ -220,7 +236,6 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
-        assertEquals( 0, conn.getSizeOutstandingConfirms());
         assertEquals(expectedMessages, actualMessages);
     }
 
@@ -241,7 +256,6 @@ public class ConnectionIntegrationTest {
                 messageCount,
                 30,
                 TestUtil.QUEUE_NAME);
-        assertEquals( 0, conn.getSizeOutstandingConfirms());
         assertEquals(expectedMessages, actualMessages);
     }
 
