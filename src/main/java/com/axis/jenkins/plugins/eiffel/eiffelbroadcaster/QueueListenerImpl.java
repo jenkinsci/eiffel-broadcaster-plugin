@@ -87,7 +87,7 @@ public class QueueListenerImpl extends QueueListener {
         }
 
         try {
-            wi.addOrReplaceAction(new EiffelActivityTriggerAction(event));
+            wi.addOrReplaceAction(new EiffelActivityAction(event));
         } catch (JsonProcessingException e) {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
@@ -120,15 +120,15 @@ public class QueueListenerImpl extends QueueListener {
         if (upstreamRun == null) {
             return null;
         }
-        EiffelActivityTriggerAction upstreamAction = upstreamRun.getAction(EiffelActivityTriggerAction.class);
+        EiffelActivityAction upstreamAction = upstreamRun.getAction(EiffelActivityAction.class);
         if (upstreamAction == null) {
             return null;
         }
         try {
-            return upstreamAction.getEvent().getMeta().getId();
+            return upstreamAction.getTriggerEvent().getMeta().getId();
         } catch (JsonProcessingException e) {
             logger.warn("JSON payload stored in {} in {} couldn't be deserialized ({}): {}",
-                    upstreamAction.getClass().getSimpleName(), upstreamRun, e, upstreamAction.getEventJSON());
+                    upstreamAction.getClass().getSimpleName(), upstreamRun, e, upstreamAction.getTriggerEventJSON());
             return null;
         }
     }

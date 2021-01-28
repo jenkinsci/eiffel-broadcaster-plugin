@@ -309,4 +309,21 @@ public class EmittedEventsTest {
     // described in https://github.com/jenkinsci/eiffel-broadcaster-plugin/issues/18 it's not
     // realistic to write such a test right now (not even one that expects a failure since there's
     // more than one possible failure).
+
+    @Test
+    public void testActivityActionsForSuccessfulFreestyleBuild() throws Exception {
+        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        EiffelActivityAction action = job.getBuildByNumber(1).getAction(EiffelActivityAction.class);
+        EiffelActivityTriggeredEvent actT = action.getTriggerEvent();
+
+        EiffelActivityStartedEvent actS = action.getStartedEvent();
+        assertThat(actS, is(notNullValue()));
+        assertThat(actS, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
+
+        EiffelActivityFinishedEvent actF = action.getFinishedEvent();
+        assertThat(actF, is(notNullValue()));
+        assertThat(actF, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
+    }
 }

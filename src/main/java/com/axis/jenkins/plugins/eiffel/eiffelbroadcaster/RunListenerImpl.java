@@ -26,6 +26,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFinishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.model.Result;
@@ -79,6 +80,12 @@ public class RunListenerImpl extends RunListener<Run> {
                     new EiffelActivityStartedEvent.Data.LiveLogs(CONSOLE_LOG_NAME, logUri));
         }
 
+        try {
+            r.getAction(EiffelActivityAction.class).setStartedEvent(event);
+        } catch (JsonProcessingException e) {
+            // If there's a problem serializing the event it'll get logged when we try
+            // to publish the event. No need to log the same error message twice.
+        }
         Util.publishEvent(event);
     }
 
@@ -101,6 +108,12 @@ public class RunListenerImpl extends RunListener<Run> {
                     new EiffelActivityFinishedEvent.Data.PersistentLogs(CONSOLE_LOG_NAME, logUri));
         }
 
+        try {
+            r.getAction(EiffelActivityAction.class).setFinishedEvent(event);
+        } catch (JsonProcessingException e) {
+            // If there's a problem serializing the event it'll get logged when we try
+            // to publish the event. No need to log the same error message twice.
+        }
         Util.publishEvent(event);
     }
 
