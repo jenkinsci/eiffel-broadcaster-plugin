@@ -37,7 +37,6 @@ import hudson.model.queue.QueueListener;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import java.util.UUID;
-import javax.annotation.CheckForNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,16 +73,15 @@ public class QueueListenerImpl extends QueueListener {
 
             if (cause instanceof TimerTrigger.TimerTriggerCause) {
                 trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.TIMER);
+                data.getTriggers().add(trigger);
             } else if (cause instanceof SCMTrigger.SCMTriggerCause) {
                 trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.SOURCE_CHANGE);
+                data.getTriggers().add(trigger);
             } else if (cause instanceof Cause.UpstreamCause) {
-                UUID triggerId = getUpstreamTriggerId((Cause.UpstreamCause) cause);
-                if (triggerId != null) {
-                    event.getLinks().add(new EiffelEvent.Link(EiffelEvent.Link.Type.CAUSE, triggerId));
-                    trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.EIFFEL_EVENT);
-                }
+                addTriggerFromUpstreamCause((Cause.UpstreamCause) cause, event, trigger);
+            } else {
+                data.getTriggers().add(trigger);
             }
-            data.getTriggers().add(trigger);
         }
 
         try {
@@ -109,27 +107,31 @@ public class QueueListenerImpl extends QueueListener {
     }
 
     /**
-     * Locates the ID of the EiffelActivityTriggeredEvent for the build referenced by
-     * an {@link hudson.model.Cause.UpstreamCause}, or null if no such event was found.
+     * Updates an {@link EiffelActivityTriggeredEvent} with trigger information and links based on the build
+     * referenced by an {@link Cause.UpstreamCause}. If the upstream build has an EiffelActivityTriggeredEvent
+     * associated with it it will be added as a CAUSE link.
      *
      * @param cause the cause for which to locate the Eiffel event
+     * @param event the event to potentially update with additional links and trigger(s)
+     * @param trigger a trigger prepopulated with the cause's short description that can be further modified
+     *                and added to the event
      */
-    @CheckForNull
-    private UUID getUpstreamTriggerId(Cause.UpstreamCause cause) {
+    void addTriggerFromUpstreamCause(final Cause.UpstreamCause cause, final EiffelActivityTriggeredEvent event,
+                                     final EiffelActivityTriggeredEvent.Data.Trigger trigger) {
         Run upstreamRun = cause.getUpstreamRun();
-        if (upstreamRun == null) {
-            return null;
+        if (upstreamRun != null) {
+            EiffelActivityAction upstreamAction = upstreamRun.getAction(EiffelActivityAction.class);
+            if (upstreamAction != null) {
+                try {
+                    event.getLinks().add(new EiffelEvent.Link(EiffelEvent.Link.Type.CAUSE,
+                            upstreamAction.getTriggerEvent().getMeta().getId()));
+                    trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.EIFFEL_EVENT);
+                } catch (JsonProcessingException e) {
+                    logger.warn("JSON payload stored in {} in {} couldn't be deserialized ({}): {}",
+                            upstreamAction.getClass().getSimpleName(), upstreamRun, e, upstreamAction.getTriggerEventJSON());
+                }
+            }
         }
-        EiffelActivityAction upstreamAction = upstreamRun.getAction(EiffelActivityAction.class);
-        if (upstreamAction == null) {
-            return null;
-        }
-        try {
-            return upstreamAction.getTriggerEvent().getMeta().getId();
-        } catch (JsonProcessingException e) {
-            logger.warn("JSON payload stored in {} in {} couldn't be deserialized ({}): {}",
-                    upstreamAction.getClass().getSimpleName(), upstreamRun, e, upstreamAction.getTriggerEventJSON());
-            return null;
-        }
+        event.getData().getTriggers().add(trigger);
     }
 }
