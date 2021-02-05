@@ -24,12 +24,19 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TreeNode;
+import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -45,13 +52,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * See the Eiffel event documentation for each concrete event type for more on the meaning of the attributes.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "meta.type")
-@JsonSubTypes({
-        @JsonSubTypes.Type(value = EiffelActivityCanceledEvent.class, name = "EiffelActivityCanceledEvent"),
-        @JsonSubTypes.Type(value = EiffelActivityFinishedEvent.class, name = "EiffelActivityFinishedEvent"),
-        @JsonSubTypes.Type(value = EiffelActivityStartedEvent.class, name = "EiffelActivityStartedEvent"),
-        @JsonSubTypes.Type(value = EiffelActivityTriggeredEvent.class, name = "EiffelActivityTriggeredEvent"),
-})
+@JsonDeserialize(using = EiffelEvent.Deserializer.class)
 public class EiffelEvent {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     private final List<Link> links = new ArrayList<>();
@@ -326,6 +327,38 @@ public class EiffelEvent {
                         .append("serializer", serializer)
                         .append("uri", uri)
                         .toString();
+            }
+        }
+    }
+
+    /**
+     * Deserializes a JSON payload into an instance of a subclass of {@link EiffelEvent} based on
+     * the payload's <tt>meta.type</tt> member.
+     */
+    static class Deserializer extends StdDeserializer<Object> {
+        protected Deserializer() {
+            super(EiffelEvent.class);
+        }
+
+        @Override
+        public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            TreeNode node = p.readValueAsTree();
+
+            // Obtain event type from the meta.type member.
+            TreeNode typeNode = node.path("meta").path("type");
+            if (typeNode.isMissingNode()) {
+                throw new InvalidJsonPayloadException(
+                        "Unable to figure out type of Eiffel event: no 'meta.type' key found");
+            }
+            String eventType = p.getCodec().treeToValue(typeNode, String.class);
+
+            // Attempt to deserialize the TreeNode into a class in this package
+            // with the same name as the event type.
+            try {
+                return p.getCodec().treeToValue(node,
+                        Class.forName(getClass().getPackage().getName() + "." + eventType));
+            } catch (ClassNotFoundException e) {
+                throw new UnsupportedEventTypeException("Unsupported event type: " + eventType, e);
             }
         }
     }

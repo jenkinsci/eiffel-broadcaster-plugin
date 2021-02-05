@@ -25,6 +25,8 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Objects;
 import java.util.UUID;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -37,6 +39,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  * See the Eiffel event documentation for more on the meaning of the attributes.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonDeserialize(using = JsonDeserializer.None.class)
 public class EiffelActivityCanceledEvent extends EiffelEvent {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     private final Data data;
