@@ -21,6 +21,30 @@ Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffe
 ### Notes
 - Current versions of each event can be found in the getVersion() function in the [sourcecode.](https://github.com/Isacholm/EiffelBroadcaster/tree/master/src/main/java/com/axis/jenkins/plugins/eiffel/eiffelbroadcaster/eiffel)
 
+## API
+The plugin will do its best to populate the emitted
+EiffelActivityTriggeredEvent with information taken from the causes of
+the build, but in many cases you'll want to inject additional Eiffel links
+that the plugin can't figure out on its own. This can be done with the
+$JOB_URL/eiffel/build API endpoint which works nearly identially to the
+standard $JOB_URL/build endpoint except that it requires an additional
+`eiffellinks` form parameter that contains the Eiffel links to include in
+the EiffelActivityTriggeredEvent. `eiffellinks` follows the same schema
+as the `links` value in Eiffel events. Example (payload lacking URL
+encoding to improve readability):
+```
+POST $JOB_URL/eiffel/build
+Content-Type: application/x-www-form-urlencoded
+
+json={"eiffellinks": [{"target": "662b3813-bef4-4588-bf75-ffaead24a6d5", "type": "CAUSE"}], "parameter": [{"name": "PARAM_NAME", "value": "param value"}]}
+```
+The `eiffellinks` key is mandatory for this endpoint but `parameter` is
+optional. If the latter is omitted and the job is parameterized the default
+values for all parameters will be used.
+
+If at least one CAUSE link is included in `eiffellinks`, an `EIFFEL_EVENT`
+trigger will be included in the EiffelActivityTriggeredEvent.
+
 ## How to build and install this plugin from source
 In the EiffelBroadcaster root folder, use maven to compile.
 ```
@@ -53,7 +77,7 @@ This plugin is part of the [Eiffel Community](https://github.com/eiffel-communit
 ```
 The MIT License
 
-Copyright 2018 Axis Communications AB.
+Copyright 2018-2021 Axis Communications AB.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

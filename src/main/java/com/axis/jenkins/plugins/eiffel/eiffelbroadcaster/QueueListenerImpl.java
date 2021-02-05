@@ -36,7 +36,9 @@ import hudson.model.Run;
 import hudson.model.queue.QueueListener;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,6 +81,8 @@ public class QueueListenerImpl extends QueueListener {
                 data.getTriggers().add(trigger);
             } else if (cause instanceof Cause.UpstreamCause) {
                 addTriggerFromUpstreamCause((Cause.UpstreamCause) cause, event, trigger);
+            } else if (cause instanceof EiffelCause) {
+                addTriggerFromEiffelCause((EiffelCause) cause, event, trigger);
             } else {
                 data.getTriggers().add(trigger);
             }
@@ -107,13 +111,46 @@ public class QueueListenerImpl extends QueueListener {
     }
 
     /**
+     * Updates an {@link EiffelActivityTriggeredEvent} with trigger information and links based on
+     * an {@link EiffelCause}. All links in the cause will unconditionally be added to the event,
+     * and additionally if any of the links is a CAUSE link the trigger will be updated to
+     * an EIFFEL_EVENT and added to the event.
+     *
+     * @param cause the cause from which to extract data
+     * @param event the event to potentially update with additional links and trigger(s)
+     * @param trigger a trigger pre-populated with the cause's short description that can be further modified
+     *                and added to the event
+     */
+    void addTriggerFromEiffelCause(final EiffelCause cause, final EiffelActivityTriggeredEvent event,
+                                   final EiffelActivityTriggeredEvent.Data.Trigger trigger) {
+        event.getLinks().addAll(cause.getLinks());
+
+        // Unless the EiffelCause contains a CAUSE link don't add an EIFFEL_EVENT trigger.
+        List<EiffelEvent.Link> causeEvents = cause.getLinks().stream()
+                .filter(link -> link.getType() == EiffelEvent.Link.Type.CAUSE)
+                .collect(Collectors.toList());
+        if (!causeEvents.isEmpty()) {
+            String causeEventCommaString = causeEvents.stream()
+                    .map(link -> link.getTarget().toString())
+                    .collect(Collectors.joining(", "));
+            if (causeEvents.size() == 1) {
+                trigger.setDescription("Triggered by this Eiffel event: " + causeEventCommaString);
+            } else {
+                trigger.setDescription("Triggered by these Eiffel events: " + causeEventCommaString);
+            }
+            trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.EIFFEL_EVENT);
+            event.getData().getTriggers().add(trigger);
+        }
+    }
+
+    /**
      * Updates an {@link EiffelActivityTriggeredEvent} with trigger information and links based on the build
      * referenced by an {@link Cause.UpstreamCause}. If the upstream build has an EiffelActivityTriggeredEvent
      * associated with it it will be added as a CAUSE link.
      *
      * @param cause the cause for which to locate the Eiffel event
      * @param event the event to potentially update with additional links and trigger(s)
-     * @param trigger a trigger prepopulated with the cause's short description that can be further modified
+     * @param trigger a trigger pre-populated with the cause's short description that can be further modified
      *                and added to the event
      */
     void addTriggerFromUpstreamCause(final Cause.UpstreamCause cause, final EiffelActivityTriggeredEvent event,
