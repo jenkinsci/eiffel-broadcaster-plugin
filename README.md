@@ -46,8 +46,8 @@ This plugin is part of the [Eiffel Community](https://github.com/eiffel-communit
 
 ## Maintainers
 
-* Isac Holm
-  - isac.holm@axis.com
+* Isac Holm \<isac.holm@axis.com\>
+* Magnus Bäck \<magnus.back@axis.com\>
 
 # License
 ```
