@@ -21,6 +21,14 @@ Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffe
 ### Notes
 - Current versions of each event can be found in the getVersion() function in the [sourcecode.](https://github.com/Isacholm/EiffelBroadcaster/tree/master/src/main/java/com/axis/jenkins/plugins/eiffel/eiffelbroadcaster/eiffel)
 
+## Accessing emitted Eiffel events in builds
+If a build needs to emit Eiffel events of its own they should probably have
+a CONTEXT or CAUSE link to the build's EiffelActivityTriggeredEvent. The
+plugins injects the following environment variables with the contents of
+the previously sent events:
+* `EIFFEL_ACTIVITY_TRIGGERED`: The build's EiffelActivityTriggeredEvent event.
+* `EIFFEL_ACTIVITY_STARTED`: The build's EiffelActivityStartedEvent event.
+
 ## API
 The plugin will do its best to populate the emitted
 EiffelActivityTriggeredEvent with information taken from the causes of
