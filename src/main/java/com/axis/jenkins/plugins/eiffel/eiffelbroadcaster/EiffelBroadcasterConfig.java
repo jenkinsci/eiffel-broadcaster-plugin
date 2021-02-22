@@ -24,6 +24,7 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.PossibleAuthenticationFailureException;
@@ -120,6 +121,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     public void start() throws Exception {
         super.start();
         logger.info("Starting EiffelBroadcaster Plugin");
+        EiffelEvent.setSourceProvider(new JenkinsSourceProvider());
         load();
         MQConnection.getInstance().initialize(userName, userPassword, serverUri, virtualHost);
     }

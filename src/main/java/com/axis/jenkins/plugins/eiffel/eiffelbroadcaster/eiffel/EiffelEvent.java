@@ -27,8 +27,6 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
@@ -60,8 +58,16 @@ public class EiffelEvent {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     private final Meta meta;
 
+    @JsonIgnore
+    private static SourceProvider sourceProvider;
+
     public EiffelEvent(String type, String version) {
-        this.meta = new Meta(type, version);
+        Meta.Source source = null;
+        if (sourceProvider != null) {
+            source = new Meta.Source();
+            sourceProvider.populateSource(source);
+        }
+        this.meta = new Meta(type, version, source);
     }
 
     public List<Link> getLinks() {
@@ -70,6 +76,14 @@ public class EiffelEvent {
 
     public Meta getMeta() {
         return meta;
+    }
+
+    /**
+     * Provide a {@link SourceProvider} instance that will be request to provide a {@link Meta.Source}
+     * object for each event created after that point.
+     */
+    public static void setSourceProvider(final SourceProvider provider) {
+        sourceProvider = provider;
     }
 
     public String toJSON() throws JsonProcessingException {
@@ -176,9 +190,10 @@ public class EiffelEvent {
         @JsonInclude(JsonInclude.Include.ALWAYS)
         private final String version;
 
-        public Meta(@JsonProperty("type") String type, @JsonProperty("version") String version) {
+        public Meta(@JsonProperty("type") String type, @JsonProperty("version") String version, @JsonProperty("source") Source source) {
             this.type = type;
             this.version = version;
+            this.source = source;
         }
 
         public UUID getId() {
@@ -245,8 +260,6 @@ public class EiffelEvent {
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public static class Source {
-            public final static String DEFAULT_NAME = "JENKINS_EIFFEL_BROADCASTER";
-
             private String domainId;
 
             private String host;
@@ -257,9 +270,7 @@ public class EiffelEvent {
 
             private URI uri;
 
-            public Source() {
-                this.name = DEFAULT_NAME;
-            }
+            public Source() { }
 
             public String getDomainId() {
                 return domainId;
