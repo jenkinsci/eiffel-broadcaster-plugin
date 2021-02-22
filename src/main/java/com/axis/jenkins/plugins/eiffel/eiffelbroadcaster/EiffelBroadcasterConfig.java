@@ -217,13 +217,13 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     /**
      * Gets this extension's instance.
      *
-     * If {@link jenkins.model.Jenkins#getInstance()} isn't available
+     * If {@link Jenkins#getInstanceOrNull()} isn't available
      * or the plugin class isn't registered null will be returned.
      *
      * @return the instance of this extension.
      */
     public static EiffelBroadcasterConfig getInstance() {
-        Jenkins jenkins = Jenkins.getInstance();
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
             return jenkins.getPlugin(EiffelBroadcasterConfig.class);
         } else {
@@ -331,7 +331,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
      */
     @Override
     public Descriptor<EiffelBroadcasterConfig> getDescriptor() {
-        Jenkins instance = Jenkins.getInstance();
+        Jenkins instance = Jenkins.getInstanceOrNull();
         if (instance != null) {
             return instance.getDescriptorOrDie(getClass());
         }
@@ -361,7 +361,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
         public FormValidation doTestConnection(@QueryParameter(SERVER_URI) final String uri,
                                                @QueryParameter(USERNAME) final String name,
                                                @QueryParameter(PASSWORD) final Secret pw) throws ServletException {
-            Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             UrlValidator urlValidator = new UrlValidator(getInstance().schemes, UrlValidator.ALLOW_LOCAL_URLS);
             FormValidation result = FormValidation.ok();
             if (urlValidator.isValid(uri)) {
