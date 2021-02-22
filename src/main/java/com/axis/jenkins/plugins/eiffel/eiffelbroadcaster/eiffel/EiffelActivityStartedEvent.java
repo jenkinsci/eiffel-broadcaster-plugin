@@ -49,7 +49,7 @@ public class EiffelActivityStartedEvent extends EiffelEvent {
     private final Data data;
 
     public EiffelActivityStartedEvent() {
-        super("EiffelActivityStartedEvent", "1.1.0");
+        super("EiffelActivityStartedEvent", "4.0.0");
         this.data = new Data();
     }
 

@@ -47,7 +47,7 @@ public class EiffelActivityTriggeredEvent extends EiffelEvent {
     private final Data data;
 
     public EiffelActivityTriggeredEvent(@JsonProperty("data") Data data) {
-        super("EiffelActivityTriggeredEvent", "1.1.0");
+        super("EiffelActivityTriggeredEvent", "4.0.0");
         this.data = data;
     }
 

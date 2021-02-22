@@ -49,7 +49,7 @@ public class EiffelActivityFinishedEvent extends EiffelEvent {
     private final Data data;
 
     public EiffelActivityFinishedEvent(@JsonProperty("data") Data data) {
-        super("EiffelActivityFinishedEvent", "1.1.0");
+        super("EiffelActivityFinishedEvent", "3.0.0");
         this.data = data;
     }
 

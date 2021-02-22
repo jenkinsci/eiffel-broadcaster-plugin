@@ -45,7 +45,7 @@ public class EiffelActivityCanceledEvent extends EiffelEvent {
     private final Data data;
 
     public EiffelActivityCanceledEvent() {
-        super("EiffelActivityCanceledEvent", "1.1.0");
+        super("EiffelActivityCanceledEvent", "3.0.0");
         this.data = new EiffelActivityCanceledEvent.Data();
     }
 
