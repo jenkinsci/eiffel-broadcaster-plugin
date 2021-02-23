@@ -29,9 +29,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nonnull;
 
 /**
- * Contains eiffel event map for jobs {@link EiffelJobTable}.
- * This singleton table is used to store information about eiffel events that
- * are linked within the same job.
+ * Maintains a table that maps a Jenkins queue ids to the id of the
+ * {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent}
+ * that was sent when the build was enqueued. This is needed to link the resulting
+ * {@link hudson.model.Run} to the right trigger event.
  *
  * @author Isac Holm &lt;isac.holm@axis.com&gt;
  * @version 1.0
@@ -41,18 +42,12 @@ public final class EiffelJobTable {
     private static EiffelJobTable instance = null;
     private final ConcurrentHashMap<Long, UUID> table;
 
-    /**
-     * EiffelJobTable Constructor.
-     *
-     */
-     private EiffelJobTable() {
+    /** Private constructor. Use {@link #getInstance()} to obtain an object instance of this class. */
+    private EiffelJobTable() {
         this.table = new ConcurrentHashMap<Long, UUID>();
     }
 
-    /**
-     * Get singleton instance.
-     * @return class instance
-     */
+    /** Gets the singleton instance. */
     public static synchronized EiffelJobTable getInstance() {
         if (instance == null) {
             instance = new EiffelJobTable();
@@ -61,24 +56,19 @@ public final class EiffelJobTable {
     }
 
     /**
-     * Get last event on a given jenkinsID.
-     * @return eventId
-     * @param jenkinsID
-     * uniqe id of a jenkins job.
+     * Gets the id of the {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent}
+     * for a given queue id, or null of no such mapping is known.
      */
-    public UUID getEventTrigger(@Nonnull Long jenkinsID) {
-        return table.get(jenkinsID);
+    public UUID getEventTrigger(@Nonnull Long queueId) {
+        return table.get(queueId);
     }
 
     /**
-     * Update table with a new event for the given jenkinsId.
-     * @param jenkinsID
-     * uniqe id of a jenkins job.
-     * @param eiffelEventID
-     * uniqe id of an eiffel event.
-     */
-    public void setEventTrigger(@Nonnull Long jenkinsID, @Nonnull UUID eiffelEventID) {
-        table.put(jenkinsID, eiffelEventID);
+     * Update the table with a new mapping from a queue id to the id of a
+     * {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent}.
+     * */
+    public void setEventTrigger(@Nonnull Long queueId, @Nonnull UUID eiffelEventId) {
+        table.put(queueId, eiffelEventId);
     }
 
 }
