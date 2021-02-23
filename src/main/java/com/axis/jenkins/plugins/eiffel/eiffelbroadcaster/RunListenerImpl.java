@@ -68,6 +68,10 @@ public class RunListenerImpl extends RunListener<Run> {
     @Override
     public void onStarted(Run r, TaskListener listener) {
         UUID targetEvent = EiffelJobTable.getInstance().getAndClearEventTrigger(r.getQueueId());
+        if (targetEvent == null) {
+            logger.warn("The newly started {} could not be mapped to an emitted ActT event", r);
+            return;
+        }
         EiffelActivityStartedEvent event = new EiffelActivityStartedEvent(targetEvent);
 
         URI runUri = getRunUri(r);
