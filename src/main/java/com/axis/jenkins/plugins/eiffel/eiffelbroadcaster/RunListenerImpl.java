@@ -98,9 +98,22 @@ public class RunListenerImpl extends RunListener<Run> {
             conclusion = Util.translateStatus(res.toString());
         }
 
-        EiffelActivityFinishedEvent event = new EiffelActivityFinishedEvent(
-                new EiffelActivityFinishedEvent.Data.Outcome(conclusion),
-                EiffelJobTable.getInstance().getEventTrigger(r.getQueueId()));
+        EiffelActivityAction activityAction = r.getAction(EiffelActivityAction.class);
+        if (activityAction == null) {
+            logger.warn("Unable to locate {} for {}, skipping sending of ActF event",
+                    EiffelActivityAction.class.getSimpleName(), r);
+            return;
+        }
+        EiffelActivityFinishedEvent event = null;
+        try {
+            event = new EiffelActivityFinishedEvent(new EiffelActivityFinishedEvent.Data.Outcome(conclusion),
+                    activityAction.getTriggerEvent().getMeta().getId());
+        } catch (JsonProcessingException e) {
+            logger.warn("JSON deserialization of ActT event for {} unexpectedly failed, " +
+                            "skipping sending of ActF event: {}",
+                    r, e);
+            return;
+        }
 
         URI logUri = getRunUri(r, CONSOLE_URI_PATH);
         if (logUri != null) {
