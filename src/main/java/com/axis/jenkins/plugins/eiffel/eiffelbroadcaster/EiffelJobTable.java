@@ -64,6 +64,14 @@ public final class EiffelJobTable {
     }
 
     /**
+     * Gets the id of the {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent}
+     * for a given queue id, or null if no such mapping is known, and immediately clears that entry from the table.
+     */
+     public UUID getAndClearEventTrigger(@Nonnull Long queueId) {
+         return table.remove(queueId);
+     }
+
+    /**
      * Update the table with a new mapping from a queue id to the id of a
      * {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent}.
      * */

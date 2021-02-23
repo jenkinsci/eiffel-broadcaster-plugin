@@ -100,7 +100,7 @@ public class QueueListenerImpl extends QueueListener {
     @Override
     public void onLeft(Queue.LeftItem li) {
         if (li.isCancelled()) {
-            UUID targetEvent = EiffelJobTable.getInstance().getEventTrigger(li.getId());
+            UUID targetEvent = EiffelJobTable.getInstance().getAndClearEventTrigger(li.getId());
             if (targetEvent == null) {
                 logger.debug("A cancelled queue item could not be mapped to an emitted ActT event: {}", li);
                 return;
