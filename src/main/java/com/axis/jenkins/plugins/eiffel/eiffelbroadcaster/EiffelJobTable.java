@@ -24,8 +24,9 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
-import java.util.HashMap;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nonnull;
 
 /**
  * Contains eiffel event map for jobs {@link EiffelJobTable}.
@@ -38,21 +39,21 @@ import java.util.UUID;
  */
 public final class EiffelJobTable {
     private static EiffelJobTable instance = null;
-    private HashMap<Long, UUID> table;
+    private final ConcurrentHashMap<Long, UUID> table;
 
     /**
      * EiffelJobTable Constructor.
      *
      */
      private EiffelJobTable() {
-        this.table = new HashMap<Long, UUID>();
+        this.table = new ConcurrentHashMap<Long, UUID>();
     }
 
     /**
      * Get singleton instance.
      * @return class instance
      */
-    public static EiffelJobTable getInstance() {
+    public static synchronized EiffelJobTable getInstance() {
         if (instance == null) {
             instance = new EiffelJobTable();
         }
@@ -63,7 +64,8 @@ public final class EiffelJobTable {
      * Get table HashMap method.
      * @return HashMap
      */
-    private HashMap<Long, UUID> getTable() {
+    @Nonnull
+    private ConcurrentHashMap<Long, UUID> getTable() {
         return table;
     }
 
@@ -73,7 +75,7 @@ public final class EiffelJobTable {
      * @param jenkinsID
      * uniqe id of a jenkins job.
      */
-    public UUID getEventTrigger(Long jenkinsID) {
+    public UUID getEventTrigger(@Nonnull Long jenkinsID) {
         return getTable().get(jenkinsID);
     }
 
@@ -84,7 +86,7 @@ public final class EiffelJobTable {
      * @param eiffelEventID
      * uniqe id of an eiffel event.
      */
-    public void setEventTrigger(Long jenkinsID, UUID eiffelEventID) {
+    public void setEventTrigger(@Nonnull Long jenkinsID, @Nonnull UUID eiffelEventID) {
         getTable().put(jenkinsID, eiffelEventID);
     }
 
