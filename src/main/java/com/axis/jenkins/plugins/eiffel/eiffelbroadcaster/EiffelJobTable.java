@@ -61,22 +61,13 @@ public final class EiffelJobTable {
     }
 
     /**
-     * Get table HashMap method.
-     * @return HashMap
-     */
-    @Nonnull
-    private ConcurrentHashMap<Long, UUID> getTable() {
-        return table;
-    }
-
-    /**
      * Get last event on a given jenkinsID.
      * @return eventId
      * @param jenkinsID
      * uniqe id of a jenkins job.
      */
     public UUID getEventTrigger(@Nonnull Long jenkinsID) {
-        return getTable().get(jenkinsID);
+        return table.get(jenkinsID);
     }
 
     /**
@@ -87,7 +78,7 @@ public final class EiffelJobTable {
      * uniqe id of an eiffel event.
      */
     public void setEventTrigger(@Nonnull Long jenkinsID, @Nonnull UUID eiffelEventID) {
-        getTable().put(jenkinsID, eiffelEventID);
+        table.put(jenkinsID, eiffelEventID);
     }
 
 }
