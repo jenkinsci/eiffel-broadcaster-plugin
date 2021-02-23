@@ -25,6 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
+import com.github.packageurl.PackageURL;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,6 +48,11 @@ public class JenkinsSourceProviderTest {
         EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent("activity name");
         assertThat(event.getMeta().getSource(), is(notNullValue()));
         assertThat(event.getMeta().getSource().getName(), is("Eiffel Broadcaster Plugin"));
+        assertThat(event.getMeta().getSource().getSerializer(), is(notNullValue()));
+        PackageURL purl = new PackageURL(event.getMeta().getSource().getSerializer());
+        assertThat(purl.getType(), is("maven"));
+        assertThat(purl.getNamespace(), is("com.axis.jenkins.plugins.eiffel"));
+        assertThat(purl.getName(), is("eiffel-broadcaster"));
         // Not testing meta.source.uri since it isn't available during tests.
         // Not testing meta.source.host to avoid test flakiness.
     }

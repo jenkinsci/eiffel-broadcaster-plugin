@@ -67,8 +67,14 @@
         <jackson2-api.version>2.11.1</jackson2-api.version>
         <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
         <jmockit.version>1.41</jmockit.version>
+        <packageurl.version>1.2.0</packageurl.version>
     </properties>
     <dependencies>
+        <dependency>
+            <groupId>com.github.package-url</groupId>
+            <artifactId>packageurl-java</artifactId>
+            <version>${packageurl.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>

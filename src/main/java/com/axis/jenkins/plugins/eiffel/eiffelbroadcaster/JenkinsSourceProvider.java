@@ -26,6 +26,9 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SourceProvider;
+import com.github.packageurl.MalformedPackageURLException;
+import com.github.packageurl.PackageURL;
+import com.github.packageurl.PackageURLBuilder;
 import hudson.Plugin;
 import hudson.PluginWrapper;
 import java.net.InetAddress;
@@ -60,6 +63,7 @@ public class JenkinsSourceProvider implements SourceProvider {
 
     private String host;
     private String name;
+    private String serializer;
     private URI uri;
 
     public JenkinsSourceProvider() {
@@ -77,6 +81,17 @@ public class JenkinsSourceProvider implements SourceProvider {
                         logger.error("Error parsing plugin URL", e);
                     }
                 }
+
+                try {
+                    serializer = PackageURLBuilder.aPackageURL()
+                            .withType(PackageURL.StandardTypes.MAVEN)
+                            .withNamespace(pluginWrapper.getManifest().getMainAttributes().getValue("Group-Id"))
+                            .withName(pluginWrapper.getShortName())
+                            .withVersion(pluginWrapper.getVersion())
+                            .build().toString();
+                } catch (MalformedPackageURLException e) {
+                    logger.error("Error creating package URL", e);
+                }
             }
         }
     }
@@ -86,6 +101,7 @@ public class JenkinsSourceProvider implements SourceProvider {
     public void populateSource(@Nonnull EiffelEvent.Meta.Source source) {
         source.setHost(getHost());
         source.setName(name);
+        source.setSerializer(serializer);
         source.setUri(uri);
     }
 
