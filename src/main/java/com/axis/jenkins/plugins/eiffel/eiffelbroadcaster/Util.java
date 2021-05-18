@@ -31,8 +31,10 @@ import com.rabbitmq.client.AMQP;
 import hudson.model.AbstractItem;
 import hudson.model.Queue;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,6 +95,23 @@ public final class Util {
                 logger.error("Unable to serialize object to JSON: {}: {}", e.getMessage(), event);
             }
         }
+    }
+
+    /**
+     * Splits the input string into lines, removes leading and trailing whitespace, and returns non-empty
+     * lines in a list.
+     *
+     * @param s the line to split
+     */
+    public static List<String> getLinesInString(String s) {
+        List<String> result = new ArrayList<>();
+        for (String line : s.split("\\R")) {  // \R is "any Unicode linebreak sequence"
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) {
+                result.add(trimmed);
+            }
+        }
+        return result;
     }
 
     /**

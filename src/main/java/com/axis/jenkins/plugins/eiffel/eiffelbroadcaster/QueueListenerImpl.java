@@ -37,6 +37,8 @@ import hudson.model.queue.QueueListener;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -67,6 +69,12 @@ public class QueueListenerImpl extends QueueListener {
         EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent(data);
         EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getMeta().getId());
 
+        // Populate activity categories
+        SortedSet<String> categories = new TreeSet<>();
+        categories.addAll(EiffelBroadcasterConfig.getInstance().getActivityCategoriesList());
+        data.getCategories().addAll(categories);
+
+        // Populate causes
         for (Cause cause : wi.getCauses()) {
             // Default to OTHER as the default trigger type and override it for specific known causes.
             EiffelActivityTriggeredEvent.Data.Trigger trigger = new EiffelActivityTriggeredEvent.Data.Trigger(

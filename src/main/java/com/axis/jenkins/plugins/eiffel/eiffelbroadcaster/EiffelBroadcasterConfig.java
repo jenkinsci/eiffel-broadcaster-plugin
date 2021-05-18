@@ -28,18 +28,19 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.PossibleAuthenticationFailureException;
-
 import hudson.Extension;
 import hudson.Plugin;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
-
 import net.sf.json.JSONObject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -48,10 +49,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.net.URISyntaxException;
 
 /**
  * Adds the EiffelBroadcaster plugin configuration to the system config page.
@@ -88,6 +85,8 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     private boolean persistentDelivery;
     /* Application id that can be read by the consumer (optional). */
     private String appId;
+    /* A list of strings representing categories to include in the ActTs. */
+    private final List<String> activityCategories = new ArrayList<>();
 
     /**
      * Creates an instance with specified parameters.
@@ -105,7 +104,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     @DataBoundConstructor
     public EiffelBroadcasterConfig(boolean enableBroadcaster, String serverUri, String userName, Secret userPassword,
                             String exchangeName, String virtualHost, String routingKey, boolean persistentDelivery,
-                            String appId) {
+                            String appId, String activityCategories) {
         this.enableBroadcaster = enableBroadcaster;
         this.serverUri = serverUri;
         this.userName = userName;
@@ -115,6 +114,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
         this.routingKey = routingKey;
         this.persistentDelivery = persistentDelivery;
         this.appId = appId;
+        this.activityCategories.addAll(Util.getLinesInString(activityCategories));
     }
 
     @Override
@@ -323,6 +323,21 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
         this.appId = appId;
     }
 
+    /** Returns the list of categories to attach to the activities, expressed as a multi-line string. */
+    public String getActivityCategories() {
+        return StringUtils.join(this.activityCategories, '\n');
+    }
+
+    /** Returns the list of categories to attach to the activities. */
+    public List<String> getActivityCategoriesList() {
+        return this.activityCategories;
+    }
+
+    /** Sets the list of categories to attach to the activities. */
+    public void setActivityCategories(String activityCategories) {
+        this.activityCategories.clear();
+        this.activityCategories.addAll(Util.getLinesInString(activityCategories));
+    }
 
     /**
      * Returns the descriptor instance.

@@ -37,6 +37,7 @@ import hudson.model.CauseAction;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.BuildTrigger;
+import java.util.Arrays;
 import java.util.Collections;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -325,5 +326,28 @@ public class EmittedEventsTest {
         EiffelActivityFinishedEvent actF = action.getFinishedEvent();
         assertThat(actF, is(notNullValue()));
         assertThat(actF, linksTo(actT, EiffelEvent.Link.Type.ACTIVITY_EXECUTION));
+    }
+
+    @Test
+    public void testActivityCategoriesForFreestyleBuildEmptyDefault() throws Exception {
+        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
+        assertThat(actT.getData().getCategories(), is(Collections.emptyList()));
+    }
+
+    @Test
+    public void testActivityCategoriesForFreestyleBuildUsesGlobalConfig() throws Exception {
+        EiffelBroadcasterConfig.getInstance().setActivityCategories("global category");
+        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
+        assertThat(actT.getData().getCategories(), is(Arrays.asList("global category")));
     }
 }

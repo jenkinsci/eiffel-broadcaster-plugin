@@ -29,6 +29,13 @@ the previously sent events:
 * `EIFFEL_ACTIVITY_TRIGGERED`: The build's EiffelActivityTriggeredEvent event.
 * `EIFFEL_ACTIVITY_STARTED`: The build's EiffelActivityStartedEvent event.
 
+## Category configuration
+
+The contents of the `data.categories` member in EiffelActivityTriggeredEvent
+is configurable with a global plugin setting. This can e.g. be used to
+distinguish Eiffel activities that represent Jenkins builds from other kinds
+of activities.  
+
 ## API
 The plugin will do its best to populate the emitted
 EiffelActivityTriggeredEvent with information taken from the causes of

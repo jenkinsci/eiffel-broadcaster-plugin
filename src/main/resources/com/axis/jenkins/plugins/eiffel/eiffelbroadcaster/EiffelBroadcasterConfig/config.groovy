@@ -59,4 +59,7 @@ f.section(title: "Eiffel Broadcaster Plugin") {
     f.entry(title: "Persistent Delivery mode", help: l+"help-persistent-delivery.html") {
         f.checkbox(field: "persistentDelivery", checked: my.persistentDelivery)
     }
+    f.entry(title: "Activity Categories", field: "activityCategories", help: l+"help-activity-categories.html") {
+        f.textarea(value: my.activityCategories)
+    }
 }
