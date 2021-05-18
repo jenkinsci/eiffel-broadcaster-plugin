@@ -32,9 +32,23 @@ the previously sent events:
 ## Category configuration
 
 The contents of the `data.categories` member in EiffelActivityTriggeredEvent
-is configurable with a global plugin setting. This can e.g. be used to
-distinguish Eiffel activities that represent Jenkins builds from other kinds
-of activities.  
+is configurable in two ways:
+
+* A global plugin setting.
+* A setting in each job, configured via the UI or the `eiffelActivity` pipeline
+  property:
+```
+properties([
+    eiffelActivity(categories: ['jenkins', 'maven'])
+])
+```
+
+Categories can e.g. be used to distinguish Eiffel activities that represent
+Jenkins builds from other kinds of activities, or distinguish between
+different kinds of Jenkins builds.
+
+Globally configured categories will be merged with the categories specified
+in each job. Duplicate entries will be eliminated.
 
 ## API
 The plugin will do its best to populate the emitted

@@ -1,8 +1,8 @@
 <div>
-    A list of "category" strings, one per line, that all builds in this Jenkins instance
-    will be tagged with. Categories are stored in the <tt>data.categories</tt> member of emitted
+    A list of "category" strings, one per line, that builds of this job will be tagged with.
+    Categories are stored in the <tt>data.categories</tt> member of emitted
     <a href="https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityTriggeredEvent.md">EiffelActivityTriggeredEvent</a>
-    messages. Categories listed here will be merged with any categories configured for each job.
+    messages. Categories listed here will be merged with any globally configured categories.
     Leading and trailing whitespace will be removed from each line. Duplicate lines and
     empty lines will be ignored.
 </div>

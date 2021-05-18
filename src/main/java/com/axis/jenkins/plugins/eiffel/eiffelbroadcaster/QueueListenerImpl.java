@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
 import hudson.model.BuildableItem;
 import hudson.model.Cause;
+import hudson.model.Job;
 import hudson.model.Queue;
 import hudson.model.Run;
 import hudson.model.queue.QueueListener;
@@ -71,7 +72,19 @@ public class QueueListenerImpl extends QueueListener {
 
         // Populate activity categories
         SortedSet<String> categories = new TreeSet<>();
+
+        // ...with globally configured categories
         categories.addAll(EiffelBroadcasterConfig.getInstance().getActivityCategoriesList());
+
+        // ...with job-specific categories
+        if (wi.task instanceof Job<?, ?>) {
+            EiffelActivityJobProperty activityJobProperty =
+                    ((Job<?, ?>) wi.task).getProperty(EiffelActivityJobProperty.class);
+            if (activityJobProperty != null) {
+                categories.addAll(activityJobProperty.getCategories());
+            }
+        }
+
         data.getCategories().addAll(categories);
 
         // Populate causes

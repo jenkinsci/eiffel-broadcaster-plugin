@@ -350,4 +350,55 @@ public class EmittedEventsTest {
         EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
         assertThat(actT.getData().getCategories(), is(Arrays.asList("global category")));
     }
+
+    @Test
+    public void testActivityCategoriesForFreestyleBuildUsesJobProperty() throws Exception {
+        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
+        job.addProperty(new EiffelActivityJobProperty(Arrays.asList("job category")));
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
+        assertThat(actT.getData().getCategories(), is(Arrays.asList("job category")));
+    }
+
+    @Test
+    public void testActivityCategoriesForFreestyleBuildMergesGlobalAndJobProperties() throws Exception {
+        EiffelBroadcasterConfig.getInstance().setActivityCategories("duplicate category\nglobal category");
+        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
+        job.addProperty(new EiffelActivityJobProperty(Arrays.asList("duplicate category", "job category")));
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
+        assertThat(actT.getData().getCategories(),
+                is(Arrays.asList("duplicate category", "global category", "job category")));
+    }
+
+    @Test
+    public void testActivityCategoriesForPipelineJobUsesJobProperty() throws Exception {
+        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");
+        job.setDefinition(new CpsFlowDefinition("node { echo 'hello' }", true));
+        job.addProperty(new EiffelActivityJobProperty(Arrays.asList("job category")));
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
+        assertThat(actT.getData().getCategories(), is(Arrays.asList("job category")));
+    }
+
+    @Test
+    public void testActivityCategoriesForPipelineJobAllowsPropertySetting() throws Exception {
+        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");
+        job.setDefinition(new CpsFlowDefinition(
+                "properties([eiffelActivity(categories: ['job category'])])", true));
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        assertThat(job.getProperty(EiffelActivityJobProperty.class), is(notNullValue()));
+        assertThat(job.getProperty(EiffelActivityJobProperty.class).getCategories(),
+                is(Arrays.asList("job category")));
+    }
 }
