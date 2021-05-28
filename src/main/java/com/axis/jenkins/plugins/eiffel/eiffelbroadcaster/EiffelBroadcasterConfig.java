@@ -58,7 +58,8 @@ import org.slf4j.LoggerFactory;
 @Extension
 public final class EiffelBroadcasterConfig extends Plugin implements Describable<EiffelBroadcasterConfig> {
     private static final Logger logger = LoggerFactory.getLogger(EiffelBroadcasterConfig.class);
-    private final String[] schemes = {"amqp", "amqps"};
+    private transient final String[] schemes = {};  // Replaced by ALLOWED_URL_SCHEMES but retained to satisfy XStream
+    private static final String[] ALLOWED_URL_SCHEMES = {"amqp", "amqps"};
     private static final String SERVER_URI = "serverUri";
     private static final String USERNAME = "userName";
     private static final String PASSWORD = "userPassword";
@@ -377,7 +378,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
                                                @QueryParameter(USERNAME) final String name,
                                                @QueryParameter(PASSWORD) final Secret pw) throws ServletException {
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-            UrlValidator urlValidator = new UrlValidator(getInstance().schemes, UrlValidator.ALLOW_LOCAL_URLS);
+            UrlValidator urlValidator = new UrlValidator(ALLOWED_URL_SCHEMES, UrlValidator.ALLOW_LOCAL_URLS);
             FormValidation result = FormValidation.ok();
             if (urlValidator.isValid(uri)) {
                 Connection conn = null;
