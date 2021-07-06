@@ -67,6 +67,7 @@
         <jackson2-api.version>2.11.1</jackson2-api.version>
         <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
         <jmockit.version>1.41</jmockit.version>
+        <json-schema-validator.version>1.0.43</json-schema-validator.version>
         <packageurl.version>1.2.0</packageurl.version>
         <workflow-multibranch.version>2.21</workflow-multibranch.version>
     </properties>
@@ -95,6 +96,11 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>${commons.lang3.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.networknt</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>${json-schema-validator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>

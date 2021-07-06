@@ -25,6 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidator;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.PossibleAuthenticationFailureException;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
@@ -88,6 +90,8 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     private String appId;
     /* A list of strings representing categories to include in the ActTs. */
     private final List<String> activityCategories = new ArrayList<>();
+
+    private final EventValidator eventValidator = new EventValidator();
 
     /**
      * Creates an instance with specified parameters.
@@ -338,6 +342,11 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     public void setActivityCategories(String activityCategories) {
         this.activityCategories.clear();
         this.activityCategories.addAll(Util.getLinesInString(activityCategories));
+    }
+
+    @Nonnull
+    public EventValidator getEventValidator() {
+        return eventValidator;
     }
 
     /**

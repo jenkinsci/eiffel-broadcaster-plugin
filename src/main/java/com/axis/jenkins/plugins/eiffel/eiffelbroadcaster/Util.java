@@ -26,15 +26,19 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFinishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP;
 import hudson.model.AbstractItem;
 import hudson.model.Queue;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +83,7 @@ public final class Util {
         }
     }
 
-    public static void publishEvent(EiffelEvent event) {
+    public static void publishEvent(String eventName, String eventVersion, @Nonnull final JsonNode eventJson) {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
         if (config != null && config.isBroadcasterEnabled()) {
             AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
@@ -89,11 +93,22 @@ public final class Util {
                     .timestamp(Calendar.getInstance().getTime())
                     .build();
             try {
+                config.getEventValidator().validate(eventName, eventVersion, eventJson);
                 MQConnection.getInstance().addMessageToQueue(config.getExchangeName(), config.getRoutingKey(),
-                        props, event.toJSON().getBytes(StandardCharsets.UTF_8));
+                        props, new ObjectMapper().writeValueAsBytes(eventJson));
             } catch (JsonProcessingException e) {
-                logger.error("Unable to serialize object to JSON: {}: {}", e.getMessage(), event);
+                logger.error("Unable to serialize object to JSON: {}: {}", e.getMessage(), eventJson);
+            } catch (SchemaUnavailableException | EventValidationFailedException e) {
+                logger.warn("Unable to validate event: {}", e.getMessage());
             }
+        }
+    }
+
+    public static void publishEvent(@Nonnull final EiffelEvent event) {
+        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        if (config != null && config.isBroadcasterEnabled()) {
+            JsonNode eventJson = new ObjectMapper().valueToTree(event);
+            publishEvent(event.getMeta().getType(), event.getMeta().getVersion(), eventJson);
         }
     }
 
