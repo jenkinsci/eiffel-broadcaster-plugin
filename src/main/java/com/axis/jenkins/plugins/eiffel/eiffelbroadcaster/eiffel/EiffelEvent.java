@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -165,22 +166,44 @@ public class EiffelEvent {
 
         public enum Type {
             ACTIVITY_EXECUTION,
+            ARTIFACT,
+            BASE,
             CAUSE,
+            CHANGE,
+            COMPOSITION,
             CONTEXT,
+            DERESOLVED_ISSUE,
+            ELEMENT,
+            ENVIRONMENT,
+            FAILED_ISSUE,
             FLOW_CONTEXT,
-            PREVIOUS_ACTIVITY_EXECUTION
+            INCONCLUSIVE_ISSUE,
+            IUT,
+            MODIFIED_ANNOUNCEMENT,
+            PARTIALLY_RESOLVED_ISSUE,
+            PREVIOUS_ACTIVITY_EXECUTION,
+            PREVIOUS_VERSION,
+            RESOLVED_ISSUE,
+            REUSED_ARTIFACT,
+            SUB_CONFIDENCE_LEVEL,
+            SUBJECT,
+            SUCCESSFUL_ISSUE,
+            TERC,
+            TEST_CASE_EXECUTION,
+            TEST_SUITE_EXECUTION,
+            VERIFICATION_BASIS
         }
     }
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public static class Meta {
         @JsonInclude(JsonInclude.Include.ALWAYS)
-        private final UUID id = UUID.randomUUID();
+        private UUID id = UUID.randomUUID();
 
         private Source source = new Source();
 
         @JsonInclude(JsonInclude.Include.ALWAYS)
-        private final long time = Instant.now().toEpochMilli();
+        private long time = Instant.now().toEpochMilli();
 
         private final List<String> tags = new ArrayList<>();
 
@@ -191,6 +214,12 @@ public class EiffelEvent {
         private final String version;
 
         public Meta(@JsonProperty("type") String type, @JsonProperty("version") String version, @JsonProperty("source") Source source) {
+            if (StringUtils.isBlank(type)) {
+                throw new IllegalArgumentException("The event type must be set to a non-empty string");
+            }
+            if (StringUtils.isBlank(version)) {
+                throw new IllegalArgumentException("The event version must be set to a non-empty string");
+            }
             this.type = type;
             this.version = version;
             this.source = source;
@@ -198,6 +227,10 @@ public class EiffelEvent {
 
         public UUID getId() {
             return id;
+        }
+
+        public void setId(UUID id) {
+            this.id = id;
         }
 
         public Source getSource() {
@@ -210,6 +243,10 @@ public class EiffelEvent {
 
         public long getTime() {
             return time;
+        }
+
+        public void setTime(long time) {
+            this.time = time;
         }
 
         public List<String> getTags() {
@@ -364,12 +401,13 @@ public class EiffelEvent {
             String eventType = p.getCodec().treeToValue(typeNode, String.class);
 
             // Attempt to deserialize the TreeNode into a class in this package
-            // with the same name as the event type.
+            // with the same name as the event type. If that fails, deserialize
+            // into GenericEiffelEvent where the data attribute is a JsonNode.
             try {
                 return p.getCodec().treeToValue(node,
                         Class.forName(getClass().getPackage().getName() + "." + eventType));
             } catch (ClassNotFoundException e) {
-                throw new UnsupportedEventTypeException("Unsupported event type: " + eventType, e);
+                return p.getCodec().treeToValue(node, GenericEiffelEvent.class);
             }
         }
     }
