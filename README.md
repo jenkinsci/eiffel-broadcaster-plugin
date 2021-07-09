@@ -50,6 +50,45 @@ different kinds of Jenkins builds.
 Globally configured categories will be merged with the categories specified
 in each job. Duplicate entries will be eliminated.
 
+## Pipeline steps
+
+### sendEiffelEvent
+
+The sendEiffelEvent pipeline step sends an Eiffel event from that's built in
+the Groovy code or read into a Groovy map from another location. It accepts
+the following parameters:
+
+| Argument          | Description                 |
+| ------------------|-----------------------------|
+| event             | A map with the event payload. The `meta.id` and `meta.time` members will be populated automatically. |
+| linkToActivity    | If true (default) the event sent will automatically include link to the current build's EiffelActivityTriggeredEvent. Optional. |
+| activityLinkType  | The link type to use when linking to the EiffelActivityTriggeredEvent. Defaults to CONTEXT but can be set to CAUSE. Optional. |
+
+Example:
+```
+def event = [
+    "meta": [
+        "type": "EiffelCompositionDefinedEvent",
+        "version": "3.0.0",
+    ],
+    "data": [
+        "name": "my-composition",
+    ],
+]
+def sent = sendEiffelEvent event: event
+echo "This event was sent: ${sent}"
+
+// Make the activity link a CAUSE link
+sendEiffelEvent event: event, activityLinkType: "CAUSE"
+
+// Skip the activity link altogether
+sendEiffelEvent event: event, linkToActivity: false
+```
+
+This step returns immediately as soon as the event has been validated and put
+on the internal outbound queue. The actual delivery of the event to the broker
+might not have happened at the time of the return.
+
 ## API
 The plugin will do its best to populate the emitted
 EiffelActivityTriggeredEvent with information taken from the causes of

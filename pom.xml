@@ -69,6 +69,7 @@
         <jmockit.version>1.41</jmockit.version>
         <json-schema-validator.version>1.0.43</json-schema-validator.version>
         <packageurl.version>1.2.0</packageurl.version>
+        <pipeline-utility-steps.version>2.4.0</pipeline-utility-steps.version>
         <workflow-multibranch.version>2.21</workflow-multibranch.version>
     </properties>
     <dependencies>
@@ -110,6 +111,12 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>pipeline-build-step</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>pipeline-utility-steps</artifactId>
+            <version>${pipeline-utility-steps.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
