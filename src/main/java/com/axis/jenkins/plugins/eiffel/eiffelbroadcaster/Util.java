@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,33 +84,69 @@ public final class Util {
         }
     }
 
-    public static void publishEvent(String eventName, String eventVersion, @Nonnull final JsonNode eventJson) {
+    /**
+     * Publishes an event that has been transformed into a {@link JsonNode} and raises an exception if
+     * an error occurs.
+     *
+     * @return the published event or null if event publishing is disabled
+     * @throws EventValidationFailedException if the validation of the event against the JSON schema fails
+     * @throws JsonProcessingException if there's an error during JSON serialization
+     * @throws SchemaUnavailableException if there's no schema available for the supplied event
+     */
+    @CheckForNull
+    public static JsonNode mustPublishEvent(String eventName, String eventVersion, @Nonnull final JsonNode eventJson)
+            throws EventValidationFailedException, JsonProcessingException, SchemaUnavailableException {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
-        if (config != null && config.isBroadcasterEnabled()) {
-            AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                    .appId(config.getAppId())
-                    .deliveryMode(config.getPersistentDelivery() ? PERSISTENT_DELIVERY : NON_PERSISTENT_DELIVERY)
-                    .contentType("application/json")
-                    .timestamp(Calendar.getInstance().getTime())
-                    .build();
-            try {
-                config.getEventValidator().validate(eventName, eventVersion, eventJson);
-                MQConnection.getInstance().addMessageToQueue(config.getExchangeName(), config.getRoutingKey(),
-                        props, new ObjectMapper().writeValueAsBytes(eventJson));
-            } catch (JsonProcessingException e) {
-                logger.error("Unable to serialize object to JSON: {}: {}", e.getMessage(), eventJson);
-            } catch (SchemaUnavailableException | EventValidationFailedException e) {
-                logger.warn("Unable to validate event: {}", e.getMessage());
-            }
+        if (config == null || !config.isBroadcasterEnabled()) {
+            return null;
         }
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                .appId(config.getAppId())
+                .deliveryMode(config.getPersistentDelivery() ? PERSISTENT_DELIVERY : NON_PERSISTENT_DELIVERY)
+                .contentType("application/json")
+                .timestamp(Calendar.getInstance().getTime())
+                .build();
+        config.getEventValidator().validate(eventName, eventVersion, eventJson);
+        MQConnection.getInstance().addMessageToQueue(config.getExchangeName(), config.getRoutingKey(),
+                props, new ObjectMapper().writeValueAsBytes(eventJson));
+        return eventJson;
     }
 
-    public static void publishEvent(@Nonnull final EiffelEvent event) {
+    /**
+     * Publishes an {@link EiffelEvent} and raises an exception if an error occurs.
+     *
+     * @return the published event or null if event publishing is disabled
+     * @throws EventValidationFailedException if the validation of the event against the JSON schema fails
+     * @throws JsonProcessingException if there's an error during JSON serialization
+     * @throws SchemaUnavailableException if there's no schema available for the supplied event
+     */
+    @CheckForNull
+    public static JsonNode mustPublishEvent(@Nonnull final EiffelEvent event)
+            throws EventValidationFailedException, JsonProcessingException, SchemaUnavailableException {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
-        if (config != null && config.isBroadcasterEnabled()) {
-            JsonNode eventJson = new ObjectMapper().valueToTree(event);
-            publishEvent(event.getMeta().getType(), event.getMeta().getVersion(), eventJson);
+        if (config == null || !config.isBroadcasterEnabled()) {
+            return null;
         }
+        JsonNode eventJson = new ObjectMapper().valueToTree(event);
+        mustPublishEvent(event.getMeta().getType(), event.getMeta().getVersion(), eventJson);
+        return eventJson;
+    }
+
+    /**
+     * Publishes an {@link EiffelEvent} and logs a message if there's an error.
+     *
+     * @return the published event or null if there was an error or event publishing is disabled
+     */
+    @CheckForNull
+    public static JsonNode publishEvent(@Nonnull final EiffelEvent event) {
+        try {
+            return mustPublishEvent(event);
+        } catch (JsonProcessingException e) {
+            logger.error("Unable to serialize object to JSON: {}: {}", e.getMessage(), event);
+        } catch (SchemaUnavailableException | EventValidationFailedException e) {
+            logger.warn("Unable to validate event: {}", e.getMessage());
+        }
+        return null;
     }
 
     /**
