@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
  * be left empty forever.
  */
 public class JenkinsSourceProvider implements SourceProvider {
-    private static final Logger logger = LoggerFactory.getLogger(EiffelBroadcasterConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(JenkinsSourceProvider.class);
 
     /** How frequently to attempt to find out the current host's name. */
     private static final Duration HOST_CHECK_INTERVAL = Duration.ofMinutes(2);
