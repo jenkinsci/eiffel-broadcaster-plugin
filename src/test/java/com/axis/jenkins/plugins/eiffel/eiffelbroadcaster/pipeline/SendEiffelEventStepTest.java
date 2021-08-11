@@ -22,8 +22,11 @@
  THE SOFTWARE.
  */
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EventSet;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;

@@ -37,7 +37,7 @@ import mockit.MockUp;
  * @author Örjan Percy &lt;orjan.percy@sonymobile.com&gt;
  * @author Magnus Bäck &lt;magnus.back@axis.com&gt;
  */
-final class Mocks {
+public final class Mocks {
     /** Stores received messages. */
     public static final List<String> messages = new CopyOnWriteArrayList<>();
 

@@ -22,8 +22,10 @@
  THE SOFTWARE.
  */
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelActivityAction;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Util;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.InvalidJsonPayloadException;
