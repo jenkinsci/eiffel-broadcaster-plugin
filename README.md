@@ -52,6 +52,30 @@ in each job. Duplicate entries will be eliminated.
 
 ## Pipeline steps
 
+### createPackageURL
+
+The createPackageURL pipeline step accepts individual components of a
+[Package URL](https://github.com/package-url/purl-spec) and returns a properly
+formatted and quoted string that e.g. can be used when piecing together an
+EiffelArtifactedCreatedEvent. See the Package URL specification for details on
+what the components mean.
+
+| Argument    | Description                 |
+| ------------|-----------------------------|
+| type        | The package "type" or package "protocol" such as maven, npm, nuget, gem, pypi, etc. |
+| namespace   | A name prefix such as a Maven groupid, a Docker image owner, a GitHub user or organization. Optional and type-specific. |
+| name        | The name of the package. |
+| version     | The version of the package. Optional. |
+| qualifiers  | A Groovy map with extra qualifying data for a package such as an OS, architecture, a distro, etc. Optional and type-specific. |
+| subpath     | Extra subpath within a package, relative to the package root. Optional. |
+
+Example:
+```
+def purl = createPackageURL type: 'generic', namespace: 'name/space',
+    name: 'pkgname', version: '1.0', subpath: 'some/path', qualifiers: [a: 'b']
+echo "Here's the resulting purl: ${purl}"
+```
+
 ### sendEiffelEvent
 
 The sendEiffelEvent pipeline step sends an Eiffel event from that's built in
