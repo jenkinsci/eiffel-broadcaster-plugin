@@ -24,18 +24,22 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelArtifactToPublishAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EventSet;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.GenericEiffelEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hudson.model.Result;
+import hudson.model.Run;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Before;
@@ -135,6 +139,20 @@ public class SendEiffelEventStepTest {
                 jenkins.jenkins.getWorkspaceFor(job).child("event.json").readToString(), EiffelEvent.class);
         GenericEiffelEvent publishedEvent = events.findNext(GenericEiffelEvent.class);
         assertThat(publishedEvent, is(eventWrittenToWorkspace));
+    }
+
+    @Test
+    public void testSuccessful_RecordsArtifacts() throws Exception {
+        WorkflowJob job = createJob("successful_send_event_step_with_artifacts.groovy");
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        Run run = job.getBuildByNumber(1);
+        List<EiffelArtifactToPublishAction> savedArtifacts = run.getActions(EiffelArtifactToPublishAction.class);
+        assertThat(savedArtifacts, hasSize(2));
+        assertThat(events.findNext(EiffelArtifactCreatedEvent.class), is(savedArtifacts.get(0).getEvent()));
+        assertThat(events.findNext(EiffelArtifactCreatedEvent.class), is(savedArtifacts.get(1).getEvent()));
     }
 
     @Test

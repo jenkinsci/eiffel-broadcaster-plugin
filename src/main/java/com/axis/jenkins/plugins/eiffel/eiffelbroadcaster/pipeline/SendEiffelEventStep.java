@@ -25,11 +25,13 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelActivityAction;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelArtifactToPublishAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Util;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.InvalidJsonPayloadException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
@@ -90,6 +92,15 @@ public class SendEiffelEventStep extends Step {
     /** The type of the link that's added if {@link #linkToActivity} is true. */
     private EiffelEvent.Link.Type activityLinkType = EiffelEvent.Link.Type.CONTEXT;
 
+    /**
+     *  If true and the event being sent is an
+     *  {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent}
+     *  then {@link PublishEiffelArtifactsStep} will send the
+     *  {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent}.
+     *  that corresponds to this artifact creation.
+     *  */
+    private boolean publishArtifact = false;
+
     @DataBoundConstructor
     public SendEiffelEventStep(@Nonnull final Map event) {
         this.event = event;
@@ -127,6 +138,15 @@ public class SendEiffelEventStep extends Step {
         this.activityLinkType = activityLinkType;
     }
 
+    public boolean getPublishArtifact() {
+        return publishArtifact;
+    }
+
+    @DataBoundSetter
+    public void setPublishArtifact(boolean publishArtifact) {
+        this.publishArtifact = publishArtifact;
+    }
+
     private static class Execution extends SynchronousStepExecution<Map> {
         private static final long serialVersionUID = 1L;
         private final transient SendEiffelEventStep step;
@@ -156,8 +176,13 @@ public class SendEiffelEventStep extends Step {
                             "Successfully sent %s with id %s%n",
                             event.getMeta().getType(), event.getMeta().getId());
                 }
+
+                if (step.getPublishArtifact() && event instanceof EiffelArtifactCreatedEvent) {
+                    run.addAction(new EiffelArtifactToPublishAction((EiffelArtifactCreatedEvent) event));
+                }
+
                 return mapper.convertValue(event, Map.class);
-            } catch (EventValidationFailedException | IllegalArgumentException | InvalidJsonPayloadException
+            } catch (EventValidationFailedException | IllegalArgumentException | JsonProcessingException
                     | SchemaUnavailableException e) {
                 throw new AbortException(String.format(
                         "%s (%s): %s", ERROR_MESSAGE_PREFIX, e.getClass().getSimpleName(), e.getMessage()));

@@ -28,15 +28,12 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFi
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
-import hudson.Functions;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.UUID;
-import jenkins.model.Jenkins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,11 +71,11 @@ public class RunListenerImpl extends RunListener<Run> {
         }
         EiffelActivityStartedEvent event = new EiffelActivityStartedEvent(targetEvent);
 
-        URI runUri = getRunUri(r);
+        URI runUri = Util.getRunUri(r);
         if (runUri != null) {
             event.getData().setExecutionUri(runUri);
         }
-        URI logUri = getRunUri(r, CONSOLE_URI_PATH);
+        URI logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
         if (logUri != null) {
             event.getData().getLiveLogs().add(
                     new EiffelActivityStartedEvent.Data.LiveLogs(CONSOLE_LOG_NAME, logUri));
@@ -119,7 +116,7 @@ public class RunListenerImpl extends RunListener<Run> {
             return;
         }
 
-        URI logUri = getRunUri(r, CONSOLE_URI_PATH);
+        URI logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
         if (logUri != null) {
             event.getData().getPersistentLogs().add(
                     new EiffelActivityFinishedEvent.Data.PersistentLogs(CONSOLE_LOG_NAME, logUri));
@@ -132,28 +129,5 @@ public class RunListenerImpl extends RunListener<Run> {
             // to publish the event. No need to log the same error message twice.
         }
         Util.publishEvent(event);
-    }
-
-    /**
-     * Returns the URI of a {@link Run}, or one of its subresources.
-     *
-     * @param r the Run to return the URI for
-     * @param pathSuffix additional path components to append
-     * @return the URI asked for, or null if a URI couldn't be resolved
-     */
-    private static URI getRunUri(Run r, String... pathSuffix) {
-        Jenkins jenkins = Jenkins.get();
-        if (jenkins.getRootUrl() != null) {
-            try {
-                String uri = Functions.joinPath(jenkins.getRootUrl(), r.getUrl());
-                if (pathSuffix.length == 0) {
-                    return new URI(uri);
-                }
-                return new URI(Functions.joinPath(uri, Functions.joinPath(pathSuffix)));
-            } catch (URISyntaxException e) {
-                logger.warn("Error constructing URI for build", e);
-            }
-        }
-        return null;
     }
 }

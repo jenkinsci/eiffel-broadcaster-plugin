@@ -32,14 +32,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP;
+import hudson.Functions;
 import hudson.model.AbstractItem;
 import hudson.model.Queue;
+import hudson.model.Run;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import jenkins.model.Jenkins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,6 +87,29 @@ public final class Util {
         } else {
             return t.getName();
         }
+    }
+
+    /**
+     * Returns the URI of a {@link Run}, or one of its subresources.
+     *
+     * @param r the Run to return the URI for
+     * @param pathSuffix additional path components to append
+     * @return the URI asked for, or null if a URI couldn't be resolved
+     */
+    public static URI getRunUri(final Run r, String... pathSuffix) {
+        Jenkins jenkins = Jenkins.get();
+        if (jenkins.getRootUrl() != null) {
+            try {
+                String uri = Functions.joinPath(jenkins.getRootUrl(), r.getUrl());
+                if (pathSuffix.length == 0) {
+                    return new URI(uri);
+                }
+                return new URI(Functions.joinPath(uri, Functions.joinPath(pathSuffix)));
+            } catch (URISyntaxException e) {
+                logger.warn("Error constructing URI for build", e);
+            }
+        }
+        return null;
     }
 
     /**

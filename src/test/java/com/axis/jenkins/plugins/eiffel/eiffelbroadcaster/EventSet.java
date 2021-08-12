@@ -29,6 +29,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.hamcrest.Matcher;
 
 /**
@@ -53,6 +54,20 @@ public class EventSet {
         for (String message : messages) {
             events.add(mapper.readValue(message, EiffelEvent.class));
         }
+    }
+
+    /**
+     * Finds and returns all events of a particular class. As opposed to {@link #findNext(Class)}
+     * all returned events will be kept in the set.
+     *
+     * @param clazz the class to look for
+     * @return a list of all matching events
+     */
+    public <T> List<T> all(Class<T> clazz) {
+        return events.stream()
+                .filter(clazz::isInstance)
+                .map(clazz::cast)
+                .collect(Collectors.toList());
     }
 
     /**

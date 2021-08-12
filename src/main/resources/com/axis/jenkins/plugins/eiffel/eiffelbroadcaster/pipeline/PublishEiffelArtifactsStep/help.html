@@ -1,0 +1,25 @@
+<div>
+    <p>
+        Sends an
+        <a href="https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelArtifactPublishedEvent.md">
+            EiffelArtifactPublishedEvent
+        </a> for each
+        <a href="https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelArtifactCreatedEvent.md">
+            EiffelArtifactCreatedEvent
+        </a>
+        that has been recorded in the build using a sendEiffelEvent step with
+        the <tt>publishArtifact</tt> argument enabled.
+    </p>
+    <p>
+        This requires that each EiffelArtifactPublishedEvent has at least one file defined in its
+        <tt>data.fileInformation</tt> array and that each relative file path in <tt>data.fileInformation.name</tt>
+        matches a Jenkins artifact in the build. Because of the latter requirement it's normally used after an
+        <a href="https://www.jenkins.io/doc/pipeline/steps/core/#code-archiveartifacts-code-archive-the-artifacts">
+            archiveArtifacts
+        </a> step.
+    </p>
+    <p>
+        The EiffelArtifactPublishedEvent will have two links; one ARTIFACT link to the EiffelArtifactCreatedEvent
+        and one CONTEXT link to the parent build's EiffelActivityTriggeredEvent.
+    </p>
+</div>

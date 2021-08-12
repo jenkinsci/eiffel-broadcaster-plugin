@@ -76,6 +76,45 @@ def purl = createPackageURL type: 'generic', namespace: 'name/space',
 echo "Here's the resulting purl: ${purl}"
 ```
 
+### publishEiffelArtifacts
+
+The publishEiffelArtifacts pipeline step sends an EiffelArtifactPublishedEvent
+for each EiffelArtifactCreatedEvent that has been recorded in the build using
+a sendEiffelEvent step with the `publishArtifact` argument enabled.
+
+This requires that each EiffelArtifactPublishedEvent has at least one file
+defined in its `data.fileInformation` array and that each relative file path
+in `data.fileInformation.name` matches a Jenkins artifact in the build.
+Because of the latter requirement it's normally used after an
+[archiveArtifacts](https://www.jenkins.io/doc/pipeline/steps/core/#code-archiveartifacts-code-archive-the-artifacts)
+step.
+
+The EiffelArtifactPublishedEvent will have two links; one ARTIFACT link to
+the EiffelArtifactCreatedEvent and one CONTEXT link to the parent build's
+EiffelActivityTriggeredEvent.
+
+Example:
+```
+def event = [
+    'meta': [
+        'type': 'EiffelArtifactCreatedEvent',
+        'version': '3.0.0',
+    ],
+    'data': [
+        'identity': 'pkg:generic/myprogram@1.0',
+        'fileInformation': [
+            [
+                'name': 'myprogram-1.0.tar.gz',
+            ],
+        ],
+    ],
+]
+sendEiffelEvent event: event, publishArtifact: true
+
+archiveArtifacts artifacts: 'myprogram-1.0.tar.gz'
+publishEiffelArtifacts()
+```
+
 ### sendEiffelEvent
 
 The sendEiffelEvent pipeline step sends an Eiffel event from that's built in
@@ -87,6 +126,7 @@ the following parameters:
 | event             | A map with the event payload. The `meta.id` and `meta.time` members will be populated automatically. |
 | linkToActivity    | If true (default) the event sent will automatically include link to the current build's EiffelActivityTriggeredEvent. Optional. |
 | activityLinkType  | The link type to use when linking to the EiffelActivityTriggeredEvent. Defaults to CONTEXT but can be set to CAUSE. Optional. |
+| publishArtifact   | If true and the event being sent is EiffelArtifactCreatedEvent it will be recorded for possible later use by the publishEiffelArtifacts step. Optional. |
 
 Example:
 ```
