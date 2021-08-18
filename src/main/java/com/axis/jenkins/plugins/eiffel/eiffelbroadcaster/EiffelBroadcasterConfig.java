@@ -91,7 +91,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     /* A list of strings representing categories to include in the ActTs. */
     private final List<String> activityCategories = new ArrayList<>();
 
-    private final EventValidator eventValidator = new EventValidator();
+    private transient final EventValidator eventValidator = new EventValidator();
 
     /**
      * Creates an instance with specified parameters.
