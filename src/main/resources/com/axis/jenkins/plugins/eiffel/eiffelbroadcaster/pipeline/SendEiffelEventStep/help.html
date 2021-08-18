@@ -1,0 +1,15 @@
+<div>
+    <p>
+        Sends an Eiffel event expressed as a Groovy map. This map is passed in the <tt>event</tt> argument.
+    </p>
+    <p>
+        By default the event passed by the user will be decorated with a CONTEXT link to the current build's
+        <a href="https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityTriggeredEvent.md">
+            EiffelActivityTriggeredEvent
+        </a>. Optionally a CAUSE link can be created instead or the link can be omitted entirely.
+    </p>
+    <p>
+        This step returns immediately as soon as the event has been validated and put on the internal outbound queue.
+        The actual delivery of the event to the broker might not have happened at the time of the return.
+    </p>
+</div>
