@@ -59,6 +59,13 @@ public class PublishEiffelArtifactsStepTest {
         return job;
     }
 
+    private List<String> getLocationNames(EventSet events) {
+        return events.all(EiffelArtifactPublishedEvent.class).stream()
+                .flatMap(event -> event.getData().getLocations().stream())
+                .map(EiffelArtifactPublishedEvent.Data.Location::getName)
+                .collect(Collectors.toList());
+    }
+
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         new Mocks.RabbitMQConnectionMock();
@@ -81,10 +88,31 @@ public class PublishEiffelArtifactsStepTest {
         // We have pretty thorough tests of the ArtP contents for a given ArtC so here it's enough to
         // verify that we get the correct number of events and that the filenames in the events are what
         // we expect (so we're not getting two copies of the same event).
-        List<String> allLocationNames = events.all(EiffelArtifactPublishedEvent.class).stream()
-                .flatMap(event -> event.getData().getLocations().stream())
-                .map(EiffelArtifactPublishedEvent.Data.Location::getName)
-                .collect(Collectors.toList());
-        assertThat(allLocationNames, containsInAnyOrder("a.txt", "b.txt"));
+        assertThat(getLocationNames(events), containsInAnyOrder("a.txt", "b.txt"));
+    }
+
+    @Test
+    public void testSuccessful_PublishesArtifactsFromFile() throws Exception {
+        WorkflowJob job = createJob("successful_publish_artifact_step_from_file.groovy");
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        EventSet events = new EventSet(Mocks.messages);
+
+        Run run = job.getBuildByNumber(1);
+        // We have pretty thorough tests of the ArtP contents for a given ArtC so here it's enough to
+        // verify that we get the correct number of events and that the filenames in the events are what
+        // we expect (so we're not getting two copies of the same event).
+        assertThat(getLocationNames(events), containsInAnyOrder("a.txt", "b.txt", "c.txt", "d.txt"));
+    }
+
+
+    @Test
+    public void testFailed_EventFromFileWithWrongType() throws Exception {
+        WorkflowJob job = createJob("failed_publish_artifact_step_from_file_bad_type.groovy");
+        jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
+
+        jenkins.assertLogContains(
+                "was of the type EiffelCompositionDefinedEvent but only EiffelArtifactCreatedEvent is supported",
+                job.getBuildByNumber(1));
     }
 }

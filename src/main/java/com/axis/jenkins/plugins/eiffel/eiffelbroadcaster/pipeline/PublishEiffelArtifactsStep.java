@@ -32,16 +32,24 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.MissingArtifactExceptio
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Util;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import hudson.AbortException;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -49,15 +57,20 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Pipeline step for publishing previously announced Eiffel artifacts, i.e. sending
  * an {@link EiffelArtifactPublishedEvent} that contains URIs to the Jenkins artifacts that correspond to
  * the files in the Eiffel artifact. The artifact creation events are picked up from the {@link Run}'s
- * {@link EiffelArtifactToPublishAction} actions, optionally added by {@link SendEiffelEventStep}.
+ * {@link EiffelArtifactToPublishAction} actions, optionally added by {@link SendEiffelEventStep},
+ * or from JSON files stored in the Run's workspace.
  */
 public class PublishEiffelArtifactsStep extends Step {
     public static final String ERROR_MESSAGE_PREFIX = "Could not publish Eiffel event";
+
+    /** An Ant-style glob expression that selects which file(s) to read {@link EiffelArtifactCreatedEvent} from. */
+    private @CheckForNull String artifactEventFiles;
 
     @DataBoundConstructor
     public PublishEiffelArtifactsStep() { }
@@ -65,6 +78,15 @@ public class PublishEiffelArtifactsStep extends Step {
     @Override
     public StepExecution start(StepContext stepContext) throws Exception {
         return new Execution(this, stepContext);
+    }
+
+    public @CheckForNull String getArtifactEventFiles() {
+        return artifactEventFiles;
+    }
+
+    @DataBoundSetter
+    public void setArtifactEventFiles(@CheckForNull String artifactEventFiles) {
+        this.artifactEventFiles = hudson.Util.fixEmptyAndTrim(artifactEventFiles);
     }
 
     private static class Execution extends SynchronousStepExecution<Void> {
@@ -87,6 +109,12 @@ public class PublishEiffelArtifactsStep extends Step {
                 for (EiffelArtifactToPublishAction savedArtifact : run.getActions(EiffelArtifactToPublishAction.class)) {
                     publishArtifact(artifactPublisher, savedArtifact.getEvent());
                 }
+
+                if (step.getArtifactEventFiles() != null) {
+                    for (FilePath file : getContext().get(FilePath.class).list(step.getArtifactEventFiles())) {
+                        publishArtifactsFromFile(artifactPublisher, file);
+                    }
+                }
             } catch (EmptyArtifactException | EventValidationFailedException | JsonProcessingException
                     | MissingArtifactException | SchemaUnavailableException e) {
                 throw new AbortException(String.format(
@@ -106,13 +134,35 @@ public class PublishEiffelArtifactsStep extends Step {
                         creationEvent.getMeta().getId());
             }
         }
+
+        private void publishArtifactsFromFile(@Nonnull final EiffelArtifactPublisher artifactPublisher,
+                                              @Nonnull final FilePath file) throws Exception {
+            getContext().get(TaskListener.class).getLogger().format("Reading events from %s%n", file.getRemote());
+            try (InputStream is = file.read()) {
+                try (InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+                    try (BufferedReader br = new BufferedReader(isr)) {
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            EiffelEvent event = new ObjectMapper().readValue(line, EiffelEvent.class);
+                            if (!(event instanceof EiffelArtifactCreatedEvent)) {
+                                throw new AbortException(String.format(
+                                        "%s: This event in %s was of the type %s but only " +
+                                                "EiffelArtifactCreatedEvent is supported: %s",
+                                        ERROR_MESSAGE_PREFIX, file.getRemote(), event.getMeta().getType(), line));
+                            }
+                            publishArtifact(artifactPublisher, (EiffelArtifactCreatedEvent) event);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     @Extension
     public static class Descriptor extends StepDescriptor {
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
-            return ImmutableSet.of(Run.class, TaskListener.class);
+            return ImmutableSet.of(FilePath.class, Run.class, TaskListener.class);
         }
 
         @Override

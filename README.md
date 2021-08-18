@@ -80,7 +80,8 @@ echo "Here's the resulting purl: ${purl}"
 
 The publishEiffelArtifacts pipeline step sends an EiffelArtifactPublishedEvent
 for each EiffelArtifactCreatedEvent that has been recorded in the build using
-a sendEiffelEvent step with the `publishArtifact` argument enabled.
+a sendEiffelEvent step with the `publishArtifact` argument enabled and for
+each artifact recorded in the specified JSON files in the workspace.
 
 This requires that each EiffelArtifactPublishedEvent has at least one file
 defined in its `data.fileInformation` array and that each relative file path
@@ -93,7 +94,11 @@ The EiffelArtifactPublishedEvent will have two links; one ARTIFACT link to
 the EiffelArtifactCreatedEvent and one CONTEXT link to the parent build's
 EiffelActivityTriggeredEvent.
 
-Example:
+| Argument            | Description                 |
+| --------------------|-----------------------------|
+| artifactEventFiles  | An Ant-style glob expression that selects files containing JSON representations (one per line) of EiffelArtifactCreatedEvent to publish. Optional. |
+
+Example of publishing artifacts connected to the build:
 ```
 def event = [
     'meta': [
@@ -113,6 +118,28 @@ sendEiffelEvent event: event, publishArtifact: true
 
 archiveArtifacts artifacts: 'myprogram-1.0.tar.gz'
 publishEiffelArtifacts()
+```
+
+Example of publishing artifacts from a file:
+```
+def event = [
+    'meta': [
+        'type': 'EiffelArtifactCreatedEvent',
+        'version': '3.0.0',
+    ],
+    'data': [
+        'identity': 'pkg:generic/myprogram@1.0',
+        'fileInformation': [
+            [
+                'name': 'myprogram-1.0.tar.gz',
+            ],
+        ],
+    ],
+]
+writeJSON file: 'events.json', json: event
+
+archiveArtifacts artifacts: 'myprogram-1.0.tar.gz'
+publishEiffelArtifacts artifactEventFiles: '*.json'
 ```
 
 ### sendEiffelEvent
