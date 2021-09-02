@@ -60,14 +60,14 @@ formatted and quoted string that e.g. can be used when piecing together an
 EiffelArtifactedCreatedEvent. See the Package URL specification for details on
 what the components mean.
 
-| Argument    | Description                 |
-| ------------|-----------------------------|
-| type        | The package "type" or package "protocol" such as maven, npm, nuget, gem, pypi, etc. |
-| namespace   | A name prefix such as a Maven groupid, a Docker image owner, a GitHub user or organization. Optional and type-specific. |
-| name        | The name of the package. |
-| version     | The version of the package. Optional. |
-| qualifiers  | A Groovy map with extra qualifying data for a package such as an OS, architecture, a distro, etc. Optional and type-specific. |
-| subpath     | Extra subpath within a package, relative to the package root. Optional. |
+| Argument    | Required | Description               |
+| ------------|----------|---------------------------|
+| type        | ✔        | The package "type" or package "protocol" such as maven, npm, nuget, gem, pypi, etc. |
+| namespace   |          | A name prefix such as a Maven groupid, a Docker image owner, a GitHub user or organization. |
+| name        | ✔        | The name of the package. |
+| version     |          | The version of the package. |
+| qualifiers  |          | A Groovy map with extra qualifying data for a package such as an OS, architecture, a distro, etc. |
+| subpath     |          | Extra subpath within a package, relative to the package root. |
 
 Example:
 ```
@@ -94,9 +94,9 @@ The EiffelArtifactPublishedEvent will have two links; one ARTIFACT link to
 the EiffelArtifactCreatedEvent and one CONTEXT link to the parent build's
 EiffelActivityTriggeredEvent.
 
-| Argument            | Description                 |
-| --------------------|-----------------------------|
-| artifactEventFiles  | An Ant-style glob expression that selects files containing JSON representations (one per line) of EiffelArtifactCreatedEvent to publish. Optional. |
+| Argument            | Required | Description               |
+| --------------------|----------|---------------------------|
+| artifactEventFiles  |          | An Ant-style glob expression that selects files containing JSON representations (one per line) of EiffelArtifactCreatedEvent to publish. |
 
 Example of publishing artifacts connected to the build:
 ```
@@ -148,12 +148,12 @@ The sendEiffelEvent pipeline step sends an Eiffel event from that's built in
 the Groovy code or read into a Groovy map from another location. It accepts
 the following parameters:
 
-| Argument          | Description                 |
-| ------------------|-----------------------------|
-| event             | A map with the event payload. The `meta.id` and `meta.time` members will be populated automatically. |
-| linkToActivity    | If true (default) the event sent will automatically include link to the current build's EiffelActivityTriggeredEvent. Optional. |
-| activityLinkType  | The link type to use when linking to the EiffelActivityTriggeredEvent. Defaults to CONTEXT but can be set to CAUSE. Optional. |
-| publishArtifact   | If true and the event being sent is EiffelArtifactCreatedEvent it will be recorded for possible later use by the publishEiffelArtifacts step. Optional. |
+| Argument          | Required | Description               |
+| ------------------|----------|---------------------------|
+| event             | ✔        | A map with the event payload. The `meta.id` and `meta.time` members will be populated automatically. |
+| linkToActivity    |          | If true (default) the event sent will automatically include link to the current build's EiffelActivityTriggeredEvent. |
+| activityLinkType  |          | The link type to use when linking to the EiffelActivityTriggeredEvent. Defaults to CONTEXT but can be set to CAUSE. |
+| publishArtifact   |          | If true and the event being sent is EiffelArtifactCreatedEvent it will be recorded for possible later use by the publishEiffelArtifacts step. |
 
 Example:
 ```
