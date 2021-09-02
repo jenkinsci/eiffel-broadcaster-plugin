@@ -4,22 +4,28 @@ This Jenkins plugin sends Eiffel events to a Message Queue. For now, only Rabbit
 The plugin can be extended with more events and or more data but the required data is there.
 A detailed list of event representations can be found in the table below.
 
-Read more about the Eiffel protocol on https://github.com/eiffel-community/eiffel
+Read more about the Eiffel protocol at https://eiffel-community.github.io/.
 
-## Jenkins events represented in Eiffel are:
-| Jenkins Event               | Eiffel Event                 |
-| --------------------------- |------------------------------|
-| Job Queued                  | EiffelActivityTriggeredEvent |
-| Job Dequeued (canceled)     | EiffelActivityCanceledEvent  |
-| Job Starts                  | EiffelActivityStartedEvent   |
-| Job Finishes                | EiffelActivityFinishedEvent  |
-| Job Successful              | EiffelActivityFinishedEvent  |
-| Job Unstable                | EiffelActivityFinishedEvent  |
-| Job Failed                  | EiffelActivityFinishedEvent  |
-| Job Aborted                 | EiffelActivityFinishedEvent  |
+## Jenkins events represented in Eiffel
 
-### Notes
-- Current versions of each event can be found in the getVersion() function in the [sourcecode.](https://github.com/Isacholm/EiffelBroadcaster/tree/master/src/main/java/com/axis/jenkins/plugins/eiffel/eiffelbroadcaster/eiffel)
+A number of Jenkins events automatically result in Eiffel events.
+Additionally, builds have various options of emitting events of their own.
+
+| Jenkins Event           | Eiffel Event                 |
+| ------------------------|------------------------------|
+| Job Queued              | [EiffelActivityTriggeredEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityTriggeredEvent.md) |
+| Job Dequeued (canceled) | [EiffelActivityCanceledEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityCanceledEvent.md) |
+| Job Starts              | [EiffelActivityStartedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityStartedEvent.md) |
+| Job Finishes            | [EiffelActivityFinishedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityFinishedEvent.md) |
+| Job Successful          | [EiffelActivityFinishedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityFinishedEvent.md) |
+| Job Unstable            | [EiffelActivityFinishedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityFinishedEvent.md) |
+| Job Failed              | [EiffelActivityFinishedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityFinishedEvent.md) |
+| Job Aborted             | [EiffelActivityFinishedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityFinishedEvent.md) |
+
+The plugin conforms to the
+[Paris edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-paris)
+of the Eiffel protocol for the events it emits. See the documentation of each
+event for details of the corresponding event version used.
 
 ## Accessing emitted Eiffel events in builds
 If a build needs to emit Eiffel events of its own they should probably have
@@ -177,8 +183,10 @@ sendEiffelEvent event: event, linkToActivity: false
 ```
 
 This step returns immediately as soon as the event has been validated and put
-on the internal outbound queue. The actual delivery of the event to the broker
-might not have happened at the time of the return.
+in the internal outbound queue. The actual delivery of the event to the broker
+might not have happened at the time of the return. The validation supports all
+events and event versions up to and including the
+[Paris edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-paris).
 
 ## API
 The plugin will do its best to populate the emitted
@@ -218,21 +226,12 @@ $ mvn hpi:hpi
 
 The plugin should install without the need to reboot Jenkins.
 
-
-## Read more about the Eiffel events used in this plugin
-- [EiffelActivityTriggeredEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityTriggeredEvent.md)
-- [EiffelActivityStartedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityStartedEvent.md)
-- [EiffelActivityFinishedEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityFinishedEvent.md)
-- [EiffelActivityCanceledEvent](https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelActivityCanceledEvent.md)
-
-This plugin is part of the [Eiffel Community](https://github.com/eiffel-community/)
-
 ## Maintainers
 
 * Isac Holm \<isac.holm@axis.com\>
 * Magnus Bäck \<magnus.back@axis.com\>
 
-# License
+## License
 ```
 The MIT License
 
@@ -256,4 +255,3 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
-==============
