@@ -242,6 +242,33 @@ public class BuildWithEiffelLinksActionTest {
         assertThat(build, hasBuildParameter(stringParam.getName(), "value"));
     }
 
+    @Test
+    public void testParameterizedFreestyleBuild_WithParamSubset() throws Exception {
+        BuildRequestParams reqParams = new BuildRequestParams();
+
+        // Define two parameters, GIVEN_PARAM and EXTRA_PARAM, but include only the former in the build request.
+        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
+        StringParameterDefinition givenParam = new StringParameterDefinition("GIVEN_PARAM", "value");
+        reqParams.buildParams.add(new NameValuePair(givenParam.getName(), "overridden value"));
+        StringParameterDefinition extraParam = new StringParameterDefinition("EXTRA_PARAM", "value");
+        job.addProperty(new ParametersDefinitionProperty(givenParam, extraParam));
+
+        WebResponse resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        jenkins.waitUntilNoActivity();
+
+        assertThat(resp.getStatusCode(), is(SC_CREATED));
+
+        AbstractBuild build = job.getBuildByNumber(1);
+        assertThat(build, is(notNullValue()));
+
+        EiffelCause cause = (EiffelCause) build.getCause(EiffelCause.class);
+        assertThat(cause, is(notNullValue()));
+        assertThat(cause.getLinks(), is(reqParams.links));
+
+        assertThat(build, hasBuildParameter(givenParam.getName(), "overridden value"));
+        assertThat(build, hasBuildParameter(extraParam.getName(), "value"));
+    }
+
     /**
      * Helper to construct the JSON object posted in the "json" form parameter. By default populated
      * with a few Eiffel links.

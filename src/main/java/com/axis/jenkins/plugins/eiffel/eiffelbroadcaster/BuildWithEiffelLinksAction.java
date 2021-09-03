@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
@@ -219,42 +220,58 @@ public class BuildWithEiffelLinksAction<
     private ParametersAction getParametersAction(final StaplerRequest req,
                                                  final JSONObject formData,
                                                  final ParametersDefinitionProperty pp) {
-        Object inputParams = formData.get(FORM_PARAM_PARAMETERS);
-        if (inputParams != null) {
-            List<ParameterValue> values = new ArrayList<>();
-            try {
-                for (Object paramObject : JSONArray.fromObject(inputParams)) {
-                    JSONObject param = (JSONObject) paramObject;
-                    String name = param.getString("name");
+        List<ParameterValue> values = new ArrayList<>();
 
-                    ParameterDefinition paramDef = pp.getParameterDefinition(name);
-                    if (paramDef == null) {
-                        throw new IllegalArgumentException(String.format(
-                                "Build request provided a value for the '%s' parameter but the job has " +
-                                        "no parameter with that name", name));
-                    }
-                    ParameterValue parameterValue = paramDef.createValue(req, param);
-                    if (parameterValue != null) {
-                        values.add(parameterValue);
-                    } else {
-                        throw new IllegalArgumentException(String.format(
-                                "Cannot initialize the '%s' parameter with the given value", name));
-                    }
+        // Collect parameters given in this request.
+        List<JSONObject> givenParams = new ArrayList<>();
+        try {
+            Object inputParams = formData.get(FORM_PARAM_PARAMETERS);
+            if (inputParams != null) {
+                for (Object paramObject : JSONArray.fromObject(inputParams)) {
+                    givenParams.add((JSONObject) paramObject);
                 }
-                return values.isEmpty() ? null : new ParametersAction(values);
             }
-            catch (ClassCastException | JSONException e) {
-                throw new IllegalArgumentException(String.format(
-                        "URL parameter '%s' couldn't be deserialized to a parameter list: %s",
-                        FORM_PARAM_PARAMETERS, e.toString()), e);
-            }
-        } else {
-            return new ParametersAction(
-                    pp.getParameterDefinitions().stream()
-                            .map(ParameterDefinition::getDefaultParameterValue)
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList()));
         }
+        catch (ClassCastException | JSONException e) {
+            throw new IllegalArgumentException(String.format(
+                    "URL parameter '%s' couldn't be deserialized to a parameter list: %s",
+                    FORM_PARAM_PARAMETERS, e.toString()), e);
+        }
+
+        // Did the request include any parameters that haven't been defined for this job?
+        Set<String> missingParamDefs = givenParams.stream()
+                .map(p -> p.getString("name"))
+                .filter(n -> pp.getParameterDefinition(n) == null)
+                .collect(Collectors.toSet());
+        if (!missingParamDefs.isEmpty()) {
+            throw new IllegalArgumentException(String.format(
+                    "Build request provided values for the following parameters that aren't defined in the job: %s'",
+                    missingParamDefs));
+        }
+
+        // Add parameter values for all given parameters.
+        for (JSONObject param : givenParams) {
+            String name = param.getString("name");
+            ParameterValue parameterValue = pp.getParameterDefinition(name).createValue(req, param);
+            if (parameterValue != null) {
+                values.add(parameterValue);
+            } else {
+                throw new IllegalArgumentException(String.format(
+                        "Cannot initialize the '%s' parameter with the given value", name));
+            }
+        }
+
+        // Add default parameter values for parameters that haven't been given values above.
+        Set<String> paramsWithValues = values.stream()
+                .map(ParameterValue::getName)
+                .collect(Collectors.toSet());
+        values.addAll(pp.getParameterDefinitions().stream()
+                .filter(pd -> !paramsWithValues.contains(pd.getName()))
+                .map(ParameterDefinition::getDefaultParameterValue)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
+
+        return values.isEmpty() ? null : new ParametersAction(values);
     }
 
     @CheckForNull
