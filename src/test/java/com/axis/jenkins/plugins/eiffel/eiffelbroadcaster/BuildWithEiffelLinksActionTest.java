@@ -36,7 +36,6 @@ import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
-import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
@@ -52,6 +51,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.*;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_CREATED;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -133,11 +133,7 @@ public class BuildWithEiffelLinksActionTest {
         assertThat(cause, is(notNullValue()));
         assertThat(cause.getLinks(), is(reqParams.links));
 
-        ParametersAction paramAction = build.getAction(ParametersAction.class);
-        assertThat(paramAction, is(notNullValue()));
-        ParameterValue actualParam = paramAction.getParameter(stringParam.getName());
-        assertThat(actualParam, is(notNullValue()));
-        assertThat(actualParam.getValue(), is("overridden value"));
+        assertThat(build, hasBuildParameter(stringParam.getName(), "overridden value"));
     }
 
     @Test
@@ -162,11 +158,7 @@ public class BuildWithEiffelLinksActionTest {
         assertThat(cause, is(notNullValue()));
         assertThat(cause.getLinks(), is(reqParams.links));
 
-        ParametersAction paramAction = build.getAction(ParametersAction.class);
-        assertThat(paramAction, is(notNullValue()));
-        ParameterValue actualParam = paramAction.getParameter(stringParam.getName());
-        assertThat(actualParam, is(notNullValue()));
-        assertThat(actualParam.getValue(), is("overridden value"));
+        assertThat(build, hasBuildParameter(stringParam.getName(), "overridden value"));
     }
 
     @Test
@@ -247,11 +239,7 @@ public class BuildWithEiffelLinksActionTest {
         assertThat(cause, is(notNullValue()));
         assertThat(cause.getLinks(), is(reqParams.links));
 
-        ParametersAction paramAction = build.getAction(ParametersAction.class);
-        assertThat(paramAction, is(notNullValue()));
-        ParameterValue actualParam = paramAction.getParameter(stringParam.getName());
-        assertThat(actualParam, is(notNullValue()));
-        assertThat(actualParam.getValue(), is("value"));
+        assertThat(build, hasBuildParameter(stringParam.getName(), "value"));
     }
 
     /**

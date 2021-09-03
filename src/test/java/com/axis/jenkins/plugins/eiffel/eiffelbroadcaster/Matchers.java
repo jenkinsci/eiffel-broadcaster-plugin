@@ -26,12 +26,15 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.Run;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 
 /**
- * A collection of Hamcrest {@link Matcher} functions that inspect the state of Eiffel events.
+ * A collection of Hamcrest {@link Matcher} functions that e.g. inspect the state of Eiffel events.
  */
 public class Matchers {
     /**
@@ -65,6 +68,35 @@ public class Matchers {
     public static Matcher<EiffelActivityTriggeredEvent> hasTrigger(
             EiffelActivityTriggeredEvent.Data.Trigger.Type type) {
         return hasTrigger(type, "");
+    }
+
+    /**
+     * Returns a matcher that checks whether the subject {@link Run} has a parameter
+     * with the given name and value.
+     *
+     * @param name the expected name of the parameter
+     * @param value the expected value of the parameter
+     */
+    public static Matcher<Run> hasBuildParameter(String name, Object value) {
+        return new TypeSafeMatcher<Run>() {
+            @Override
+            protected boolean matchesSafely(Run run) {
+                ParametersAction paramAction = run.getAction(ParametersAction.class);
+                if (paramAction == null) {
+                    return false;
+                }
+                ParameterValue actualParam = paramAction.getParameter(name);
+                if (actualParam == null) {
+                    return false;
+                }
+                return value.equals(actualParam.getValue());
+            }
+
+            @Override
+            public void describeTo(Description description) {
+                description.appendText(String.format("run having a %s parameter with the value '%s'", name, value));
+            }
+        };
     }
 
     /**
