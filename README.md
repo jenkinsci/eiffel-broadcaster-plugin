@@ -5,6 +5,9 @@ The plugin can be extended with more events and or more data but the required da
 A detailed list of event representations can be found in the table below.
 
 Read more about the Eiffel protocol at https://eiffel-community.github.io/.
+The plugin and its features were presented at the 2021 Eiffel Summit;
+the [presentation slides](https://github.com/eiffel-community/community/blob/master/presentations/eiffel_summit_2021.1/The%20eiffel-broadcaster%20Jenkins%20plugin.pdf)
+and a [video](https://youtu.be/fRCq9VosRJA) are available.
 
 ## Jenkins events represented in Eiffel
 
