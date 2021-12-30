@@ -120,6 +120,8 @@ public class EiffelEvent {
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     public static class Link {
+        private String domainId;
+
         @JsonInclude(JsonInclude.Include.ALWAYS)
         private UUID target;
 
@@ -129,6 +131,14 @@ public class EiffelEvent {
         public Link(@JsonProperty("type") Type type, @JsonProperty("target") UUID target) {
             this.target = target;
             this.type = type;
+        }
+
+        public String getDomainId() {
+            return domainId;
+        }
+
+        public void setDomainId(String domainId) {
+            this.domainId = domainId;
         }
 
         public UUID getTarget() {
@@ -152,18 +162,20 @@ public class EiffelEvent {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Link link = (Link) o;
-            return target.equals(link.target) &&
+            return Objects.equals(domainId, link.domainId) &&
+                    target.equals(link.target) &&
                     type.equals(link.type);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(target, type);
+            return Objects.hash(domainId, target, type);
         }
 
         @Override
         public String toString() {
             return new ToStringBuilder(this)
+                    .append("domainId", domainId)
                     .append("target", target)
                     .append("type", type)
                     .toString();
@@ -190,6 +202,7 @@ public class EiffelEvent {
             PREVIOUS_VERSION,
             RESOLVED_ISSUE,
             REUSED_ARTIFACT,
+            RUNTIME_ENVIRONMENT,
             SUB_CONFIDENCE_LEVEL,
             SUBJECT,
             SUCCESSFUL_ISSUE,

@@ -27,8 +27,11 @@ Additionally, builds have various options of emitting events of their own.
 
 The plugin conforms to the
 [Paris edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-paris)
-of the Eiffel protocol for the events it emits. See the documentation of each
-event for details of the corresponding event version used.
+of the Eiffel protocol for the events it emits. Users of the provided
+sendEiffelEvent pipeline step may choose to emit events from any Eiffel
+edition up to and including the
+[Lyon edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-lyon).
+See the documentation of each event for details of the corresponding event version used.
 
 ## Accessing emitted Eiffel events in builds
 If a build needs to emit Eiffel events of its own they should probably have
@@ -189,7 +192,7 @@ This step returns immediately as soon as the event has been validated and put
 in the internal outbound queue. The actual delivery of the event to the broker
 might not have happened at the time of the return. The validation supports all
 events and event versions up to and including the
-[Paris edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-paris).
+[Lyon edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-lyon).
 
 ## API
 The plugin will do its best to populate the emitted

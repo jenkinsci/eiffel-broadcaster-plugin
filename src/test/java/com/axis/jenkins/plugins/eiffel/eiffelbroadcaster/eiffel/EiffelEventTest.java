@@ -49,6 +49,17 @@ public class EiffelEventTest {
         assertThat(event, instanceOf(GenericEiffelEvent.class));
     }
 
+    @Test
+    public void testJsonDeserialization_WithLyonEvent() throws IOException {
+        // Make sure we can deserialize an event with a newer version than the default,
+        // and that an attribute that was added in that version is picked up.
+        EiffelEvent event = new ObjectMapper().readValue(
+                getClass().getResourceAsStream("EiffelCompositionDefinedEvent_with_domainid_link.json"),
+                EiffelEvent.class);
+        assertThat(event.getMeta().getVersion(), is("3.2.0"));
+        assertThat(event.getLinks().get(0).getDomainId(), is("example.com"));
+    }
+
     @Test(expected = InvalidJsonPayloadException.class)
     public void testJsonDeserialization_WithMissingTypeInfo() throws IOException {
         new ObjectMapper().readValue(

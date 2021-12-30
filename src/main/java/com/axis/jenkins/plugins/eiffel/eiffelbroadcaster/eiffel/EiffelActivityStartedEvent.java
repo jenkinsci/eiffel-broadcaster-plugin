@@ -127,8 +127,12 @@ public class EiffelActivityStartedEvent extends EiffelEvent {
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
         public static class LiveLogs {
+            private String mediaType;
+
             @JsonInclude(JsonInclude.Include.ALWAYS)
             private String name;
+
+            private List<String> tags = new ArrayList<>();
 
             @JsonInclude(JsonInclude.Include.ALWAYS)
             private URI uri;
@@ -138,12 +142,24 @@ public class EiffelActivityStartedEvent extends EiffelEvent {
                 this.uri = uri;
             }
 
+            public String getMediaType() {
+                return mediaType;
+            }
+
+            public void setMediaType(String mediaType) {
+                this.mediaType = mediaType;
+            }
+
             public String getName() {
                 return name;
             }
 
             public void setName(String name) {
                 this.name = name;
+            }
+
+            public List<String> getTags() {
+                return tags;
             }
 
             public URI getURI() {
@@ -159,13 +175,15 @@ public class EiffelActivityStartedEvent extends EiffelEvent {
                 if (this == o) return true;
                 if (o == null || getClass() != o.getClass()) return false;
                 LiveLogs liveLogs = (LiveLogs) o;
-                return name.equals(liveLogs.name) &&
+                return Objects.equals(mediaType, liveLogs.mediaType) &&
+                        name.equals(liveLogs.name) &&
+                        tags.equals(liveLogs.tags) &&
                         uri.equals(liveLogs.uri);
             }
 
             @Override
             public int hashCode() {
-                return Objects.hash(name, uri);
+                return Objects.hash(mediaType, name, tags, uri);
             }
         }
     }
