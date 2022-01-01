@@ -99,10 +99,18 @@ public class JenkinsSourceProvider implements SourceProvider {
     /** {@inheritDoc} */
     @Override
     public void populateSource(@Nonnull EiffelEvent.Meta.Source source) {
-        source.setHost(getHost());
-        source.setName(name);
+        // Most source values can be set by the input event so don't overwrite existing values,
+        // except for the serializer since it's always this plugin that does the serialization.
+        if (source.getHost() == null) {
+            source.setHost(getHost());
+        }
+        if (source.getName() == null) {
+            source.setName(name);
+        }
         source.setSerializer(serializer);
-        source.setUri(uri);
+        if (source.getUri() == null) {
+            source.setUri(uri);
+        }
     }
 
     /**

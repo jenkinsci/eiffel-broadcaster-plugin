@@ -63,12 +63,8 @@ public class EiffelEvent {
     private static SourceProvider sourceProvider;
 
     public EiffelEvent(String type, String version) {
-        Meta.Source source = null;
-        if (sourceProvider != null) {
-            source = new Meta.Source();
-            sourceProvider.populateSource(source);
-        }
-        this.meta = new Meta(type, version, source);
+        this.meta = new Meta(type, version);
+        populateSource();
     }
 
     public List<Link> getLinks() {
@@ -111,6 +107,15 @@ public class EiffelEvent {
                 .append("links", links)
                 .append("meta", meta)
                 .toString();
+    }
+
+    private void populateSource() {
+        if (sourceProvider != null) {
+            if (getMeta().getSource() == null) {
+                getMeta().setSource(new Meta.Source());
+            }
+            sourceProvider.populateSource(getMeta().getSource());
+        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -213,7 +218,7 @@ public class EiffelEvent {
         @JsonInclude(JsonInclude.Include.ALWAYS)
         private final String version;
 
-        public Meta(@JsonProperty("type") String type, @JsonProperty("version") String version, @JsonProperty("source") Source source) {
+        public Meta(@JsonProperty("type") String type, @JsonProperty("version") String version) {
             if (StringUtils.isBlank(type)) {
                 throw new IllegalArgumentException("The event type must be set to a non-empty string");
             }
@@ -222,7 +227,6 @@ public class EiffelEvent {
             }
             this.type = type;
             this.version = version;
-            this.source = source;
         }
 
         public UUID getId() {
@@ -403,12 +407,15 @@ public class EiffelEvent {
             // Attempt to deserialize the TreeNode into a class in this package
             // with the same name as the event type. If that fails, deserialize
             // into GenericEiffelEvent where the data attribute is a JsonNode.
+            EiffelEvent event;
             try {
-                return p.getCodec().treeToValue(node,
+                event = (EiffelEvent) p.getCodec().treeToValue(node,
                         Class.forName(getClass().getPackage().getName() + "." + eventType));
             } catch (ClassNotFoundException e) {
-                return p.getCodec().treeToValue(node, GenericEiffelEvent.class);
+                event = p.getCodec().treeToValue(node, GenericEiffelEvent.class);
             }
+            event.populateSource();
+            return event;
         }
     }
 }

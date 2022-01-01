@@ -54,4 +54,40 @@ public class EiffelEventTest {
         new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelCompositionDefinedEvent_without_meta.json"), EiffelEvent.class);
     }
+
+    @Test
+    public void testSourceProvider_WithDirectConstruction() throws IOException {
+        EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
+        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent("activity name");
+        assertThat(event.getMeta().getSource().getDomainId(), is(DummyDomainIdProvider.DOMAIN_ID));
+    }
+
+    @Test
+    public void testSourceProvider_FromJsonToConcreteClass() throws IOException {
+        EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
+        EiffelEvent event = new ObjectMapper().readValue(
+                getClass().getResourceAsStream("EiffelActivityTriggeredEvent.json"), EiffelEvent.class);
+        assertThat(event.getMeta().getSource().getDomainId(), is(DummyDomainIdProvider.DOMAIN_ID));
+    }
+
+    @Test
+    public void testSourceProvider_FromJsonToGenericClass() throws IOException {
+        EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
+        EiffelEvent event = new ObjectMapper().readValue(
+                getClass().getResourceAsStream("EiffelCompositionDefinedEvent.json"), EiffelEvent.class);
+        // First make sure we actually get a GenericEiffelEvent object. If we introduce a concrete
+        // class for EiffelCompositionDefinedEvent this testcase must be updated to not follow
+        // the same code path as testSourceProvider_FromJsonToConcreteClass.
+        assertThat(event, instanceOf(GenericEiffelEvent.class));
+        assertThat(event.getMeta().getSource().getDomainId(), is(DummyDomainIdProvider.DOMAIN_ID));
+    }
+
+    class DummyDomainIdProvider implements SourceProvider {
+        static final String DOMAIN_ID = "dummy";
+
+        @Override
+        public void populateSource(EiffelEvent.Meta.Source source) {
+            source.setDomainId(DOMAIN_ID);
+        }
+    }
 }

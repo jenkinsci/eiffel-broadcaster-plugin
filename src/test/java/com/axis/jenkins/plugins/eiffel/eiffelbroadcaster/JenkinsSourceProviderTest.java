@@ -25,6 +25,8 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.packageurl.PackageURL;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -55,5 +57,15 @@ public class JenkinsSourceProviderTest {
         assertThat(purl.getName(), is("eiffel-broadcaster"));
         // Not testing meta.source.uri since it isn't available during tests.
         // Not testing meta.source.host to avoid test flakiness.
+    }
+
+    @Test
+    public void testSourceNameIsNotOverwritten() throws Exception {
+        EiffelEvent event = new ObjectMapper().readValue(
+                getClass().getResourceAsStream("EiffelActivityTriggeredEvent.json"), EiffelEvent.class);
+        // We get the meta.source.name value from the JSON file
+        assertThat(event.getMeta().getSource().getName(), is("Custom meta.source.name"));
+        // We get the meta.source.serializer value from JenkinsSourceProvider
+        assertThat(event.getMeta().getSource().getSerializer(), is(notNullValue()));
     }
 }

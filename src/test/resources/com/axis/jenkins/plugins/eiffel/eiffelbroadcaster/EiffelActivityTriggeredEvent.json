@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "type": "EiffelActivityTriggeredEvent",
+    "version": "4.1.0",
+    "time": 1234567890,
+    "id": "aaaaaaaa-bbbb-5ccc-8ddd-eeeeeeeeeee0",
+    "tags": ["foo", "bar"],
+    "source": {
+      "name": "Custom meta.source.name"
+    }
+  },
+  "data": {
+    "name": "Activity name",
+    "triggers": [
+      {
+        "type": "MANUAL"
+      }
+    ]
+  },
+  "links": []
+}
