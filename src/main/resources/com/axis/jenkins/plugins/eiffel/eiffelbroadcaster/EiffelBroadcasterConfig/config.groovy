@@ -62,4 +62,9 @@ f.section(title: "Eiffel Broadcaster Plugin") {
     f.entry(title: "Activity Categories", field: "activityCategories", help: l+"help-activity-categories.html") {
         f.textarea(value: my.activityCategories)
     }
+    f.entry(title: "Hostname source", field: "hostnameSource", help: l+"help-hostname-source.html") {
+        f.enum {
+            raw(my.description)
+        }
+    }
 }

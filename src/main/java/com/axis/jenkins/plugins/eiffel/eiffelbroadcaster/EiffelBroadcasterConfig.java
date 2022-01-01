@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2021 Axis Communications AB.
+ Copyright 2018-2022 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -90,6 +90,8 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     private String appId;
     /* A list of strings representing categories to include in the ActTs. */
     private final List<String> activityCategories = new ArrayList<>();
+    /* How the hostname used in the <tt>meta.source.host</tt> member should be determined. */
+    private HostnameSource hostnameSource = HostnameSource.NETWORK_STACK;
 
     private transient final EventValidator eventValidator = new EventValidator();
 
@@ -109,7 +111,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     @DataBoundConstructor
     public EiffelBroadcasterConfig(boolean enableBroadcaster, String serverUri, String userName, Secret userPassword,
                             String exchangeName, String virtualHost, String routingKey, boolean persistentDelivery,
-                            String appId, String activityCategories) {
+                            String appId, String activityCategories, HostnameSource hostnameSource) {
         this.enableBroadcaster = enableBroadcaster;
         this.serverUri = serverUri;
         this.userName = userName;
@@ -120,6 +122,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
         this.persistentDelivery = persistentDelivery;
         this.appId = appId;
         this.activityCategories.addAll(Util.getLinesInString(activityCategories));
+        this.hostnameSource = hostnameSource;
     }
 
     @Override
@@ -342,6 +345,16 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     public void setActivityCategories(String activityCategories) {
         this.activityCategories.clear();
         this.activityCategories.addAll(Util.getLinesInString(activityCategories));
+    }
+
+    /** Returns the hostname source. */
+    public HostnameSource getHostnameSource() {
+        return hostnameSource;
+    }
+
+    /** Sets the hostname source. */
+    public void setHostnameSource(HostnameSource hostnameSource) {
+        this.hostnameSource = hostnameSource;
     }
 
     @Nonnull

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2022 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,10 @@ import com.github.packageurl.PackageURLBuilder;
 import hudson.Plugin;
 import hudson.PluginWrapper;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.Instant;
@@ -61,7 +63,7 @@ public class JenkinsSourceProvider implements SourceProvider {
     /** The last time we attempted to obtain the current host's name. */
     private Instant lastHostCheck = Instant.MIN;
 
-    private String host;
+    private String physicalHostname;
     private String name;
     private String serializer;
     private URI uri;
@@ -114,22 +116,40 @@ public class JenkinsSourceProvider implements SourceProvider {
     }
 
     /**
-     * Returns the name of the current host. Unless already known it looks up the name against
-     * the network stack. DNS lookups may be involved so the call may block. To avoid a complete
-     * standstill if there are DNS problems the check won't take place more often that once
-     * every {@link #HOST_CHECK_INTERVAL}.
+     * Returns the name of the current host. Depending on {@link EiffelBroadcasterConfig#getHostnameSource()}
+     * it will either grab the hostname from the configured Jenkins controller URL or ask the OS and network stack.
+     * In the latter case DNS lookups may be involved so the call may block. To avoid a complete standstill if
+     * there are DNS problems the check won't take place more often that once every {@link #HOST_CHECK_INTERVAL},
+     * and the result will be cached until the next restart.
      */
     @CheckForNull
     private synchronized String getHost() {
-        if (host == null &&
-                Duration.between(lastHostCheck, Instant.now()).compareTo(HOST_CHECK_INTERVAL) > 0) {
-            try {
-                host = InetAddress.getLocalHost().getHostName();
-            } catch (UnknownHostException e) {
-                lastHostCheck = Instant.now();
-                logger.debug("Error looking up the hostname of the Jenkins server", e);
-            }
+        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        if (config == null) {
+            return null;
         }
-        return host;
+        switch (config.getHostnameSource()) {
+            case NETWORK_STACK:
+                if (physicalHostname == null &&
+                        Duration.between(lastHostCheck, Instant.now()).compareTo(HOST_CHECK_INTERVAL) > 0) {
+                    try {
+                        physicalHostname = InetAddress.getLocalHost().getHostName();
+                    } catch (UnknownHostException e) {
+                        lastHostCheck = Instant.now();
+                        logger.debug("Error looking up the hostname of the Jenkins server", e);
+                    }
+                }
+                return physicalHostname;
+            case CONFIGURED_URL:
+                try {
+                    return new URL(Jenkins.get().getRootUrl()).getHost();
+                } catch (MalformedURLException e) {
+                    logger.debug("Error parsing the configured root URL", e);
+                    return null;
+                }
+            default:
+                throw new IllegalStateException(
+                        String.format("Unexpected enum value %s encountered", config.getHostnameSource()));
+        }
     }
 }

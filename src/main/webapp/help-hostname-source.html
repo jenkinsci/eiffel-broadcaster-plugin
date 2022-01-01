@@ -1,0 +1,20 @@
+<div>
+    Selects how the Jenkins controller's hostname should be determined.
+    This hostname will end up in the <tt>meta.source.host</tt> member
+    of all emitted events. Two options are available:
+    <ul>
+        <li>
+            <b>The hostname of the Jenkins controller according to the network
+            stack</b>. The plugin will obtain the hostname from the operating
+            system, translate it to an IP address, and resolve it back into
+            a (usually fully-qualified) hostname. The result may depend on
+            the hosts file and/or DNS.
+        </li>
+        <li>
+            <b>The hostname from the configured URL of the Jenkins controller.</b>
+            This may be desirable if the Jenkins controller is known by and
+            accessed through a DNS alias and it's that alias name rather than
+            the physical hostname that should be exposed.
+        </li>
+    </ul>
+</div>
