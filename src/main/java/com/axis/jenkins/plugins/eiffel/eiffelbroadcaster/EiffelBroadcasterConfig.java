@@ -47,7 +47,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -73,7 +73,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     private static final String CONFIG_XML = "eiffel-broadcaster.xml";
 
     /* The status whether the plugin is enabled */
-    private boolean enableBroadcaster;
+    private boolean enableBroadcaster = false;
 
     /* The MQ server URI */
     private String serverUri;
@@ -91,7 +91,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      */
     private String routingKey;
     /* Messages delivered to durable queues will be logged to disk if persistent delivery is set. */
-    private boolean persistentDelivery;
+    private boolean persistentDelivery = true;
     /* Application id that can be read by the consumer (optional). */
     private String appId;
     /* A list of strings representing categories to include in the ActTs. */
@@ -101,44 +101,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
 
     private transient final EventValidator eventValidator = new EventValidator();
 
-    /**
-     * Creates an instance with specified parameters.
-     *
-     * @param enableBroadcaster  if this plugin is enabled
-     * @param serverUri          the server uri
-     * @param userName           the user name
-     * @param userPassword       the user password
-     * @param exchangeName       the name of the exchange
-     * @param virtualHost        the name of the virtual host
-     * @param routingKey         the routing key
-     * @param persistentDelivery if using persistent delivery mode
-     * @param appId              the application id
-     */
-    @DataBoundConstructor
-    public EiffelBroadcasterConfig(boolean enableBroadcaster, String serverUri, String userName, Secret userPassword,
-                            String exchangeName, String virtualHost, String routingKey, boolean persistentDelivery,
-                            String appId, String activityCategories, HostnameSource hostnameSource) {
-        this.enableBroadcaster = enableBroadcaster;
-        this.serverUri = serverUri;
-        this.userName = userName;
-        this.userPassword = userPassword;
-        this.exchangeName = exchangeName;
-        this.virtualHost = virtualHost;
-        this.routingKey = routingKey;
-        this.persistentDelivery = persistentDelivery;
-        this.appId = appId;
-        this.activityCategories.addAll(Util.getLinesInString(activityCategories));
-        this.hostnameSource = hostnameSource;
-        super.load();
-        EiffelEvent.setSourceProvider(new JenkinsSourceProvider());
-    }
-
-    /**
-     * Load configuration on invoke.
-     */
     public EiffelBroadcasterConfig() {
-        this.enableBroadcaster = false; // default value
-        this.persistentDelivery = true; // default value
         super.load();
         EiffelEvent.setSourceProvider(new JenkinsSourceProvider());
     }
@@ -175,6 +138,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param enableBroadcaster true if this plugin is enabled.
      */
+    @DataBoundSetter
     public void setEnableBroadcaster(boolean enableBroadcaster) {
         this.enableBroadcaster = enableBroadcaster;
     }
@@ -193,6 +157,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param serverUri the URI.
      */
+    @DataBoundSetter
     public void setServerUri(final String serverUri) {
         this.serverUri = StringUtils.strip(StringUtils.stripToNull(serverUri), "/");
     }
@@ -211,6 +176,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param userName the user name.
      */
+    @DataBoundSetter
     public void setUserName(String userName) {
         this.userName = userName;
     }
@@ -229,6 +195,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param userPassword the user password.
      */
+    @DataBoundSetter
     public void setUserPassword(Secret userPassword) {
         this.userPassword = userPassword;
     }
@@ -254,6 +221,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param exchangeName the exchange name.
      */
+    @DataBoundSetter
     public void setExchangeName(String exchangeName) {
         this.exchangeName = exchangeName;
     }
@@ -272,6 +240,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param virtualHost the exchange name.
      */
+    @DataBoundSetter
     public void setVirtualHost(String virtualHost) {
         this.virtualHost = virtualHost;
     }
@@ -290,6 +259,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param routingKey the routing key.
      */
+    @DataBoundSetter
     public void setRoutingKey(String routingKey) {
         this.routingKey = routingKey;
     }
@@ -309,6 +279,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param pd if persistentDelivery is to be used.
      */
+    @DataBoundSetter
     public void setPersistentDelivery(boolean pd) {
         this.persistentDelivery = pd;
     }
@@ -327,6 +298,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
      *
      * @param appId Application id to use
      */
+    @DataBoundSetter
     public void setAppId(String appId) {
         this.appId = appId;
     }
@@ -342,6 +314,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     }
 
     /** Sets the list of categories to attach to the activities. */
+    @DataBoundSetter
     public void setActivityCategories(String activityCategories) {
         this.activityCategories.clear();
         this.activityCategories.addAll(Util.getLinesInString(activityCategories));
@@ -353,6 +326,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     }
 
     /** Sets the hostname source. */
+    @DataBoundSetter
     public void setHostnameSource(HostnameSource hostnameSource) {
         this.hostnameSource = hostnameSource;
     }
