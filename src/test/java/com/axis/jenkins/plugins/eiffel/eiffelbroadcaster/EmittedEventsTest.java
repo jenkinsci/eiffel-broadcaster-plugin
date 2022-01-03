@@ -45,7 +45,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -58,7 +57,7 @@ import static org.hamcrest.Matchers.*;
  */
 public class EmittedEventsTest {
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public RestoreSourceProviderJenkinsRule jenkins = new RestoreSourceProviderJenkinsRule();
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {

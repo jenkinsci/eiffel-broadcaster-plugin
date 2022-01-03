@@ -30,21 +30,23 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.PossibleAuthenticationFailureException;
 import hudson.Extension;
-import hudson.Plugin;
-import hudson.model.Describable;
+import hudson.XmlFile;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
+import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -58,13 +60,17 @@ import org.slf4j.LoggerFactory;
  * @author Isac Holm &lt;isac.holm@axis.com&gt;
  */
 @Extension
-public final class EiffelBroadcasterConfig extends Plugin implements Describable<EiffelBroadcasterConfig> {
+@Symbol("eiffel-broadcaster")
+public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     private static final Logger logger = LoggerFactory.getLogger(EiffelBroadcasterConfig.class);
     private transient final String[] schemes = {};  // Replaced by ALLOWED_URL_SCHEMES but retained to satisfy XStream
     private static final String[] ALLOWED_URL_SCHEMES = {"amqp", "amqps"};
     private static final String SERVER_URI = "serverUri";
     private static final String USERNAME = "userName";
     private static final String PASSWORD = "userPassword";
+
+    /* The name of the configuration file. */
+    private static final String CONFIG_XML = "eiffel-broadcaster.xml";
 
     /* The status whether the plugin is enabled */
     private boolean enableBroadcaster;
@@ -123,15 +129,8 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
         this.appId = appId;
         this.activityCategories.addAll(Util.getLinesInString(activityCategories));
         this.hostnameSource = hostnameSource;
-    }
-
-    @Override
-    public void start() throws Exception {
-        super.start();
-        logger.info("Starting EiffelBroadcaster Plugin");
+        super.load();
         EiffelEvent.setSourceProvider(new JenkinsSourceProvider());
-        load();
-        MQConnection.getInstance().initialize(userName, userPassword, serverUri, virtualHost);
     }
 
     /**
@@ -140,14 +139,26 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
     public EiffelBroadcasterConfig() {
         this.enableBroadcaster = false; // default value
         this.persistentDelivery = true; // default value
+        super.load();
+        EiffelEvent.setSourceProvider(new JenkinsSourceProvider());
     }
 
     @Override
-    public void configure(StaplerRequest req, JSONObject formData) throws IOException, ServletException,
-            Descriptor.FormException {
+    public boolean configure(StaplerRequest req, JSONObject formData) throws Descriptor.FormException {
         req.bindJSON(this, formData);
         save();
         MQConnection.getInstance().initialize(userName, userPassword, serverUri, virtualHost);
+        return true;
+    }
+
+    /**
+     * For backwards-compatibility with the previous {@link hudson.Plugin}-derived version.
+     *
+     * @return XmlFile representing the configuration file.
+     */
+    @Override
+    protected XmlFile getConfigFile() {
+        return new XmlFile(new File(Jenkins.get().getRootDir(), CONFIG_XML));
     }
 
     /**
@@ -155,7 +166,7 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
      *
      * @return true if this plugin is enabled.
      */
-    public boolean isBroadcasterEnabled() {
+    public boolean getEnableBroadcaster() {
         return this.enableBroadcaster;
     }
 
@@ -224,20 +235,9 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
 
     /**
      * Gets this extension's instance.
-     *
-     * If {@link Jenkins#getInstanceOrNull()} isn't available
-     * or the plugin class isn't registered null will be returned.
-     *
-     * @return the instance of this extension.
      */
     public static EiffelBroadcasterConfig getInstance() {
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
-        if (jenkins != null) {
-            return jenkins.getPlugin(EiffelBroadcasterConfig.class);
-        } else {
-            logger.error("Error, Jenkins could not be found, so no plugin!");
-            return null;
-        }
+        return EiffelBroadcasterConfig.all().get(EiffelBroadcasterConfig.class);
     }
 
     /**
@@ -362,79 +362,58 @@ public final class EiffelBroadcasterConfig extends Plugin implements Describable
         return eventValidator;
     }
 
-    /**
-     * Returns the descriptor instance.
-     *
-     * @return descriptor instance.
-     */
     @Override
-    public Descriptor<EiffelBroadcasterConfig> getDescriptor() {
-        Jenkins instance = Jenkins.getInstanceOrNull();
-        if (instance != null) {
-            return instance.getDescriptorOrDie(getClass());
-        }
-        return null;
+    public String getDisplayName() {
+        return "EiffelBroadcaster";
     }
 
     /**
-     * Implementation of the Descriptor interface.
+     * Tests connection to the server URI.
+     *
+     * @param uri  the URI.
+     * @param name the user name.
+     * @param pw   the user password.
+     * @return FormValidation object that indicates ok or error.
+     * @throws javax.servlet.ServletException Exception for servlet.
      */
-    @Extension
-    public static final class DescriptorImpl extends Descriptor<EiffelBroadcasterConfig> {
-        @Override
-        public String getDisplayName() {
-            return "EiffelBroadcaster";
-        }
-
-        /**
-         * Tests connection to the server URI.
-         *
-         * @param uri the URI.
-         * @param name the user name.
-         * @param pw the user password.
-         * @return FormValidation object that indicates ok or error.
-         * @throws javax.servlet.ServletException Exception for servlet.
-         */
-        @RequirePOST
-        public FormValidation doTestConnection(@QueryParameter(SERVER_URI) final String uri,
-                                               @QueryParameter(USERNAME) final String name,
-                                               @QueryParameter(PASSWORD) final Secret pw) throws ServletException {
-            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-            UrlValidator urlValidator = new UrlValidator(ALLOWED_URL_SCHEMES, UrlValidator.ALLOW_LOCAL_URLS);
-            FormValidation result = FormValidation.ok();
-            if (urlValidator.isValid(uri)) {
-                Connection conn = null;
-                try {
-                    ConnectionFactory connFactory = new ConnectionFactory();
-                    connFactory.setUri(uri);
-                    if (StringUtils.isNotEmpty(name)) {
-                        connFactory.setUsername(name);
-                        if (StringUtils.isNotEmpty(Secret.toString(pw))) {
-                            connFactory.setPassword(Secret.toString(pw));
-                        }
-                    }
-                    conn = connFactory.newConnection();
-                } catch (URISyntaxException e) {
-                    result = FormValidation.error("Invalid Uri");
-                } catch (PossibleAuthenticationFailureException e) {
-                    result = FormValidation.error("Authentication Failure");
-                } catch (Exception e) {
-                    result = FormValidation.error(e.getMessage());
-                }
-                // Close the connection outside the exception block above so spurious connection
-                // closure problems won't flag the configuration as invalid, but do log the exception.
-                if (conn != null && conn.isOpen()) {
-                    try {
-                        conn.close();
-                    } catch (IOException e) {
-                        logger.warn("An error occurred when closing the AMQP connection", e);
+    @RequirePOST
+    public FormValidation doTestConnection(@QueryParameter(SERVER_URI) final String uri,
+                                           @QueryParameter(USERNAME) final String name,
+                                           @QueryParameter(PASSWORD) final Secret pw) throws ServletException {
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+        UrlValidator urlValidator = new UrlValidator(ALLOWED_URL_SCHEMES, UrlValidator.ALLOW_LOCAL_URLS);
+        FormValidation result = FormValidation.ok();
+        if (urlValidator.isValid(uri)) {
+            Connection conn = null;
+            try {
+                ConnectionFactory connFactory = new ConnectionFactory();
+                connFactory.setUri(uri);
+                if (StringUtils.isNotEmpty(name)) {
+                    connFactory.setUsername(name);
+                    if (StringUtils.isNotEmpty(Secret.toString(pw))) {
+                        connFactory.setPassword(Secret.toString(pw));
                     }
                 }
-            } else {
+                conn = connFactory.newConnection();
+            } catch (URISyntaxException e) {
                 result = FormValidation.error("Invalid Uri");
+            } catch (PossibleAuthenticationFailureException e) {
+                result = FormValidation.error("Authentication Failure");
+            } catch (Exception e) {
+                result = FormValidation.error(e.getMessage());
             }
-            return result;
+            // Close the connection outside the exception block above so spurious connection
+            // closure problems won't flag the configuration as invalid, but do log the exception.
+            if (conn != null && conn.isOpen()) {
+                try {
+                    conn.close();
+                } catch (IOException e) {
+                    logger.warn("An error occurred when closing the AMQP connection", e);
+                }
+            }
+        } else {
+            result = FormValidation.error("Invalid Uri");
         }
+        return result;
     }
-
 }

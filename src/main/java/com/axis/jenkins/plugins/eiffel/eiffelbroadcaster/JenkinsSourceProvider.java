@@ -29,7 +29,6 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SourceProvider;
 import com.github.packageurl.MalformedPackageURLException;
 import com.github.packageurl.PackageURL;
 import com.github.packageurl.PackageURLBuilder;
-import hudson.Plugin;
 import hudson.PluginWrapper;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -42,6 +41,7 @@ import java.time.Instant;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,9 +71,9 @@ public class JenkinsSourceProvider implements SourceProvider {
     public JenkinsSourceProvider() {
         Jenkins jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
-            Plugin plugin = jenkins.getPlugin(EiffelBroadcasterConfig.class);
-            if (plugin != null) {
-                PluginWrapper pluginWrapper = plugin.getWrapper();
+            String pluginShortName = EiffelBroadcasterConfig.class.getAnnotation(Symbol.class).value()[0];
+            PluginWrapper pluginWrapper = jenkins.getPluginManager().getPlugin(pluginShortName);
+            if (pluginWrapper != null) {
                 name = pluginWrapper.getDisplayName();
 
                 if (pluginWrapper.getUrl() != null) {

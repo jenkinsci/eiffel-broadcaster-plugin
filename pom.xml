@@ -65,7 +65,7 @@
         <commons.lang3.version>3.11</commons.lang3.version>
         <commons.validator.version>1.7</commons.validator.version>
         <jackson2-api.version>2.11.1</jackson2-api.version>
-        <jenkins-test-harness.version>2.49</jenkins-test-harness.version>
+        <jenkins-test-harness.version>2.72</jenkins-test-harness.version>
         <jmockit.version>1.41</jmockit.version>
         <json-schema-validator.version>1.0.43</json-schema-validator.version>
         <packageurl.version>1.2.0</packageurl.version>
@@ -102,6 +102,16 @@
             <groupId>com.networknt</groupId>
             <artifactId>json-schema-validator</artifactId>
             <version>${json-schema-validator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins</groupId>
+            <artifactId>configuration-as-code</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.configuration-as-code</groupId>
+            <artifactId>test-harness</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>

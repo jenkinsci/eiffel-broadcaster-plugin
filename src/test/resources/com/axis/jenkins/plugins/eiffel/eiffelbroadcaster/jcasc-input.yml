@@ -1,0 +1,12 @@
+unclassified:
+  eiffel-broadcaster:
+    appId: "random-appid"
+    enableBroadcaster: true
+    exchangeName: "eiffel-exchange"
+    hostnameSource: CONFIGURED_URL
+    persistentDelivery: false
+    routingKey: "random-routing-key"
+    serverUri: "amqp://rabbitmq.example.com"
+    userName: "johndoe"
+    userPassword: "{AQAAABAAAAAQamrmPWJHqDjtHxMg0DLrGcCR/HrxsVE6BbBGft31t5g=}"
+    virtualHost: "/"

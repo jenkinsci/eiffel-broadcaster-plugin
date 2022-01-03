@@ -59,7 +59,7 @@ import static org.hamcrest.Matchers.*;
 
 public class BuildWithEiffelLinksActionTest {
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public RestoreSourceProviderJenkinsRule jenkins = new RestoreSourceProviderJenkinsRule();
 
     public WebResponse postBuildRequest(final Job job, final String jsonPayload) throws IOException {
         JenkinsRule.WebClient wc = jenkins.createWebClient();

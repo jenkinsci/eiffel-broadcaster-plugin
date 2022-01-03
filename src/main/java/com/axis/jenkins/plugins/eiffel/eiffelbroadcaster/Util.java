@@ -125,7 +125,7 @@ public final class Util {
     public static JsonNode mustPublishEvent(String eventName, String eventVersion, @Nonnull final JsonNode eventJson)
             throws EventValidationFailedException, JsonProcessingException, SchemaUnavailableException {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
-        if (config == null || !config.isBroadcasterEnabled()) {
+        if (config == null || !config.getEnableBroadcaster()) {
             return null;
         }
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
@@ -152,7 +152,7 @@ public final class Util {
     public static JsonNode mustPublishEvent(@Nonnull final EiffelEvent event)
             throws EventValidationFailedException, JsonProcessingException, SchemaUnavailableException {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
-        if (config == null || !config.isBroadcasterEnabled()) {
+        if (config == null || !config.getEnableBroadcaster()) {
             return null;
         }
         JsonNode eventJson = new ObjectMapper().valueToTree(event);

@@ -31,14 +31,13 @@ import com.github.packageurl.PackageURL;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class JenkinsSourceProviderTest {
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    public RestoreSourceProviderJenkinsRule jenkins = new RestoreSourceProviderJenkinsRule();
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
