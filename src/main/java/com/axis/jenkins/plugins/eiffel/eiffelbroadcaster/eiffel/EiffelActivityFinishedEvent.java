@@ -249,6 +249,16 @@ public class EiffelActivityFinishedEvent extends EiffelEvent {
             public int hashCode() {
                 return Objects.hash(mediaType, name, tags, uri);
             }
+
+            @Override
+            public String toString() {
+                return new ToStringBuilder(this)
+                        .append("mediaType", mediaType)
+                        .append("name", name)
+                        .append("tags", tags)
+                        .append("uri", uri)
+                        .toString();
+            }
         }
     }
 }
