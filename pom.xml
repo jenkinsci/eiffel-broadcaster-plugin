@@ -70,7 +70,7 @@
         <json-schema-validator.version>1.0.43</json-schema-validator.version>
         <packageurl.version>1.2.0</packageurl.version>
         <pipeline-utility-steps.version>2.4.0</pipeline-utility-steps.version>
-        <workflow-multibranch.version>2.21</workflow-multibranch.version>
+        <workflow-multibranch.version>707.v71c3f0a_6ccdb_</workflow-multibranch.version>
     </properties>
     <dependencies>
         <dependency>
