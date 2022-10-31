@@ -204,7 +204,7 @@ public final class Util {
     public static EiffelActivityFinishedEvent.Data.Outcome.Conclusion translateStatus(String status) {
         EiffelActivityFinishedEvent.Data.Outcome.Conclusion statusTranslated;
         if (STATUS_TRANSLATION.get(status) == null) {
-            statusTranslated = STATUS_TRANSLATION.get("inconclusive");
+            statusTranslated = STATUS_TRANSLATION.get("INCONCLUSIVE");
         } else {
             statusTranslated = STATUS_TRANSLATION.get(status);
         }
