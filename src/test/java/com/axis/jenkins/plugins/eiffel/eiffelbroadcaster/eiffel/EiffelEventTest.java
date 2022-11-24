@@ -51,13 +51,28 @@ public class EiffelEventTest {
 
     @Test
     public void testJsonDeserialization_WithLyonEvent() throws IOException {
-        // Make sure we can deserialize an event with a newer version than the default,
+        // Make sure we can deserialize an event from the Lyon edition,
         // and that an attribute that was added in that version is picked up.
         EiffelEvent event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelCompositionDefinedEvent_with_domainid_link.json"),
                 EiffelEvent.class);
         assertThat(event.getMeta().getVersion(), is("3.2.0"));
         assertThat(event.getLinks().get(0).getDomainId(), is("example.com"));
+    }
+
+    @Test
+    public void testJsonDeserialization_WithAricaEvent() throws IOException {
+        // Make sure we can deserialize an event from the Arica edition,
+        // and that attributes that were added in that version are picked up.
+        EiffelArtifactCreatedEvent event = new ObjectMapper().readValue(
+                getClass().getResourceAsStream("EiffelArtifactCreatedEvent_with_digest_and_schemauri.json"),
+                EiffelArtifactCreatedEvent.class);
+        assertThat(event.getMeta().getVersion(), is("3.3.0"));
+        assertThat(event.getMeta().getSchemaUri(), is("https://example.com/schema.json"));
+        EiffelArtifactCreatedEvent.Data.FileInformation.IntegrityProtection ip =
+                event.getData().getFileInformation().get(0).getIntegrityProtection();
+        assertThat(ip.getAlg(), is(EiffelArtifactCreatedEvent.Data.FileInformation.IntegrityProtection.Alg.SHA256));
+        assertThat(ip.getDigest(), is("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
     }
 
     @Test(expected = InvalidJsonPayloadException.class)

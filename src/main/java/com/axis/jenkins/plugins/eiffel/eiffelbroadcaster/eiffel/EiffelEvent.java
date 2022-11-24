@@ -198,6 +198,7 @@ public class EiffelEvent {
             IUT,
             MODIFIED_ANNOUNCEMENT,
             PARTIALLY_RESOLVED_ISSUE,
+            PRECURSOR,
             PREVIOUS_ACTIVITY_EXECUTION,
             PREVIOUS_VERSION,
             RESOLVED_ISSUE,
@@ -217,6 +218,8 @@ public class EiffelEvent {
     public static class Meta {
         @JsonInclude(JsonInclude.Include.ALWAYS)
         private UUID id = UUID.randomUUID();
+
+        private String schemaUri;
 
         private Source source = new Source();
 
@@ -248,6 +251,14 @@ public class EiffelEvent {
 
         public void setId(UUID id) {
             this.id = id;
+        }
+
+        public String getSchemaUri() {
+            return schemaUri;
+        }
+
+        public void setSchemaUri(String schemaUri) {
+            this.schemaUri = schemaUri;
         }
 
         public Source getSource() {
@@ -289,6 +300,7 @@ public class EiffelEvent {
             Meta meta = (Meta) o;
             return time == meta.time &&
                     id.equals(meta.id) &&
+                    Objects.equals(schemaUri, meta.schemaUri) &&
                     Objects.equals(source, meta.source) &&
                     tags.equals(meta.tags) &&
                     type.equals(meta.type) &&
@@ -297,13 +309,14 @@ public class EiffelEvent {
 
         @Override
         public int hashCode() {
-            return Objects.hash(id, source, time, tags, type, version);
+            return Objects.hash(id, schemaUri, source, time, tags, type, version);
         }
 
         @Override
         public String toString() {
             return new ToStringBuilder(this)
                     .append("id", id)
+                    .append("schemaUri", schemaUri)
                     .append("source", source)
                     .append("time", time)
                     .append("tags", tags)

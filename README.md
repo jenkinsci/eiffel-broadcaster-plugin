@@ -30,7 +30,7 @@ The plugin conforms to the
 of the Eiffel protocol for the events it emits. Users of the provided
 sendEiffelEvent pipeline step may choose to emit events from any Eiffel
 edition up to and including the
-[Lyon edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-lyon).
+[Arica edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-arica).
 See the documentation of each event for details of the corresponding event version used.
 
 ## Accessing emitted Eiffel events in builds
@@ -192,7 +192,7 @@ This step returns immediately as soon as the event has been validated and put
 in the internal outbound queue. The actual delivery of the event to the broker
 might not have happened at the time of the return. The validation supports all
 events and event versions up to and including the
-[Lyon edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-lyon).
+[Arica edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-arica).
 
 ## API
 The plugin will do its best to populate the emitted

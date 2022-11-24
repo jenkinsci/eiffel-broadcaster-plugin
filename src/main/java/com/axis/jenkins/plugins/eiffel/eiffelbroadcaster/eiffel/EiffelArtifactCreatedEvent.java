@@ -26,6 +26,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.ArrayList;
@@ -191,6 +192,8 @@ public class EiffelArtifactCreatedEvent extends EiffelEvent {
             @JsonInclude(JsonInclude.Include.ALWAYS)
             private String name;
 
+            private IntegrityProtection integrityProtection;
+
             private List<String> tags = new ArrayList<>();
 
             public FileInformation(@JsonProperty("name") String name) {
@@ -205,6 +208,14 @@ public class EiffelArtifactCreatedEvent extends EiffelEvent {
                 this.name = name;
             }
 
+            public IntegrityProtection getIntegrityProtection() {
+                return integrityProtection;
+            }
+
+            public void setIntegrityProtection(IntegrityProtection integrityProtection) {
+                this.integrityProtection = integrityProtection;
+            }
+
             public List<String> getTags() {
                 return tags;
             }
@@ -214,20 +225,94 @@ public class EiffelArtifactCreatedEvent extends EiffelEvent {
                 if (this == o) return true;
                 if (o == null || getClass() != o.getClass()) return false;
                 FileInformation that = (FileInformation) o;
-                return name.equals(that.name) && tags.equals(that.tags);
+                return name.equals(that.name) &&
+                        Objects.equals(integrityProtection, that.integrityProtection) &&
+                        tags.equals(that.tags);
             }
 
             @Override
             public int hashCode() {
-                return Objects.hash(name, tags);
+                return Objects.hash(name, integrityProtection, tags);
             }
 
             @Override
             public String toString() {
                 return new ToStringBuilder(this)
                         .append("name", name)
+                        .append("integrityProtection", integrityProtection)
                         .append("tags", tags)
                         .toString();
+            }
+
+            public static class IntegrityProtection {
+                @JsonInclude(JsonInclude.Include.ALWAYS)
+                private Alg alg;
+
+                @JsonInclude(JsonInclude.Include.ALWAYS)
+                private String digest;
+
+                public IntegrityProtection(@JsonProperty("alg") Alg alg, @JsonProperty("digest") String digest) {
+                    this.alg = alg;
+                    this.digest = digest;
+                }
+
+                public Alg getAlg() {
+                    return alg;
+                }
+
+                public void setAlg(Alg alg) {
+                    this.alg = alg;
+                }
+
+                public String getDigest() {
+                    return digest;
+                }
+
+                public void setDigest(String digest) {
+                    this.digest = digest;
+                }
+
+                @Override
+                public boolean equals(Object o) {
+                    if (this == o) return true;
+                    if (o == null || getClass() != o.getClass()) return false;
+                    IntegrityProtection that = (IntegrityProtection) o;
+                    return alg == that.alg && digest.equals(that.digest);
+                }
+
+                @Override
+                public int hashCode() {
+                    return Objects.hash(alg, digest);
+                }
+
+                @Override
+                public String toString() {
+                    return new ToStringBuilder(this)
+                            .append("alg", alg)
+                            .append("digest", digest)
+                            .toString();
+                }
+
+                public enum Alg {
+                    SHA224("SHA-224"),
+                    SHA256("SHA-256"),
+                    SHA384("SHA-384"),
+                    SHA512("SHA-512"),
+                    SHA512_224("SHA-512/224"),
+                    SHA512_256("SHA-512/256");
+
+                    @JsonValue
+                    private final String algName;
+
+                    Alg(String algName) {
+                        this.algName = algName;
+                    }
+
+                    @Override
+                    public String toString() {
+                        return algName;
+                    }
+                }
             }
         }
     }
