@@ -53,18 +53,20 @@ f.section(title: "Eiffel Broadcaster Plugin") {
     f.entry(title: "Routing Key", field: "routingKey", help: l+"help-routing-key.html") {
         f.textbox("value":instance.routingKey)
     }
-    f.entry(title: "Application Id", field: "appId", help: l+"help-application-id.html") {
-        f.textbox("value":instance.appId)
-    }
-    f.entry(title: "Persistent Delivery mode", help: l+"help-persistent-delivery.html") {
-        f.checkbox(field: "persistentDelivery", checked: instance.persistentDelivery)
-    }
-    f.entry(title: "Activity Categories", field: "activityCategories", help: l+"help-activity-categories.html") {
-        f.textarea(value: instance.activityCategories)
-    }
-    f.entry(title: "Hostname source", field: "hostnameSource", help: l+"help-hostname-source.html") {
-        f.enum {
-            raw(my.description)
+    f.advanced() {
+        f.entry(title: "Application Id", field: "appId", help: l+"help-application-id.html") {
+            f.textbox("value":instance.appId)
+        }
+        f.entry(title: "Persistent Delivery mode", help: l+"help-persistent-delivery.html") {
+            f.checkbox(field: "persistentDelivery", checked: instance.persistentDelivery)
+        }
+        f.entry(title: "Activity Categories", field: "activityCategories", help: l+"help-activity-categories.html") {
+            f.textarea(value: instance.activityCategories)
+        }
+        f.entry(title: "Hostname source", field: "hostnameSource", help: l+"help-hostname-source.html") {
+            f.enum {
+                raw(my.description)
+            }
         }
     }
 }
