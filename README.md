@@ -95,7 +95,7 @@ for each EiffelArtifactCreatedEvent that has been recorded in the build using
 a sendEiffelEvent step with the `publishArtifact` argument enabled and for
 each artifact recorded in the specified JSON files in the workspace.
 
-This requires that each EiffelArtifactPublishedEvent has at least one file
+This requires that each EiffelArtifactCreatedEvent has at least one file
 defined in its `data.fileInformation` array and that each relative file path
 in `data.fileInformation.name` matches a Jenkins artifact in the build.
 Because of the latter requirement it's normally used after an
