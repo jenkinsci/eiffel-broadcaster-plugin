@@ -24,13 +24,13 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.EnvironmentContributor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import java.io.IOException;
-import javax.annotation.Nonnull;
 
 /**
  * An {@link EnvironmentContributor} implementation that injects environment variables with the JSON payload of
@@ -60,7 +60,7 @@ public class EiffelEnvironmentContributor extends EnvironmentContributor {
     public static final String ACTIVITY_TRIGGERED = "EIFFEL_ACTIVITY_TRIGGERED";
 
     @Override
-    public void buildEnvironmentFor(@Nonnull Run r, @Nonnull EnvVars envs, @Nonnull TaskListener listener)
+    public void buildEnvironmentFor(@NonNull Run r, @NonNull EnvVars envs, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
         EiffelActivityAction action = r.getAction(EiffelActivityAction.class);
         if (action != null) {

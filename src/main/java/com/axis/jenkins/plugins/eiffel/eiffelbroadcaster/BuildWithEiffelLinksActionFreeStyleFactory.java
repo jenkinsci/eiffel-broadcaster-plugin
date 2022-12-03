@@ -24,12 +24,12 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.FreeStyleProject;
 import java.util.Collection;
 import java.util.Collections;
-import javax.annotation.Nonnull;
 import jenkins.model.TransientActionFactory;
 
 /**
@@ -44,9 +44,9 @@ public class BuildWithEiffelLinksActionFreeStyleFactory extends TransientActionF
     }
 
     /** {@inheritDoc} */
-    @Nonnull
+    @NonNull
     @Override
-    public Collection<? extends Action> createFor(@Nonnull FreeStyleProject job) {
+    public Collection<? extends Action> createFor(@NonNull FreeStyleProject job) {
         return Collections.singleton(new BuildWithEiffelLinksAction(job));
     }
 }

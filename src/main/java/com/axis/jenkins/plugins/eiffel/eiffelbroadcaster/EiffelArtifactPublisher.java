@@ -27,6 +27,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Functions;
 import java.io.IOException;
 import java.net.URI;
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import jenkins.util.VirtualFile;
 
 /**
@@ -55,9 +55,9 @@ public class EiffelArtifactPublisher {
      * @param runURI the {@link URI} of the {@link hudson.model.Run} that contains the files for the artifact
      * @param artifactRoot a {@link VirtualFile} that represents the Jenkins artifact root directory
      */
-    public EiffelArtifactPublisher(@Nonnull final EiffelEvent contextEvent,
-                                   @Nonnull final URI runURI,
-                                   @Nonnull final VirtualFile artifactRoot) {
+    public EiffelArtifactPublisher(@NonNull final EiffelEvent contextEvent,
+                                   @NonNull final URI runURI,
+                                   @NonNull final VirtualFile artifactRoot) {
         this.contextEvent = contextEvent;
         this.runURI = runURI;
         this.artifactRoot = artifactRoot;
@@ -75,7 +75,7 @@ public class EiffelArtifactPublisher {
      *                                  doesn't exist in Jenkins's artifact directory
      * @throws URISyntaxException when an error occurred when trying to construct a URI to an artifact file
      */
-    public EiffelArtifactPublishedEvent prepareEvent(@Nonnull final EiffelArtifactCreatedEvent creationEvent)
+    public EiffelArtifactPublishedEvent prepareEvent(@NonNull final EiffelArtifactCreatedEvent creationEvent)
             throws EmptyArtifactException, IOException, MissingArtifactException, URISyntaxException {
         // It's okay for an ArtC to not have any files in its data.fileInformation array but if we're
         // explicitly asked to emit an ArtP for the artifact and we can't do that it's reasonable to fail.

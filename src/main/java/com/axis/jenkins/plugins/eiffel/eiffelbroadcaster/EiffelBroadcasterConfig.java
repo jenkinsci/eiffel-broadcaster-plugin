@@ -29,6 +29,7 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidator;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.PossibleAuthenticationFailureException;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.XmlFile;
 import hudson.model.Descriptor;
@@ -39,7 +40,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
@@ -331,7 +331,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
         this.hostnameSource = hostnameSource;
     }
 
-    @Nonnull
+    @NonNull
     public EventValidator getEventValidator() {
         return eventValidator;
     }

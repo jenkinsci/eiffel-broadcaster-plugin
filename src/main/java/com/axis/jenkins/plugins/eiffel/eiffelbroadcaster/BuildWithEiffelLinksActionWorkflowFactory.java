@@ -24,12 +24,11 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Action;
-import hudson.model.FreeStyleProject;
 import java.util.Collection;
 import java.util.Collections;
-import javax.annotation.Nonnull;
 import jenkins.model.TransientActionFactory;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 
@@ -43,9 +42,9 @@ public class BuildWithEiffelLinksActionWorkflowFactory extends TransientActionFa
         return WorkflowJob.class;
     }
 
-    @Nonnull
+    @NonNull
     @Override
-    public Collection<? extends Action> createFor(@Nonnull WorkflowJob job) {
+    public Collection<? extends Action> createFor(@NonNull WorkflowJob job) {
         return Collections.singleton(new BuildWithEiffelLinksAction(job));
     }
 }

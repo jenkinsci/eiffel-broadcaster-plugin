@@ -25,9 +25,9 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Cause;
 import java.util.List;
-import javax.annotation.Nonnull;
 
 /**
  * Indicates that a build was started because of one or more Eiffel events.
@@ -35,12 +35,12 @@ import javax.annotation.Nonnull;
 public class EiffelCause extends Cause {
     private List<EiffelEvent.Link> links;
 
-    public EiffelCause(@Nonnull List<EiffelEvent.Link> links) {
+    public EiffelCause(@NonNull List<EiffelEvent.Link> links) {
         this.links = links;
     }
 
     /** Returns the Eiffel links associated with this cause. */
-    @Nonnull
+    @NonNull
     public List<EiffelEvent.Link> getLinks() {
         return links;
     }

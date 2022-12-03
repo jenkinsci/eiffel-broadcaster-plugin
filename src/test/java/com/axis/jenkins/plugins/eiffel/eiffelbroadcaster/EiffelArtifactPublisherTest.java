@@ -28,12 +28,12 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTr
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nonnull;
 import jenkins.util.VirtualFile;
 import org.junit.Rule;
 import org.junit.Test;
@@ -112,7 +112,7 @@ public class EiffelArtifactPublisherTest {
     private class ArtifactFiles {
         private List<String> filenames = new ArrayList<>();
 
-        public ArtifactFiles(@Nonnull final String... filenames) throws IOException {
+        public ArtifactFiles(@NonNull final String... filenames) throws IOException {
             for (String filename : filenames) {
                 this.filenames.add(filename);
                 File file = new File(tempDir.getRoot(), filename);
@@ -121,13 +121,13 @@ public class EiffelArtifactPublisherTest {
             }
         }
 
-        public void addFilesToEvent(@Nonnull final EiffelArtifactCreatedEvent event) {
+        public void addFilesToEvent(@NonNull final EiffelArtifactCreatedEvent event) {
             for (String filename : filenames) {
                 event.getData().getFileInformation().add(new EiffelArtifactCreatedEvent.Data.FileInformation(filename));
             }
         }
 
-        public List<EiffelArtifactPublishedEvent.Data.Location> getLocations(@Nonnull final URI baseURI) {
+        public List<EiffelArtifactPublishedEvent.Data.Location> getLocations(@NonNull final URI baseURI) {
             List<EiffelArtifactPublishedEvent.Data.Location> result = new ArrayList<>();
             for (String filename : filenames) {
                 EiffelArtifactPublishedEvent.Data.Location location = new EiffelArtifactPublishedEvent.Data.Location(
