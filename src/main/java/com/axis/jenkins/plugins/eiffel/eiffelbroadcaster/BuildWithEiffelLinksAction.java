@@ -252,13 +252,18 @@ public class BuildWithEiffelLinksAction<
         // Add parameter values for all given parameters.
         for (JSONObject param : givenParams) {
             String name = param.getString("name");
-            ParameterValue parameterValue = pp.getParameterDefinition(name).createValue(req, param);
-            if (parameterValue != null) {
-                values.add(parameterValue);
-            } else {
+            ParameterDefinition parameterDef = pp.getParameterDefinition(name);
+            if (parameterDef == null) {
+                // We've already checked that all given parameters have definitions in this job,
+                // but if the job definition changes after that check was done we're off to the races.
+                continue;
+            }
+            ParameterValue parameterValue = parameterDef.createValue(req, param);
+            if (parameterValue == null) {
                 throw new IllegalArgumentException(String.format(
                         "Cannot initialize the '%s' parameter with the given value", name));
             }
+            values.add(parameterValue);
         }
 
         // Add default parameter values for parameters that haven't been given values above.
