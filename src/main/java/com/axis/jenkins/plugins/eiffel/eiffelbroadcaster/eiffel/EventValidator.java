@@ -30,12 +30,12 @@ import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import javax.annotation.Nonnull;
 
 /** Validates an Eiffel event against the available schemas. */
 public class EventValidator {
@@ -58,7 +58,7 @@ public class EventValidator {
      * @throws EventValidationFailedException if the event fails validation
      * @throws SchemaUnavailableException if a schema can't be located
      */
-    public void validate(String eventName, String eventVersion, @Nonnull final JsonNode eventJson)
+    public void validate(String eventName, String eventVersion, @NonNull final JsonNode eventJson)
             throws EventValidationFailedException, SchemaUnavailableException {
         EventVersionKey key = new EventVersionKey(eventName, eventVersion);
         JsonSchema schema = schemaCache.get(key);

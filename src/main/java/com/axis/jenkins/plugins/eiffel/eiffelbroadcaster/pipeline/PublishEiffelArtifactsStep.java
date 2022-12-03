@@ -39,6 +39,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
@@ -49,8 +51,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -93,7 +93,7 @@ public class PublishEiffelArtifactsStep extends Step {
         private static final long serialVersionUID = 1L;
         private final transient PublishEiffelArtifactsStep step;
 
-        public Execution(@Nonnull PublishEiffelArtifactsStep step, StepContext context) {
+        public Execution(@NonNull PublishEiffelArtifactsStep step, StepContext context) {
             super(context);
             this.step = step;
         }
@@ -123,8 +123,8 @@ public class PublishEiffelArtifactsStep extends Step {
             return null;
         }
 
-        private void publishArtifact(@Nonnull final EiffelArtifactPublisher artifactPublisher,
-                                     @Nonnull final EiffelArtifactCreatedEvent creationEvent) throws Exception {
+        private void publishArtifact(@NonNull final EiffelArtifactPublisher artifactPublisher,
+                                     @NonNull final EiffelArtifactCreatedEvent creationEvent) throws Exception {
             EiffelArtifactPublishedEvent event = artifactPublisher.prepareEvent(creationEvent);
             JsonNode sentJSON = Util.mustPublishEvent(event);
             if (sentJSON != null) {
@@ -135,8 +135,8 @@ public class PublishEiffelArtifactsStep extends Step {
             }
         }
 
-        private void publishArtifactsFromFile(@Nonnull final EiffelArtifactPublisher artifactPublisher,
-                                              @Nonnull final FilePath file) throws Exception {
+        private void publishArtifactsFromFile(@NonNull final EiffelArtifactPublisher artifactPublisher,
+                                              @NonNull final FilePath file) throws Exception {
             getContext().get(TaskListener.class).getLogger().format("Reading events from %s%n", file.getRemote());
             try (InputStream is = file.read()) {
                 try (InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
@@ -166,7 +166,7 @@ public class PublishEiffelArtifactsStep extends Step {
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Publishes previously announced Eiffel artifacts";
         }

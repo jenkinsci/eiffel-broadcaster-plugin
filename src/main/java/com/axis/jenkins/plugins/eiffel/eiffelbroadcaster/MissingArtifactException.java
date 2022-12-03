@@ -25,8 +25,8 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
-import javax.annotation.Nonnull;
 
 /**
  * Raised when an {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent}
@@ -35,8 +35,8 @@ import javax.annotation.Nonnull;
  * artifact's files.
  */
 public class MissingArtifactException extends Exception {
-    public MissingArtifactException(@Nonnull final EiffelArtifactCreatedEvent creationEvent,
-                                    @Nonnull final Collection<String> missingArtifacts) {
+    public MissingArtifactException(@NonNull final EiffelArtifactCreatedEvent creationEvent,
+                                    @NonNull final Collection<String> missingArtifacts) {
         super(String.format(
                 "Unable to send EiffelArtifactPublishedEvent for Eiffel artifact with id %s and " +
                         "identity %s because the following files included in the Eiffel artifact " +

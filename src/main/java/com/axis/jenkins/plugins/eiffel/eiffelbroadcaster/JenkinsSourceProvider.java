@@ -29,6 +29,8 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SourceProvider;
 import com.github.packageurl.MalformedPackageURLException;
 import com.github.packageurl.PackageURL;
 import com.github.packageurl.PackageURLBuilder;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.PluginWrapper;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -38,8 +40,6 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.time.Duration;
 import java.time.Instant;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 import org.jenkinsci.Symbol;
 import org.slf4j.Logger;
@@ -100,7 +100,7 @@ public class JenkinsSourceProvider implements SourceProvider {
 
     /** {@inheritDoc} */
     @Override
-    public void populateSource(@Nonnull EiffelEvent.Meta.Source source) {
+    public void populateSource(@NonNull EiffelEvent.Meta.Source source) {
         // Most source values can be set by the input event so don't overwrite existing values,
         // except for the serializer since it's always this plugin that does the serialization.
         if (source.getHost() == null) {

@@ -25,7 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Raised when an {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent}
@@ -33,7 +33,7 @@ import javax.annotation.Nonnull;
  * the files that make up the artifact, making it impossible to create URIs for the files.
  */
 public class EmptyArtifactException extends Exception {
-    public EmptyArtifactException(@Nonnull final EiffelArtifactCreatedEvent creationEvent) {
+    public EmptyArtifactException(@NonNull final EiffelArtifactCreatedEvent creationEvent) {
         super(String.format(
                 "Unable to send EiffelArtifactPublishedEvent for Eiffel artifact with id %s and " +
                         "identity %s because it didn't declare any files in data.fileInformation.",

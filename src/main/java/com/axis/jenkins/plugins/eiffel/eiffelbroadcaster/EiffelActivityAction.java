@@ -29,10 +29,10 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivitySt
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;
 import hudson.model.Run;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -51,7 +51,7 @@ public class EiffelActivityAction implements Action {
     private String startedEventJSON;
     private String triggerEventJSON;
 
-    public EiffelActivityAction(@Nonnull EiffelActivityTriggeredEvent triggerEvent) throws JsonProcessingException {
+    public EiffelActivityAction(@NonNull EiffelActivityTriggeredEvent triggerEvent) throws JsonProcessingException {
         this.triggerEventJSON = triggerEvent.toJSON();
     }
 
@@ -79,7 +79,7 @@ public class EiffelActivityAction implements Action {
     }
 
     /** Stores the {@link EiffelActivityFinishedEvent} that was sent when this Run completed. */
-    void setFinishedEvent(@Nonnull EiffelActivityFinishedEvent finishedEvent) throws JsonProcessingException {
+    void setFinishedEvent(@NonNull EiffelActivityFinishedEvent finishedEvent) throws JsonProcessingException {
         finishedEventJSON = finishedEvent.toJSON();
     }
 
@@ -107,12 +107,12 @@ public class EiffelActivityAction implements Action {
     }
 
     /** Stores the {@link EiffelActivityStartedEvent} that was sent when this Run completed. */
-    void setStartedEvent(@Nonnull EiffelActivityStartedEvent startedEvent) throws JsonProcessingException {
+    void setStartedEvent(@NonNull EiffelActivityStartedEvent startedEvent) throws JsonProcessingException {
         startedEventJSON = startedEvent.toJSON();
     }
 
     /** Returns the Run's EiffelActivityTriggeredEvent. */
-    @Nonnull
+    @NonNull
     public EiffelActivityTriggeredEvent getTriggerEvent() throws JsonProcessingException {
         // It might make sense to cache this value for future use. It's a memory/CPU trade-off.
         return new ObjectMapper().readValue(triggerEventJSON, EiffelActivityTriggeredEvent.class);

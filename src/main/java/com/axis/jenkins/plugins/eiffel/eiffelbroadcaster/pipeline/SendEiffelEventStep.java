@@ -35,6 +35,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.Run;
@@ -42,7 +43,6 @@ import hudson.model.TaskListener;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nonnull;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
@@ -102,7 +102,7 @@ public class SendEiffelEventStep extends Step {
     private boolean publishArtifact = false;
 
     @DataBoundConstructor
-    public SendEiffelEventStep(@Nonnull final Map event) {
+    public SendEiffelEventStep(@NonNull final Map event) {
         this.event = event;
     }
 
@@ -111,7 +111,7 @@ public class SendEiffelEventStep extends Step {
         return new Execution(this, stepContext);
     }
 
-    @Nonnull
+    @NonNull
     public Map getEvent() {
         return event;
     }
@@ -151,7 +151,7 @@ public class SendEiffelEventStep extends Step {
         private static final long serialVersionUID = 1L;
         private final transient SendEiffelEventStep step;
 
-        public Execution(@Nonnull SendEiffelEventStep step, StepContext context) {
+        public Execution(@NonNull SendEiffelEventStep step, StepContext context) {
             super(context);
             this.step = step;
         }
@@ -198,7 +198,7 @@ public class SendEiffelEventStep extends Step {
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Send an Eiffel event";
         }

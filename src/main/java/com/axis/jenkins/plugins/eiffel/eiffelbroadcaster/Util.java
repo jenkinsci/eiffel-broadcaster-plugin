@@ -32,6 +32,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Functions;
 import hudson.model.AbstractItem;
 import hudson.model.Queue;
@@ -42,8 +44,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,7 +122,7 @@ public final class Util {
      * @throws SchemaUnavailableException if there's no schema available for the supplied event
      */
     @CheckForNull
-    public static JsonNode mustPublishEvent(String eventName, String eventVersion, @Nonnull final JsonNode eventJson)
+    public static JsonNode mustPublishEvent(String eventName, String eventVersion, @NonNull final JsonNode eventJson)
             throws EventValidationFailedException, JsonProcessingException, SchemaUnavailableException {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
         if (config == null || !config.getEnableBroadcaster()) {
@@ -149,7 +149,7 @@ public final class Util {
      * @throws SchemaUnavailableException if there's no schema available for the supplied event
      */
     @CheckForNull
-    public static JsonNode mustPublishEvent(@Nonnull final EiffelEvent event)
+    public static JsonNode mustPublishEvent(@NonNull final EiffelEvent event)
             throws EventValidationFailedException, JsonProcessingException, SchemaUnavailableException {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
         if (config == null || !config.getEnableBroadcaster()) {
@@ -166,7 +166,7 @@ public final class Util {
      * @return the published event or null if there was an error or event publishing is disabled
      */
     @CheckForNull
-    public static JsonNode publishEvent(@Nonnull final EiffelEvent event) {
+    public static JsonNode publishEvent(@NonNull final EiffelEvent event) {
         try {
             return mustPublishEvent(event);
         } catch (JsonProcessingException e) {

@@ -27,9 +27,9 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Action;
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -41,19 +41,19 @@ import org.kohsuke.stapler.export.ExportedBean;
  */
 @ExportedBean
 public class EiffelArtifactToPublishAction implements Action {
-    private @Nonnull final String eventJSON;
+    private @NonNull final String eventJSON;
 
-    public EiffelArtifactToPublishAction(@Nonnull EiffelArtifactCreatedEvent event) throws JsonProcessingException {
+    public EiffelArtifactToPublishAction(@NonNull EiffelArtifactCreatedEvent event) throws JsonProcessingException {
         this.eventJSON = event.toJSON();
     }
 
-    @Nonnull
+    @NonNull
     public EiffelArtifactCreatedEvent getEvent() throws JsonProcessingException {
         return new ObjectMapper().readValue(eventJSON, EiffelArtifactCreatedEvent.class);
     }
 
     @Exported
-    @Nonnull
+    @NonNull
     public String getEventJSON() {
         return eventJSON;
     }

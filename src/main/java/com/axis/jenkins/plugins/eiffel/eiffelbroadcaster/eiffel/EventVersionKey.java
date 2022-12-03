@@ -24,34 +24,34 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
-import javax.annotation.Nonnull;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /** Wraps the name and version of an Eiffel event in a single hashable entity that e.g. can be used a map key. */
 class EventVersionKey {
-    @Nonnull
+    @NonNull
     private String eventName;
 
-    @Nonnull
+    @NonNull
     private String eventVersion;
 
-    public EventVersionKey(@Nonnull String eventName, @Nonnull String eventVersion) {
+    public EventVersionKey(@NonNull String eventName, @NonNull String eventVersion) {
         this.eventName = eventName;
         this.eventVersion = eventVersion;
     }
 
-    public EventVersionKey(@Nonnull EiffelEvent event) {
+    public EventVersionKey(@NonNull EiffelEvent event) {
         this.eventName = event.getMeta().getType();
         this.eventVersion = event.getMeta().getVersion();
     }
 
-    @Nonnull
+    @NonNull
     public String getEventName() {
         return eventName;
     }
 
-    @Nonnull
+    @NonNull
     public String getEventVersion() {
         return eventVersion;
     }

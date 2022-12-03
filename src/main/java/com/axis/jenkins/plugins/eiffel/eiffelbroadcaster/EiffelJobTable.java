@@ -24,9 +24,9 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.annotation.Nonnull;
 
 /**
  * Maintains a table that maps a Jenkins queue ids to the id of the
@@ -59,7 +59,7 @@ public final class EiffelJobTable {
      * Gets the id of the {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent}
      * for a given queue id, or null of no such mapping is known.
      */
-    public UUID getEventTrigger(@Nonnull Long queueId) {
+    public UUID getEventTrigger(@NonNull Long queueId) {
         return table.get(queueId);
     }
 
@@ -67,7 +67,7 @@ public final class EiffelJobTable {
      * Gets the id of the {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent}
      * for a given queue id, or null if no such mapping is known, and immediately clears that entry from the table.
      */
-     public UUID getAndClearEventTrigger(@Nonnull Long queueId) {
+     public UUID getAndClearEventTrigger(@NonNull Long queueId) {
          return table.remove(queueId);
      }
 
@@ -75,7 +75,7 @@ public final class EiffelJobTable {
      * Update the table with a new mapping from a queue id to the id of a
      * {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent}.
      * */
-    public void setEventTrigger(@Nonnull Long queueId, @Nonnull UUID eiffelEventId) {
+    public void setEventTrigger(@NonNull Long queueId, @NonNull UUID eiffelEventId) {
         table.put(queueId, eiffelEventId);
     }
 

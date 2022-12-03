@@ -24,8 +24,8 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import java.io.InputStream;
-import javax.annotation.CheckForNull;
 
 /**
  * Locates the JSON schema for an Eiffel event so that it can be validated.
