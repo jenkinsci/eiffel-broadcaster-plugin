@@ -1,4 +1,4 @@
-/*
+<!--
 The MIT License
 
 Copyright 2018 Axis Communications AB.
@@ -20,10 +20,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
- */
-import lib.LayoutTagLib
-
-l=namespace(LayoutTagLib)
-div(
-  "This is the EiffelEvent Broadcaster plugin."
-)
+-->
+<?jelly escape-by-default='true'?>
+<div>
+    Broadcasts Eiffel messages on an MQ server.
+</div>

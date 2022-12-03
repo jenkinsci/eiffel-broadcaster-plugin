@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.15</version>
+        <version>4.51</version>
         <relativePath />
     </parent>
     <groupId>com.axis.jenkins.plugins.eiffel</groupId>
@@ -12,7 +12,6 @@
     <version>2.5.0-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>Eiffel Broadcaster Plugin</name>
-    <description>Broadcasts Eiffel messages on an MQ server</description>
     <licenses>
         <license>
             <name>MIT License</name>
@@ -58,19 +57,15 @@
         </pluginRepository>
     </pluginRepositories>
     <properties>
-        <java.level>8</java.level>
-        <jenkins.version>2.164.3</jenkins.version>
+        <jenkins.version>2.303.3</jenkins.version>
 
         <amqp.client.version>4.8.0</amqp.client.version>
         <commons.lang3.version>3.11</commons.lang3.version>
         <commons.validator.version>1.7</commons.validator.version>
-        <jackson2-api.version>2.11.1</jackson2-api.version>
         <jenkins-test-harness.version>2.72</jenkins-test-harness.version>
         <jmockit.version>1.41</jmockit.version>
         <json-schema-validator.version>1.0.43</json-schema-validator.version>
         <packageurl.version>1.2.0</packageurl.version>
-        <pipeline-utility-steps.version>2.4.0</pipeline-utility-steps.version>
-        <workflow-multibranch.version>2.21</workflow-multibranch.version>
     </properties>
     <dependencies>
         <dependency>
@@ -91,7 +86,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>jackson2-api</artifactId>
-            <version>${jackson2-api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -126,7 +120,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>pipeline-utility-steps</artifactId>
-            <version>${pipeline-utility-steps.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -152,7 +145,6 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-multibranch</artifactId>
-            <version>${workflow-multibranch.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -166,8 +158,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.164.x</artifactId>
-                <version>10</version>
+                <artifactId>bom-2.303.x</artifactId>
+                <version>1500.ve4d05cd32975</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
