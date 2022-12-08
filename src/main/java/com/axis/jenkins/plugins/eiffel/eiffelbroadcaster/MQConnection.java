@@ -58,7 +58,7 @@ public final class MQConnection implements ShutdownListener {
     private static final int SENDMESSAGE_TIMEOUT = 100;
     private static final int CONNECTION_WAIT = 10000;
 
-    private boolean initialized = false;
+    private volatile boolean initialized = false;
     private String userName;
     private Secret userPassword;
     private String serverUri;
