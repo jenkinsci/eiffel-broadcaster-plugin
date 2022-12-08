@@ -58,6 +58,7 @@ public final class MQConnection implements ShutdownListener {
     private static final int SENDMESSAGE_TIMEOUT = 100;
     private static final int CONNECTION_WAIT = 10000;
 
+    private boolean initialized = false;
     private String userName;
     private Secret userPassword;
     private String serverUri;
@@ -164,23 +165,7 @@ public final class MQConnection implements ShutdownListener {
         if (messageQueue == null) {
             messageQueue = new LinkedBlockingQueue(MESSAGE_QUEUE_SIZE);
         }
-
-        if (messageQueueThread == null || !messageQueueThread.isAlive()) {
-            synchronized (lock) {
-                if (messageQueueThread == null) {
-                    messageQueueThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            sendMessages();
-                        }
-                    });
-
-                }
-            }
-            messageQueueThread.start();
-            logger.info("messageQueueThread recreated since it was null or not alive.");
-        }
-
+        startMessageQueueThread();
         MessageData messageData = new MessageData(exchange, routingKey, props, body);
         if (!messageQueue.offer(messageData)) {
             logger.error("addMessageToQueue() failed, RabbitMQ queue is full!");
@@ -202,6 +187,29 @@ public final class MQConnection implements ShutdownListener {
             } catch (InterruptedException ie) {
                 logger.info("sendMessages() poll() was interrupted: ", ie);
             }
+        }
+    }
+
+    /**
+     * Start or restart the message queue thread as necessary. Requires that
+     * the MQConnection has been initialized with the needed configuration.
+     *
+     * @return true if the message queue thread was started, otherwise false
+     */
+    private boolean startMessageQueueThread() {
+        synchronized (lock) {
+            if (!initialized || (messageQueueThread != null && messageQueueThread.isAlive())) {
+                return false;
+            }
+            messageQueueThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    sendMessages();
+                }
+            });
+            messageQueueThread.start();
+            logger.info("messageQueueThread recreated since it was null or not alive.");
+            return true;
         }
     }
 
@@ -272,6 +280,8 @@ public final class MQConnection implements ShutdownListener {
         virtualHost = vh;
         connection = null;
         channel = null;
+        initialized = true;
+        startMessageQueueThread();
     }
 
     /**
