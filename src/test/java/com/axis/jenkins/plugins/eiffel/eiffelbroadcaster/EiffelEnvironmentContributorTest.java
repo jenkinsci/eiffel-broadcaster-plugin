@@ -34,13 +34,14 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class EiffelEnvironmentContributorTest {
     @Rule
-    public RestoreSourceProviderJenkinsRule jenkins = new RestoreSourceProviderJenkinsRule();
+    public JenkinsRule jenkins = new JenkinsRule();
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {

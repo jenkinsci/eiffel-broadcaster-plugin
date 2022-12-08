@@ -27,7 +27,6 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EventSet;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.RestoreSourceProviderJenkinsRule;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -42,13 +41,14 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class PublishEiffelArtifactsStepTest {
     @Rule
-    public RestoreSourceProviderJenkinsRule jenkins = new RestoreSourceProviderJenkinsRule();
+    public JenkinsRule jenkins = new JenkinsRule();
 
     private WorkflowJob createJob(String pipelineCodeResourceFile) throws Exception {
         WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");

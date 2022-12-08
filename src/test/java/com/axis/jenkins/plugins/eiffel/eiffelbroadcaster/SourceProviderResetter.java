@@ -25,23 +25,20 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
-import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+import hudson.Extension;
+import hudson.init.TermMilestone;
+import hudson.init.Terminator;
 
 /**
- * Extends {@link JenkinsConfiguredWithCodeRule} to also clear the
- * {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SourceProvider}
- * stored in a static attribute in {@link EiffelEvent}. It gets set to an instance
- * of {@link JenkinsSourceProvider} when the plugin is run in a Jenkins instance,
- * but that class requires a Jenkins instance to be available so subsequently run
- * tests will fail unless we clear the source provider.
- *
- * We should refactor the code to not use a static attribute like this, but until
- * that's done this'll have to do.
+ * A {@link Terminator} that clears out {@link EiffelEvent}'s source provider
+ * so it doesn't point to an object that relies on a running Jenkins instance.
+ * That could otherwise cause failures in unit tests that run after JenkinsRule-based
+ * integration tests.
  */
-public class RestoreSourceProviderJenkinsConfiguredWithCodeRule extends JenkinsConfiguredWithCodeRule {
-    @Override
-    public void after() throws Exception {
-        super.after();
+@Extension
+public class SourceProviderResetter {
+    @Terminator(before=TermMilestone.COMPLETED)
+    public static void resetSourceProvider() {
         EiffelEvent.setSourceProvider(null);
     }
 }

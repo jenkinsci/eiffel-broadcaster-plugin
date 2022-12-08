@@ -24,16 +24,16 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.RestoreSourceProviderJenkinsRule;
 import hudson.model.Result;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class CreatePackageURLStepTest {
     @Rule
-    public RestoreSourceProviderJenkinsRule jenkins = new RestoreSourceProviderJenkinsRule();
+    public JenkinsRule jenkins = new JenkinsRule();
 
     private WorkflowJob createJob(String purlCreationSnippet) throws Exception {
         WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");

@@ -43,7 +43,7 @@ public class ConfigurationAsCodeTest {
     // {@link JenkinsConfiguredWithCodeRule} requires that the formal type of the rule attribute
     // is JenkinsConfiguredWithCodeRule.
     @Rule
-    public JenkinsConfiguredWithCodeRule jenkins = new RestoreSourceProviderJenkinsConfiguredWithCodeRule();
+    public JenkinsConfiguredWithCodeRule jenkins = new JenkinsConfiguredWithCodeRule();
 
     @Test
     @ConfiguredWithCode("jcasc-input.yml")
