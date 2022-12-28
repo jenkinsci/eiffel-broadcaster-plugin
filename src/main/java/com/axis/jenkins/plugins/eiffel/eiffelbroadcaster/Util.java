@@ -113,34 +113,6 @@ public final class Util {
     }
 
     /**
-     * Publishes an event that has been transformed into a {@link JsonNode} and raises an exception if
-     * an error occurs.
-     *
-     * @return the published event or null if event publishing is disabled
-     * @throws EventValidationFailedException if the validation of the event against the JSON schema fails
-     * @throws JsonProcessingException if there's an error during JSON serialization
-     * @throws SchemaUnavailableException if there's no schema available for the supplied event
-     */
-    @CheckForNull
-    public static JsonNode mustPublishEvent(String eventName, String eventVersion, @NonNull final JsonNode eventJson)
-            throws EventValidationFailedException, JsonProcessingException, SchemaUnavailableException {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
-        if (config == null || !config.getEnableBroadcaster()) {
-            return null;
-        }
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
-                .appId(config.getAppId())
-                .deliveryMode(config.getPersistentDelivery() ? PERSISTENT_DELIVERY : NON_PERSISTENT_DELIVERY)
-                .contentType("application/json")
-                .timestamp(Calendar.getInstance().getTime())
-                .build();
-        config.getEventValidator().validate(eventName, eventVersion, eventJson);
-        MQConnection.getInstance().addMessageToQueue(config.getExchangeName(), config.getRoutingKey(),
-                props, new ObjectMapper().writeValueAsBytes(eventJson));
-        return eventJson;
-    }
-
-    /**
      * Publishes an {@link EiffelEvent} and raises an exception if an error occurs.
      *
      * @return the published event or null if event publishing is disabled
@@ -156,7 +128,16 @@ public final class Util {
             return null;
         }
         JsonNode eventJson = new ObjectMapper().valueToTree(event);
-        mustPublishEvent(event.getMeta().getType(), event.getMeta().getVersion(), eventJson);
+        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+                .appId(config.getAppId())
+                .deliveryMode(config.getPersistentDelivery() ? PERSISTENT_DELIVERY : NON_PERSISTENT_DELIVERY)
+                .contentType("application/json")
+                .timestamp(Calendar.getInstance().getTime())
+                .build();
+        config.getEventValidator().validate(event.getMeta().getType(), event.getMeta().getVersion(), eventJson);
+        MQConnection.getInstance().addMessageToQueue(config.getExchangeName(),
+                config.getRoutingKeyProvider().getRoutingKey(event),
+                props, new ObjectMapper().writeValueAsBytes(eventJson));
         return eventJson;
     }
 

@@ -24,6 +24,8 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.FixedRoutingKeyProvider;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.SepiaRoutingKeyProvider;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.ConfiguratorRegistry;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
@@ -45,29 +47,88 @@ public class ConfigurationAsCodeTest {
     @Rule
     public JenkinsConfiguredWithCodeRule jenkins = new JenkinsConfiguredWithCodeRule();
 
+    /**
+     * Test that an old JCasC configuration that uses the old way of configuring a routing key
+     * (prior to the introduction of
+     * {@link com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.RoutingKeyProvider})
+     * is translated to the equivalent {@link FixedRoutingKeyProvider}.
+     */
     @Test
-    @ConfiguredWithCode("jcasc-input.yml")
-    public void testSupportsConfigurationAsCode() throws Exception {
+    @ConfiguredWithCode("jcasc-input-with-legacy-routing-key.yml")
+    public void testSupportsConfigurationAsCode_WithLegacyRoutingKey() throws Exception {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
         assertThat(config.getAppId(), is("random-appid"));
         assertThat(config.getEnableBroadcaster(), is(true));
         assertThat(config.getExchangeName(), is("eiffel-exchange"));
         assertThat(config.getHostnameSource(), is(HostnameSource.CONFIGURED_URL));
         assertThat(config.getPersistentDelivery(), is(false));
-        assertThat(config.getRoutingKey(), is("random-routing-key"));
+        assertThat(config.getRoutingKeyProvider(), instanceOf(FixedRoutingKeyProvider.class));
+        assertThat(((FixedRoutingKeyProvider) config.getRoutingKeyProvider()).getFixedRoutingKey(),
+                is("random-legacy-key"));
         assertThat(config.getServerUri(), is("amqp://rabbitmq.example.com"));
         assertThat(config.getUserName(), is("johndoe"));
         assertThat(config.getVirtualHost(), is("/"));
     }
 
     @Test
-    @ConfiguredWithCode("jcasc-input.yml")
+    @ConfiguredWithCode("jcasc-input-without-routing-key-provider.yml")
+    public void testSupportsConfigurationAsCode_WithoutRoutingKeyProvider() throws Exception {
+        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        assertThat(config.getAppId(), is("random-appid"));
+        assertThat(config.getEnableBroadcaster(), is(true));
+        assertThat(config.getExchangeName(), is("eiffel-exchange"));
+        assertThat(config.getHostnameSource(), is(HostnameSource.CONFIGURED_URL));
+        assertThat(config.getPersistentDelivery(), is(false));
+        assertThat(config.getRoutingKeyProvider(), instanceOf(SepiaRoutingKeyProvider.class));
+        assertThat(config.getServerUri(), is("amqp://rabbitmq.example.com"));
+        assertThat(config.getUserName(), is("johndoe"));
+        assertThat(config.getVirtualHost(), is("/"));
+    }
+
+    @Test
+    @ConfiguredWithCode("jcasc-input-with-fixed-routing-key-provider.yml")
+    public void testSupportsConfigurationAsCode_WithFixedRoutingKeyProvider() throws Exception {
+        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        assertThat(config.getAppId(), is("random-appid"));
+        assertThat(config.getEnableBroadcaster(), is(true));
+        assertThat(config.getExchangeName(), is("eiffel-exchange"));
+        assertThat(config.getHostnameSource(), is(HostnameSource.CONFIGURED_URL));
+        assertThat(config.getPersistentDelivery(), is(false));
+        assertThat(config.getRoutingKeyProvider(), instanceOf(FixedRoutingKeyProvider.class));
+        assertThat(((FixedRoutingKeyProvider) config.getRoutingKeyProvider()).getFixedRoutingKey(),
+                is("random-routing-key"));
+        assertThat(config.getServerUri(), is("amqp://rabbitmq.example.com"));
+        assertThat(config.getUserName(), is("johndoe"));
+        assertThat(config.getVirtualHost(), is("/"));
+    }
+
+    @Test
+    @ConfiguredWithCode("jcasc-input-with-sepia-routing-key-provider.yml")
+    public void testSupportsConfigurationAsCode_WithSepiaRoutingKeyProvider() throws Exception {
+        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        assertThat(config.getAppId(), is("random-appid"));
+        assertThat(config.getEnableBroadcaster(), is(true));
+        assertThat(config.getExchangeName(), is("eiffel-exchange"));
+        assertThat(config.getHostnameSource(), is(HostnameSource.CONFIGURED_URL));
+        assertThat(config.getPersistentDelivery(), is(false));
+        assertThat(config.getRoutingKeyProvider(), instanceOf(SepiaRoutingKeyProvider.class));
+        assertThat(((SepiaRoutingKeyProvider) config.getRoutingKeyProvider()).getTag(),
+                is("random-tag"));
+        assertThat(config.getServerUri(), is("amqp://rabbitmq.example.com"));
+        assertThat(config.getUserName(), is("johndoe"));
+        assertThat(config.getVirtualHost(), is("/"));
+    }
+
+    @Test
+    @ConfiguredWithCode("jcasc-input-with-sepia-routing-key-provider.yml")
     public void testSupportsConfigurationExport() throws Exception {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
         ConfigurationContext context = new ConfigurationContext(ConfiguratorRegistry.get());
         String pluginShortName = EiffelBroadcasterConfig.class.getAnnotation(Symbol.class).value()[0];
         CNode pluginNode = getUnclassifiedRoot(context).get(pluginShortName);
-        String sanitizedYAML = toYamlString(pluginNode).replaceFirst("(?m)^userPassword: .*(?:\\r?\\n)?", "");
+        String sanitizedYAML = toYamlString(pluginNode)
+                .replaceFirst("(?m)^userPassword: .*(?:\\r?\\n)?", "")
+                .replaceFirst("(?m)^    dummy: .*(?:\\r?\\n)?", "");
         assertThat(sanitizedYAML, is(toStringFromYamlFile(this, "jcasc-expected-output.yml")));
     }
 }

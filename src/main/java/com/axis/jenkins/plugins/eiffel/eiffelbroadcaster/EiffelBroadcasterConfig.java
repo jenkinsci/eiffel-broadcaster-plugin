@@ -26,11 +26,15 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidator;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.FixedRoutingKeyProvider;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.RoutingKeyProvider;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.SepiaRoutingKeyProvider;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.PossibleAuthenticationFailureException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
+import hudson.ExtensionList;
 import hudson.XmlFile;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
@@ -86,10 +90,18 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     /* The virtual host which the connection intends to operate within. */
     private String virtualHost;
 
-    /* Messages will be sent with a routing key which allows messages to be delivered to queues that are bound with a
-     * matching binding key. The routing key must be a list of words, delimited by dots.
+    /**
+     * Legacy attribute that used to hold the AMQP routing key for outbound messages. The routing key is
+     * now determined by {@link #routingKeyProvider} and this attribute is kept only to please XStream.
      */
-    private String routingKey;
+    private transient String routingKey;
+
+    /**
+     * A reference to a {@link RoutingKeyProvider} that can figure out what routing key
+     * should be used for an outbound event.
+     */
+    private RoutingKeyProvider routingKeyProvider = new SepiaRoutingKeyProvider();
+
     /* Messages delivered to durable queues will be logged to disk if persistent delivery is set. */
     private boolean persistentDelivery = true;
     /* Application id that can be read by the consumer (optional). */
@@ -112,6 +124,17 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
         save();
         MQConnection.getInstance().initialize(userName, userPassword, serverUri, virtualHost);
         return true;
+    }
+
+    /** Migrates legacy model fields to the current model. Called by the XStream unmarshaler. */
+    protected Object readResolve() {
+        // If the legacy routingKey is set to something, migrate its contents
+        // to a FixedRoutingKeyProvider for functional equivalence.
+        if (StringUtils.isNotBlank(getRoutingKey())) {
+            setRoutingKeyProvider(new FixedRoutingKeyProvider(getRoutingKey()));
+            setRoutingKey(null);
+        }
+        return this;
     }
 
     /**
@@ -255,13 +278,32 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     }
 
     /**
-     * Sets the routing key.
+     * Sets the routing key. This method exists for backwards compatibility reasons.
+     * Any non-null value will be passed to {@see #setRoutingKeyProvider(RoutingKeyProvider)}
+     * and this setter's underlying attribute will be set to null.
      *
      * @param routingKey the routing key.
      */
     @DataBoundSetter
     public void setRoutingKey(String routingKey) {
-        this.routingKey = routingKey;
+        if (routingKey != null) {
+            setRoutingKeyProvider(new FixedRoutingKeyProvider(routingKey));
+        }
+        this.routingKey = null;
+    }
+
+    /** Returns the currently configured {@link RoutingKeyProvider} implementation. */
+    @NonNull
+    public RoutingKeyProvider getRoutingKeyProvider() {
+        return this.routingKeyProvider;
+    }
+
+    /**
+     * Sets which {@link RoutingKeyProvider} implementation to use to generate routing keys for the events.
+     * */
+    @DataBoundSetter
+    public void setRoutingKeyProvider(@NonNull final RoutingKeyProvider routingKeyProvider) {
+        this.routingKeyProvider = routingKeyProvider;
     }
 
     /**
@@ -336,6 +378,10 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
         return eventValidator;
     }
 
+    public ExtensionList<RoutingKeyProvider.RoutingKeyProviderDescriptor> getRoutingKeyProviderDescriptors() {
+        return RoutingKeyProvider.RoutingKeyProviderDescriptor.all();
+    }
+
     @Override
     public String getDisplayName() {
         return "EiffelBroadcaster";
@@ -389,5 +435,14 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
             result = FormValidation.error("Invalid Uri");
         }
         return result;
+    }
+
+    /** Returns a custom help file location for fields where the Stapler doesn't locate it automatically. */
+    @Override
+    public String getHelpFile(final String fieldName) {
+        if ("routingKeyProvider".equals(fieldName)) {
+            return "/plugin/eiffel-broadcaster/help-routing-key-provider.html";
+        }
+        return super.getHelpFile(fieldName);
     }
 }

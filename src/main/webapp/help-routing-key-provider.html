@@ -1,0 +1,18 @@
+<div>
+    The algorithm used to generate routing keys for outbound events.
+    <ul>
+        <li>
+            <b>Sepia</b>. The routing keys will follow the
+            <a href="https://eiffel-community.github.io/eiffel-sepia/rabbitmq-message-broker.html">Sepia recommendation</a>,
+            resulting in routing keys like e.g. <code>eiffel._.EiffelArtifactCreatedEvent._._</code>.
+            This is the default for new configurations.
+        </li>
+        <li>
+            <b>Fixed string</b>. The routing key will always be the configured string.
+        </li>
+    </ul>
+    Other plugins may provide additional algorithms by extending
+    <a href="https://javadoc.jenkins.io/plugin/eiffel-broadcaster/com/axis/jenkins/plugins/eiffel/eiffelbroadcaster/routingkeys/RoutingKeyProvider.html">
+        RoutingKeyProvider
+    </a>.
+</div>

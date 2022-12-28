@@ -3,7 +3,9 @@ enableBroadcaster: true
 exchangeName: "eiffel-exchange"
 hostnameSource: CONFIGURED_URL
 persistentDelivery: false
-routingKey: "random-routing-key"
+routingKeyProvider:
+  sepia:
+    tag: "random-tag"
 serverUri: "amqp://rabbitmq.example.com"
 userName: "johndoe"
 virtualHost: "/"

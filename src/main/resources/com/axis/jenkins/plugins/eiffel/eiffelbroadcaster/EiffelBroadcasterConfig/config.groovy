@@ -50,10 +50,9 @@ f.section(title: "Eiffel Broadcaster Plugin") {
     f.entry(title: "Virtual host", field: "virtualHost", help: l+"help-virtual-host.html") {
         f.textbox("value":instance.virtualHost)
     }
-    f.entry(title: "Routing Key", field: "routingKey", help: l+"help-routing-key.html") {
-        f.textbox("value":instance.routingKey)
-    }
     f.advanced() {
+        f.dropdownDescriptorSelector(title: "Routing key algorithm",
+                field: "routingKeyProvider", descriptors: descriptor.routingKeyProviderDescriptors)
         f.entry(title: "Application Id", field: "appId", help: l+"help-application-id.html") {
             f.textbox("value":instance.appId)
         }

@@ -5,7 +5,7 @@ unclassified:
     exchangeName: "eiffel-exchange"
     hostnameSource: CONFIGURED_URL
     persistentDelivery: false
-    routingKey: "random-routing-key"
+    routingKey: "random-legacy-key"
     serverUri: "amqp://rabbitmq.example.com"
     userName: "johndoe"
     userPassword: "{AQAAABAAAAAQamrmPWJHqDjtHxMg0DLrGcCR/HrxsVE6BbBGft31t5g=}"
