@@ -43,7 +43,8 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.RabbitMQContainer;
 import org.testcontainers.containers.ToxiproxyContainer;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.testcontainers.containers.Network.newNetwork;
 
 /**
@@ -85,7 +86,7 @@ public class ConnectionIntegrationTest {
     @Before
     public void createProxyConnection() {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
-        assertNotNull("No config available: EiffelBroadcasterConfig", config);
+        assertThat(config, is(notNullValue()));
         TestUtil.setDefaultConfig(config);
         config.setServerUri(formatProxyServerUri());
 
@@ -140,7 +141,7 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
-        assertEquals(expectedMessages, actualMessages);
+        assertThat(actualMessages, is(expectedMessages));
     }
 
     /**
@@ -159,7 +160,7 @@ public class ConnectionIntegrationTest {
                 TestUtil.QUEUE_NAME
         );
         Thread.sleep(2000); // Make sure the ACKs have some time to get processed.
-        assertEquals(0, conn.getSizeOutstandingConfirms());
+        assertThat(conn.getSizeOutstandingConfirms(), is(0));
     }
 
     /**
@@ -183,7 +184,7 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
-        assertEquals(expectedMessages, actualMessages);
+        assertThat(actualMessages, is(expectedMessages));
     }
 
     /**
@@ -206,7 +207,7 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
-        assertEquals(expectedMessages, actualMessages);
+        assertThat(actualMessages, is(expectedMessages));
     }
 
     /**
@@ -236,7 +237,7 @@ public class ConnectionIntegrationTest {
                 DEFAULT_MESSAGE_WAIT,
                 TestUtil.QUEUE_NAME
         );
-        assertEquals(expectedMessages, actualMessages);
+        assertThat(actualMessages, is(expectedMessages));
     }
 
     /**
@@ -256,7 +257,7 @@ public class ConnectionIntegrationTest {
                 messageCount,
                 30,
                 TestUtil.QUEUE_NAME);
-        assertEquals(expectedMessages, actualMessages);
+        assertThat(actualMessages, is(expectedMessages));
     }
 
 }
