@@ -29,8 +29,10 @@ import eu.rekawek.toxiproxy.model.ToxicDirection;
 import eu.rekawek.toxiproxy.model.toxic.Timeout;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -142,6 +144,35 @@ public class ConnectionIntegrationTest {
                 TestUtil.QUEUE_NAME
         );
         assertThat(actualMessages, is(expectedMessages));
+    }
+
+    /**
+     * Test that highly concurrent publishing operations won't cause e.g. deadlocks or dropped messages.
+     */
+    @Test
+    public void testConcurrentMessagePublishingWorks() throws InterruptedException, IOException {
+        MQConnection conn = MQConnection.getInstance();
+        int batchSize = 1000;
+        int threadCount = 50;
+        // Just save the hashes of the events instead of the actual event objects to
+        // save execution time. If there's a mismatch it's very unlikely we'll be able
+        // to make sense of the diff between the giant collections anyway.
+        ArrayList<Integer> expectedMessageHashes = new ArrayList<>();
+        // Prepare all publisher threads first, then start all of them at the same time (almost).
+        List<Thread> threads = new ArrayList<>();
+        for (int i = 0; i < threadCount; i++) {
+            ArrayList<EiffelEvent> batch = TestUtil.createEvents(batchSize);
+            threads.add(new Thread(() -> batch.forEach(this::publishSilently)));
+            expectedMessageHashes.addAll(batch.stream().map(EiffelEvent::hashCode).collect(Collectors.toList()));
+        }
+        threads.forEach(Thread::start);
+        List<Integer> actualMessageHashes = TestUtil.waitForMessages(
+                conn,
+                expectedMessageHashes.size(),
+                DEFAULT_MESSAGE_WAIT,
+                TestUtil.QUEUE_NAME
+        ).stream().map(EiffelEvent::hashCode).collect(Collectors.toList());
+        assertThat(actualMessageHashes, containsInAnyOrder(expectedMessageHashes.toArray()));
     }
 
     /**
