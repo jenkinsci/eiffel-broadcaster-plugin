@@ -1,1 +1,3 @@
-buildPlugin()
+buildPlugin(
+    platforms: ['linux']
+)
