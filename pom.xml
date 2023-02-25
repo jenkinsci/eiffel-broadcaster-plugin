@@ -63,7 +63,7 @@
         <commons.lang3.version>3.11</commons.lang3.version>
         <commons.validator.version>1.7</commons.validator.version>
         <jenkins-test-harness.version>2.72</jenkins-test-harness.version>
-        <jmockit.version>1.41</jmockit.version>
+        <jmockit.version>1.49</jmockit.version>
         <json-schema-validator.version>1.0.43</json-schema-validator.version>
         <packageurl.version>1.2.0</packageurl.version>
     </properties>
@@ -182,4 +182,17 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+    <build>
+        <plugins>
+            <!-- As of JMockIt 1.42 we need the extra -javaagent flag.  -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>
+                        -javaagent:"${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar"
+                    </argLine>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
