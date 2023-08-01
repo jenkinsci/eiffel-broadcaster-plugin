@@ -1,3 +1,8 @@
 buildPlugin(
-    platforms: ['linux']
+    configurations: [
+        [
+            platform: 'linux',
+            jdk: '11',
+        ],
+    ]
 )
