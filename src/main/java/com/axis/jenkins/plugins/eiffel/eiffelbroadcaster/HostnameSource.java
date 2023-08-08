@@ -26,7 +26,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 /**
  * Describes how the hostname of the Jenkins controller should be determined. This hostname
- * is currently used to populate the <tt>meta.source.host</tt> member of all events.
+ * is currently used to populate the <code>meta.source.host</code> member of all events.
  */
 public enum HostnameSource {
     /** The hostname of the Jenkins controller according to the network stack */

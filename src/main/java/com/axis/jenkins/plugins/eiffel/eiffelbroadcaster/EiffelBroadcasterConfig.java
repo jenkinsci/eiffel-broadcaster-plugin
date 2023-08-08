@@ -96,7 +96,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     private String appId;
     /* A list of strings representing categories to include in the ActTs. */
     private final List<String> activityCategories = new ArrayList<>();
-    /* How the hostname used in the <tt>meta.source.host</tt> member should be determined. */
+    /* How the hostname used in the <code>meta.source.host</code> member should be determined. */
     private HostnameSource hostnameSource = HostnameSource.NETWORK_STACK;
 
     private transient final EventValidator eventValidator = new EventValidator();

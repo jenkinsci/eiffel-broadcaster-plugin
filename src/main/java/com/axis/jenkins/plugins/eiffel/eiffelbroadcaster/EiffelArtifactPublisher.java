@@ -67,11 +67,11 @@ public class EiffelArtifactPublisher {
      * Prepares a {@link EiffelArtifactPublishedEvent} that's ready to be sent.
      * @param creationEvent the {@link EiffelArtifactCreatedEvent} that should be published
      * @throws EmptyArtifactException when the {@link EiffelArtifactCreatedEvent} doesn't contain any files
-     *                                in <tt>data.fileInformation</tt>
+     *                                in <code>data.fileInformation</code>
      * @throws IOException when there was a problem correlating the files in the {@link EiffelArtifactCreatedEvent}
      *                     with the files in the {@link hudson.model.Run}'s artifacts
      * @throws MissingArtifactException when one or more of the files listed in
-     *                                  the {@link EiffelArtifactCreatedEvent}'s <tt>data.fileInformation</tt> array
+     *                                  the {@link EiffelArtifactCreatedEvent}'s <code>data.fileInformation</code> array
      *                                  doesn't exist in Jenkins's artifact directory
      * @throws URISyntaxException when an error occurred when trying to construct a URI to an artifact file
      */

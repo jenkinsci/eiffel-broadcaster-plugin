@@ -45,8 +45,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
- * A base class for Eiffel events that defines the common event attributes (<tt>meta</tt> and <tt>links</tt>)
- * and makes it easy for subclasses to add an event-specific <tt>data</tt> attribute.
+ * A base class for Eiffel events that defines the common event attributes (<code>meta</code> and <code>links</code>)
+ * and makes it easy for subclasses to add an event-specific <code>data</code> attribute.
  *
  * See the Eiffel event documentation for each concrete event type for more on the meaning of the attributes.
  */
@@ -413,7 +413,7 @@ public class EiffelEvent {
 
     /**
      * Deserializes a JSON payload into an instance of a subclass of {@link EiffelEvent} based on
-     * the payload's <tt>meta.type</tt> member.
+     * the payload's <code>meta.type</code> member.
      */
     static class Deserializer extends StdDeserializer<Object> {
         protected Deserializer() {

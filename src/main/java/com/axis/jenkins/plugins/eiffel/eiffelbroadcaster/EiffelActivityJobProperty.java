@@ -38,7 +38,7 @@ import org.kohsuke.stapler.StaplerRequest;
  * An {@link OptionalJobProperty} that can be used to populate additional members in
  * in the Eiffel activity events emitted for the builds of a job.
  * <p>
- * Also defines a <tt>eiffelActivity</tt> pipeline step that can be used to set
+ * Also defines a <code>eiffelActivity</code> pipeline step that can be used to set
  * the properties via pipeline code:
  * <pre>
  * properties([

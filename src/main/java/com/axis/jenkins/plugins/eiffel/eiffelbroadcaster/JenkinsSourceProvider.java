@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Provides Eiffel event source information (the <tt>meta.source</tt> member of all events)
+ * Provides Eiffel event source information (the <code>meta.source</code> member of all events)
  * for a Jenkins plugin.
  *
  * Computes values during initialization and reuses them for all subsequent events, except for

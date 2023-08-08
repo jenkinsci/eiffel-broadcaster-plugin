@@ -27,7 +27,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
- * Thrown when the JSON representation of an Eiffel event lacks an <tt>meta.type</tt> member that
+ * Thrown when the JSON representation of an Eiffel event lacks an <code>meta.type</code> member that
  * determines the event type.
  */
 public class InvalidJsonPayloadException extends JsonProcessingException {

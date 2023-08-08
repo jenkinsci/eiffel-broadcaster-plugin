@@ -35,7 +35,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * A placeholder representation of an arbitrary Eiffel event that doesn't have a dedicated POJO class defined
- * in this package. This class behaves exactly like the specific classes except that the event's <tt>data</tt>
+ * in this package. This class behaves exactly like the specific classes except that the event's <code>data</code>
  * attribute is just saved as a {@link JsonNode}.
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
