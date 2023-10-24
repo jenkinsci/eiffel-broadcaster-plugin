@@ -59,7 +59,7 @@
     <properties>
         <jenkins.version>2.375.4</jenkins.version>
 
-        <amqp.client.version>5.6.0</amqp.client.version>
+        <amqp.client.version>5.18.0</amqp.client.version>
         <commons.lang3.version>3.11</commons.lang3.version>
         <commons.validator.version>1.7</commons.validator.version>
         <jenkins-test-harness.version>2044.v03c87927ff5c</jenkins-test-harness.version>
