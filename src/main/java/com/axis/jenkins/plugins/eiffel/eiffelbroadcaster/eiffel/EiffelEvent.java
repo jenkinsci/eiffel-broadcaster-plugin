@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2023 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -223,6 +223,8 @@ public class EiffelEvent {
 
         private String schemaUri;
 
+        private Security security;
+
         private Source source = new Source();
 
         @JsonInclude(JsonInclude.Include.ALWAYS)
@@ -261,6 +263,14 @@ public class EiffelEvent {
 
         public void setSchemaUri(String schemaUri) {
             this.schemaUri = schemaUri;
+        }
+
+        public Security getSecurity() {
+            return security;
+        }
+
+        public void setSecurity(Security security) {
+            this.security = security;
         }
 
         public Source getSource() {
@@ -303,6 +313,7 @@ public class EiffelEvent {
             return time == meta.time &&
                     id.equals(meta.id) &&
                     Objects.equals(schemaUri, meta.schemaUri) &&
+                    Objects.equals(security, meta.security) &&
                     Objects.equals(source, meta.source) &&
                     tags.equals(meta.tags) &&
                     type.equals(meta.type) &&
@@ -319,12 +330,200 @@ public class EiffelEvent {
             return new ToStringBuilder(this)
                     .append("id", id)
                     .append("schemaUri", schemaUri)
+                    .append("security", security)
                     .append("source", source)
                     .append("time", time)
                     .append("tags", tags)
                     .append("type", type)
                     .append("version", version)
                     .toString();
+        }
+
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        public static class Security {
+            @JsonInclude(JsonInclude.Include.ALWAYS)
+            private String authorIdentity;
+
+            private IntegrityProtection integrityProtection;
+
+            public Security(@JsonProperty("authorIdentity") String authorIdentity) {
+                this.authorIdentity = authorIdentity;
+            }
+
+            public String getAuthorIdentity() {
+                return authorIdentity;
+            }
+
+            public void setAuthorIdentity(String authorIdentity) {
+                this.authorIdentity = authorIdentity;
+            }
+
+            public IntegrityProtection getIntegrityProtection() {
+                return integrityProtection;
+            }
+
+            public void setIntegrityProtection(IntegrityProtection integrityProtection) {
+                this.integrityProtection = integrityProtection;
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (o == null || getClass() != o.getClass()) return false;
+                Security security = (Security) o;
+                return authorIdentity.equals(security.authorIdentity) &&
+                        Objects.equals(integrityProtection, security.integrityProtection);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hash(authorIdentity, integrityProtection);
+            }
+
+            @Override
+            public String toString() {
+                return new ToStringBuilder(this)
+                        .append("authorIdentity", authorIdentity)
+                        .append("integrityProtection", integrityProtection)
+                        .toString();
+            }
+
+            @JsonInclude(JsonInclude.Include.NON_EMPTY)
+            public static class IntegrityProtection {
+                @JsonInclude(JsonInclude.Include.ALWAYS)
+                private String signature;
+
+                @JsonInclude(JsonInclude.Include.ALWAYS)
+                private Alg alg;
+
+                private String publicKey;
+
+                private List<SequenceProtection> sequenceProtection = new ArrayList<>();
+
+                public IntegrityProtection(@JsonProperty("signature") String signature, @JsonProperty("alg") Alg alg) {
+                    this.signature = signature;
+                    this.alg = alg;
+                }
+
+                public String getSignature() {
+                    return signature;
+                }
+
+                public void setSignature(String signature) {
+                    this.signature = signature;
+                }
+
+                public Alg getAlg() {
+                    return alg;
+                }
+
+                public void setAlg(Alg alg) {
+                    this.alg = alg;
+                }
+
+                public String getPublicKey() {
+                    return publicKey;
+                }
+
+                public void setPublicKey(String publicKey) {
+                    this.publicKey = publicKey;
+                }
+
+                public List<SequenceProtection> getSequenceProtection() {
+                    return sequenceProtection;
+                }
+
+                @Override
+                public boolean equals(Object o) {
+                    if (this == o) return true;
+                    if (o == null || getClass() != o.getClass()) return false;
+                    IntegrityProtection that = (IntegrityProtection) o;
+                    return signature.equals(that.signature) &&
+                            alg == that.alg &&
+                            Objects.equals(publicKey, that.publicKey) &&
+                            Objects.equals(sequenceProtection, that.sequenceProtection);
+                }
+
+                @Override
+                public int hashCode() {
+                    return Objects.hash(signature, alg, publicKey, sequenceProtection);
+                }
+
+                @Override
+                public String toString() {
+                    return new ToStringBuilder(this)
+                            .append("signature", signature)
+                            .append("alg", alg)
+                            .append("publicKey", publicKey)
+                            .append("sequenceProtection", sequenceProtection)
+                            .toString();
+                }
+
+                public enum Alg {
+                    HS256,
+                    HS384,
+                    HS512,
+                    RS256,
+                    RS384,
+                    RS512,
+                    ES256,
+                    ES384,
+                    ES512,
+                    PS256,
+                    PS384,
+                    PS512;
+                }
+
+                @JsonInclude(JsonInclude.Include.ALWAYS)
+                public static class SequenceProtection {
+                    private String sequenceName;
+
+                    private int position;
+
+                    public SequenceProtection(@JsonProperty("sequenceName") String sequenceName,
+                                              @JsonProperty("position") int position) {
+                        this.sequenceName = sequenceName;
+                        this.position = position;
+                    }
+
+                    public String getSequenceName() {
+                        return sequenceName;
+                    }
+
+                    public void setSequenceName(String sequenceName) {
+                        this.sequenceName = sequenceName;
+                    }
+
+                    public int getPosition() {
+                        return position;
+                    }
+
+                    public void setPosition(int position) {
+                        this.position = position;
+                    }
+
+                    @Override
+                    public boolean equals(Object o) {
+                        if (this == o) return true;
+                        if (o == null || getClass() != o.getClass()) return false;
+                        SequenceProtection that = (SequenceProtection) o;
+                        return position == that.position && sequenceName.equals(that.sequenceName);
+                    }
+
+                    @Override
+                    public int hashCode() {
+                        return Objects.hash(sequenceName, position);
+                    }
+
+                    @Override
+                    public String toString() {
+                        return new ToStringBuilder(this)
+                                .append("sequenceName", sequenceName)
+                                .append("position", position)
+                                .toString();
+                    }
+                }
+            }
         }
 
         @JsonInclude(JsonInclude.Include.NON_EMPTY)
