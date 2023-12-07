@@ -24,6 +24,7 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.JsonCanonicalizationException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,15 +35,23 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.net.URI;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.erdtman.jcs.JsonCanonicalizer;
 
 /**
  * A base class for Eiffel events that defines the common event attributes (<code>meta</code> and <code>links</code>)
@@ -65,6 +74,45 @@ public class EiffelEvent {
     public EiffelEvent(String type, String version) {
         this.meta = new Meta(type, version);
         populateSource();
+    }
+
+    /**
+     * Signs the current event in place using the given signing key, identity, and hash algorithm.
+     *
+     * @param key the private key to use when producing the signature
+     * @param identity the distinguished name (DN) that identifies the author of the event
+     * @param hashAlg the hash algorithm to use when hashing the serialized form of the event
+     * @throws InvalidKeyException if the given private key was invalid
+     * @throws JsonCanonicalizationException if there was an error serializing the event to canonical JSON form
+     * @throws NoSuchAlgorithmException if the selected algorithm isn't supported by the available
+     *         cryptography providers
+     * @throws SignatureException if there's a general problem in the signing process
+     * @throws UnsupportedAlgorithmException if the credential's signature algorithm isn't supported
+     *         by this implementation of the Eiffel protocol or the available cryptography provider
+     */
+    public void sign(@NonNull final PrivateKey key, @NonNull final String identity,
+                     @NonNull final HashAlgorithm hashAlg)
+            throws InvalidKeyException, JsonCanonicalizationException, NoSuchAlgorithmException, SignatureException,
+            UnsupportedAlgorithmException {
+        // Prepare the event for signing by initializing the meta.security fields,
+        // including an empty signature string.
+        EiffelEvent.Meta.Security.IntegrityProtection.Alg alg = getAlgorithm(key.getAlgorithm(), hashAlg);
+        EiffelEvent.Meta.Security sec = new EiffelEvent.Meta.Security(identity);
+        sec.setIntegrityProtection(new EiffelEvent.Meta.Security.IntegrityProtection("", alg));
+        getMeta().setSecurity(sec);
+
+        // Serialize the event to canonical JSON form, compute the signature,
+        // and update the signature field with the Base64-encoded signature.
+        ObjectMapper mapper = new ObjectMapper();
+        Signature sig = Signature.getInstance(alg.getSignatureAlgorithm());
+        sig.initSign(key);
+        try {
+            sig.update(new JsonCanonicalizer(
+                    mapper.writeValueAsString(mapper.valueToTree(this))).getEncodedUTF8());
+        } catch (IOException e) {
+            throw new JsonCanonicalizationException(e.getMessage(), e);
+        }
+        getMeta().getSecurity().getIntegrityProtection().setSignature(Base64.getEncoder().encodeToString(sig.sign()));
     }
 
     public List<Link> getLinks() {
@@ -107,6 +155,46 @@ public class EiffelEvent {
                 .append("links", links)
                 .append("meta", meta)
                 .toString();
+    }
+
+    /**
+     * Obtains the {@link EiffelEvent.Meta.Security.IntegrityProtection.Alg} value that corresponds to
+     * the given key algorithm (as reported by {@link PrivateKey#getAlgorithm()}) and hash algorithm.
+     *
+     * @param keyAlg the key algorithm to translate
+     * @param hashAlg the hash algorithm to translate
+     * @throws UnsupportedAlgorithmException when the input algorithms can't be mapped to a supported Alg value
+     */
+    private EiffelEvent.Meta.Security.IntegrityProtection.Alg getAlgorithm(@NonNull final String keyAlg,
+                                                                           @NonNull final HashAlgorithm hashAlg)
+            throws UnsupportedAlgorithmException {
+        if ("RSA".equals(keyAlg)) {
+            switch (hashAlg) {
+                case SHA_256:
+                    return EiffelEvent.Meta.Security.IntegrityProtection.Alg.RS256;
+                case SHA_384:
+                    return EiffelEvent.Meta.Security.IntegrityProtection.Alg.RS384;
+                case SHA_512:
+                    return EiffelEvent.Meta.Security.IntegrityProtection.Alg.RS512;
+                default:
+                    throw new UnsupportedAlgorithmException(String.format("The %s hash algorithm isn't supported " +
+                            "when signing events. This looks like a plugin bug.", hashAlg));
+            }
+        } else if ("EC".equals(keyAlg)) {
+            switch (hashAlg) {
+                case SHA_256:
+                    return EiffelEvent.Meta.Security.IntegrityProtection.Alg.ES256;
+                case SHA_384:
+                    return EiffelEvent.Meta.Security.IntegrityProtection.Alg.ES384;
+                case SHA_512:
+                    return EiffelEvent.Meta.Security.IntegrityProtection.Alg.ES512;
+                default:
+                    throw new UnsupportedAlgorithmException(String.format("The %s hash algorithm isn't supported " +
+                            "when signing events. This looks like a plugin bug.", hashAlg));
+            }
+        }
+        throw new UnsupportedAlgorithmException(String.format("The %s key algorithm isn't supported " +
+                "when signing events. See the documentation for a list of supported algorithms.", keyAlg));
     }
 
     private void populateSource() {
@@ -472,6 +560,35 @@ public class EiffelEvent {
                     PS256,
                     PS384,
                     PS512;
+
+                    /**
+                     * Translates this algorithm to something the java.security package understands.
+                     *
+                     * @return a string representing this algorithm value, suitable for passing to
+                     *         {@link java.security.Signature#getInstance(String)}
+                     * @throws UnsupportedAlgorithmException when the current algorithm value can't be
+                     *         used for signing events
+                     */
+                    public String getSignatureAlgorithm() throws UnsupportedAlgorithmException {
+                        switch (this) {
+                            case RS256:
+                                return "SHA256withRSA";
+                            case RS384:
+                                return "SHA384withRSA";
+                            case RS512:
+                                return "SHA512withRSA";
+                            case ES256:
+                                return "SHA256withECDSA";
+                            case ES384:
+                                return "SHA384withECDSA";
+                            case ES512:
+                                return "SHA512withECDSA";
+                            default:
+                                throw new UnsupportedAlgorithmException(String.format(
+                                        "Support for the %s algorithm has not been implemented. See the " +
+                                                "documentation for a list of supported algorithms.", toString()));
+                        }
+                    }
                 }
 
                 @JsonInclude(JsonInclude.Include.ALWAYS)

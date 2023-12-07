@@ -126,7 +126,7 @@ public class PublishEiffelArtifactsStep extends Step {
         private void publishArtifact(@NonNull final EiffelArtifactPublisher artifactPublisher,
                                      @NonNull final EiffelArtifactCreatedEvent creationEvent) throws Exception {
             EiffelArtifactPublishedEvent event = artifactPublisher.prepareEvent(creationEvent);
-            JsonNode sentJSON = Util.mustPublishEvent(event);
+            JsonNode sentJSON = Util.mustPublishEvent(event, true);
             if (sentJSON != null) {
                 getContext().get(TaskListener.class).getLogger().format(
                         "Successfully sent %s with id %s for artifact with id %s%n",

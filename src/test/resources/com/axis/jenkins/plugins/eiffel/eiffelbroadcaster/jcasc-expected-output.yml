@@ -7,5 +7,7 @@ routingKeyProvider:
   sepia:
     tag: "random-tag"
 serverUri: "amqp://rabbitmq.example.com"
+systemSigningEnabled: false
+systemSigningHashAlg: SHA_256
 userName: "johndoe"
 virtualHost: "/"

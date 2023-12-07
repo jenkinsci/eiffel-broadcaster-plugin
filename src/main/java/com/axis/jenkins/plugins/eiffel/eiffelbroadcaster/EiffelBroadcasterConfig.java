@@ -26,9 +26,14 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidator;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.HashAlgorithm;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.FixedRoutingKeyProvider;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.RoutingKeyProvider;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.SepiaRoutingKeyProvider;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCertificateCredentials;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.PossibleAuthenticationFailureException;
@@ -37,12 +42,16 @@ import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.XmlFile;
 import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.servlet.ServletException;
 import jenkins.model.GlobalConfiguration;
@@ -51,6 +60,7 @@ import net.sf.json.JSONObject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -110,6 +120,18 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     private final List<String> activityCategories = new ArrayList<>();
     /* How the hostname used in the <code>meta.source.host</code> member should be determined. */
     private HostnameSource hostnameSource = HostnameSource.NETWORK_STACK;
+
+    /**
+     * Whether signing of system events, i.e. events sent by the plugin itself
+     * and not under direct control, should be enabled.
+     * */
+    private boolean systemSigningEnabled;
+
+    /** ID of credentials to use when signing events sent by the plugin itself. */
+    private String systemSigningCredentialsId;
+
+    /** Hash algorithm to use when signing events sent by the plugin itself. */
+    private HashAlgorithm systemSigningHashAlg = HashAlgorithm.SHA_256;
 
     private transient final EventValidator eventValidator = new EventValidator();
 
@@ -373,6 +395,33 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
         this.hostnameSource = hostnameSource;
     }
 
+    public boolean isSystemSigningEnabled() {
+        return systemSigningEnabled;
+    }
+
+    @DataBoundSetter
+    public void setSystemSigningEnabled(boolean systemSigningEnabled) {
+        this.systemSigningEnabled = systemSigningEnabled;
+    }
+
+    public String getSystemSigningCredentialsId() {
+        return systemSigningCredentialsId;
+    }
+
+    @DataBoundSetter
+    public void setSystemSigningCredentialsId(String systemSigningCredentialsId) {
+        this.systemSigningCredentialsId = systemSigningCredentialsId;
+    }
+
+    public HashAlgorithm getSystemSigningHashAlg() {
+        return systemSigningHashAlg;
+    }
+
+    @DataBoundSetter
+    public void setSystemSigningHashAlg(HashAlgorithm systemSigningHashAlg) {
+        this.systemSigningHashAlg = systemSigningHashAlg;
+    }
+
     @NonNull
     public EventValidator getEventValidator() {
         return eventValidator;
@@ -385,6 +434,29 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
     @Override
     public String getDisplayName() {
         return "EiffelBroadcaster";
+    }
+
+    public ListBoxModel doFillSystemSigningCredentialsIdItems(@AncestorInPath Item item,
+                                                              @QueryParameter String credentialsId) {
+        StandardListBoxModel result = new StandardListBoxModel();
+        if (item == null) {
+            if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
+                return result.includeCurrentValue(credentialsId);
+            }
+        } else {
+            if (!item.hasPermission(Item.EXTENDED_READ)
+                    && !item.hasPermission(CredentialsProvider.USE_ITEM)) {
+                return result.includeCurrentValue(credentialsId);
+            }
+        }
+        return result
+                .includeMatchingAs(
+                        ACL.SYSTEM,
+                        Jenkins.get(),
+                        StandardCertificateCredentials.class,
+                        Collections.emptyList(),
+                        CredentialsMatchers.always())
+                .includeCurrentValue(credentialsId);
     }
 
     /**

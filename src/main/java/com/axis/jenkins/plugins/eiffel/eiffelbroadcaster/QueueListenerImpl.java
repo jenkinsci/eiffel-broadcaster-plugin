@@ -115,7 +115,7 @@ public class QueueListenerImpl extends QueueListener {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event);
+        Util.publishEvent(event, true);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class QueueListenerImpl extends QueueListener {
                 return;
             }
             EiffelActivityCanceledEvent event = new EiffelActivityCanceledEvent(targetEvent);
-            Util.publishEvent(event);
+            Util.publishEvent(event, true);
         }
     }
 

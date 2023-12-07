@@ -169,7 +169,7 @@ public class SendEiffelEventStep extends Step {
                     event.getLinks().add(new EiffelEvent.Link(
                             step.getActivityLinkType(), action.getTriggerEvent().getMeta().getId()));
                 }
-                JsonNode sentJSON = Util.mustPublishEvent(event);
+                JsonNode sentJSON = Util.mustPublishEvent(event, false);
                 TaskListener taskListener = getContext().get(TaskListener.class);
                 if (sentJSON != null && taskListener != null) {
                     taskListener.getLogger().format(
