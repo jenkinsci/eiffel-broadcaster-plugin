@@ -279,7 +279,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
 
     /**
      * Sets the routing key. This method exists for backwards compatibility reasons.
-     * Any non-null value will be passed to {@see #setRoutingKeyProvider(RoutingKeyProvider)}
+     * Any non-null value will be passed to {@link #setRoutingKeyProvider(RoutingKeyProvider)}
      * and this setter's underlying attribute will be set to null.
      *
      * @param routingKey the routing key.
