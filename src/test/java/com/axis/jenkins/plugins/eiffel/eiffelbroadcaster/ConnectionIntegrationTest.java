@@ -122,7 +122,7 @@ public class ConnectionIntegrationTest {
      */
     private void publishSilently(final EiffelEvent event) {
         try {
-            Util.mustPublishEvent(event);
+            Util.mustPublishEvent(event, false);
         } catch (Exception e) {
             LOGGER.error("Unexpected exception", e);
         }

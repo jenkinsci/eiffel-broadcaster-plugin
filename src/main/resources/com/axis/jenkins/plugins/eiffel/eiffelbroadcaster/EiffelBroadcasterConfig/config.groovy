@@ -23,6 +23,7 @@ THE SOFTWARE.
  */
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
 
+def c = namespace("/lib/credentials")
 def f = namespace("/lib/form")
 def l = "/plugin/eiffel-broadcaster/"
 
@@ -65,6 +66,19 @@ f.section(title: "Eiffel Broadcaster Plugin") {
         f.entry(title: "Hostname source", field: "hostnameSource", help: l+"help-hostname-source.html") {
             f.enum {
                 raw(my.description)
+            }
+        }
+        f.optionalBlock(title: "Enable signing of system events", field: "systemSigningEnabled", inline: true,
+                help: l+"help-system-signing-enabled.html") {
+            f.entry(title: "Certificate to use for signing of system events", field: "systemSigningCredentialsId",
+                    help: l+"help-system-signing-credentials-id.html") {
+                c.select(includeUser: false)
+            }
+            f.entry(title: "Hash algorithm for system events", field: "systemSigningHashAlg",
+                    help: l+"help-system-signing-hash-alg.html") {
+                f.enum {
+                    raw(my.displayName)
+                }
             }
         }
     }

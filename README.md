@@ -218,6 +218,44 @@ values for all parameters will be used.
 If at least one CAUSE link is included in `eiffellinks`, an `EIFFEL_EVENT`
 trigger will be included in the EiffelActivityTriggeredEvent.
 
+## Event signing
+
+The plugin supports signing of event payloads according to the [Eiffel
+protocol's signing specification](https://github.com/eiffel-community/eiffel/blob/master/eiffel-syntax-and-usage/security.md).
+For now, only system events, i.e. events sent by the plugin itself can
+be signed. Specifically, this includes activity events and the
+EiffelArtifactPublishedEvent sent as a result of the publishEiffelArtifacts
+pipeline step.
+
+To enable signing, you first need to create a keypair with a certificate
+and upload it as a credential to the Jenkins instance. The certificate can
+be self-signed; only the subject name is used.
+
+Here's an example of how to create an ECDSA P-521 keypair and convert it
+to the PKCS #12 format expected by the Credentials plugin:
+
+```
+openssl ecparam -name secp521r1 -genkey -noout -out system-signing.priv.pem
+openssl req -new -x509 -key system-signing.priv.pem -out system-signing.cert.pem -subj /CN=some-identifier -days 365
+openssl x509 -noout -text -in system-signing.cert.pem
+openssl pkcs12 -export -inkey system-signing.priv.pem -in system-signing.cert.pem -out system-signing.pfx
+```
+
+The `-subj` flag to `openssl req` specifies the subject of the certificate
+and can be any distinguished name that makes sense to you. If you omit that
+flag you'll be prompted for the values that can make up a distinguished name.
+The subject is what's going to be displayed in the Jenkins interface when
+certificate credentials are listed.
+
+The `openssl pkcs12` command will prompt you for a password. You can choose
+any password you like, just make sure that you'll be able to input the same
+password when the resulting file is uploaded to Jenkins.
+
+Finally, create a new system certificate credential in Jenkins and upload
+the .pfx file you created. This credential can then be chosen from the
+_Certificate to use for signing of system events_ dropdown in the plugin
+configuration (visible when _Enable signing of system events_ is checked).
+
 ## How to build and install this plugin from source
 In the EiffelBroadcaster root folder, use maven to compile.
 ```

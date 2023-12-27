@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2021 Axis Communications AB.
+ Copyright 2018-2023 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFi
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.UnsupportedAlgorithmException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +41,13 @@ import hudson.model.Queue;
 import hudson.model.Run;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.security.UnrecoverableKeyException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -115,19 +123,40 @@ public final class Util {
     /**
      * Publishes an {@link EiffelEvent} and raises an exception if an error occurs.
      *
+     * @param event the Eiffel event to publish
+     * @param allowSystemSignature true if the plugin's global credentials may be used to sign the event
+     *                             before publishing (not to be used if the end user controls the event payload)
      * @return the published event or null if event publishing is disabled
      * @throws EventValidationFailedException if the validation of the event against the JSON schema fails
+     * @throws InvalidCertificateConfigurationException if the keystore in the certificate credential was entirely
+     *         empty or its first item didn't contain a certificate with a private key
+     * @throws InvalidKeyException if the given private key was invalid
+     * @throws JsonCanonicalizationException if there was an error serializing the event to canonical JSON form
      * @throws JsonProcessingException if there's an error during JSON serialization
+     * @throws KeyStoreException if the {@link KeyStore} hasn't been initialized (shouldn't happen and indicates a bug)
+     * @throws NoSuchAlgorithmException if the algorithm needed to decrypt the key isn't available
      * @throws SchemaUnavailableException if there's no schema available for the supplied event
+     * @throws SignatureException if there's a general problem in the signing process
+     * @throws UnsupportedAlgorithmException if the credential's signature algorithm isn't supported
+     *         by this implementation of the Eiffel protocol or the available cryptography provider
      */
     @CheckForNull
-    public static JsonNode mustPublishEvent(@NonNull final EiffelEvent event)
-            throws EventValidationFailedException, JsonProcessingException, SchemaUnavailableException {
+    public static JsonNode mustPublishEvent(@NonNull final EiffelEvent event, final boolean allowSystemSignature)
+            throws EventValidationFailedException, InvalidCertificateConfigurationException, InvalidKeyException,
+            JsonCanonicalizationException, JsonProcessingException, KeyStoreException, NoSuchAlgorithmException,
+            SchemaUnavailableException, SignatureException, UnsupportedAlgorithmException, UnrecoverableKeyException {
         EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
         if (config == null || !config.getEnableBroadcaster()) {
             return null;
         }
-        JsonNode eventJson = new ObjectMapper().valueToTree(event);
+
+        if (allowSystemSignature && config.isSystemSigningEnabled()) {
+            SigningKeyCache.Item sigData = SigningKeyCache.getInstance().get(config.getSystemSigningCredentialsId());
+            event.sign(sigData.getKey(), sigData.getIdentity(), config.getSystemSigningHashAlg());
+        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode eventJson = mapper.valueToTree(event);
         AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
                 .appId(config.getAppId())
                 .deliveryMode(config.getPersistentDelivery() ? PERSISTENT_DELIVERY : NON_PERSISTENT_DELIVERY)
@@ -137,23 +166,28 @@ public final class Util {
         config.getEventValidator().validate(event.getMeta().getType(), event.getMeta().getVersion(), eventJson);
         MQConnection.getInstance().addMessageToQueue(config.getExchangeName(),
                 config.getRoutingKeyProvider().getRoutingKey(event),
-                props, new ObjectMapper().writeValueAsBytes(eventJson));
+                props, mapper.writeValueAsBytes(eventJson));
         return eventJson;
     }
 
     /**
      * Publishes an {@link EiffelEvent} and logs a message if there's an error.
      *
+     * @param event the Eiffel event to publish
+     * @param allowSystemSignature true if the plugin's global credentials may be used to sign the event
+     *                             before publishing (not to be used if the end user controls the event payload)
      * @return the published event or null if there was an error or event publishing is disabled
      */
     @CheckForNull
-    public static JsonNode publishEvent(@NonNull final EiffelEvent event) {
+    public static JsonNode publishEvent(@NonNull final EiffelEvent event, final boolean allowSystemSignature) {
         try {
-            return mustPublishEvent(event);
-        } catch (JsonProcessingException e) {
+            return mustPublishEvent(event, allowSystemSignature);
+        } catch (JsonCanonicalizationException | JsonProcessingException e) {
             logger.error("Unable to serialize object to JSON: {}: {}", e.getMessage(), event);
         } catch (SchemaUnavailableException | EventValidationFailedException e) {
             logger.warn("Unable to validate event: {}", e.getMessage());
+        } catch (GeneralSecurityException | InvalidCertificateConfigurationException | UnsupportedAlgorithmException e) {
+            logger.error("Error signing event: {}", e.getMessage());
         }
         return null;
     }

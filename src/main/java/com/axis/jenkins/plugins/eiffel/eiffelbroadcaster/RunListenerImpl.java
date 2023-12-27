@@ -87,7 +87,7 @@ public class RunListenerImpl extends RunListener<Run> {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event);
+        Util.publishEvent(event, true);
     }
 
     @Override
@@ -128,6 +128,6 @@ public class RunListenerImpl extends RunListener<Run> {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event);
+        Util.publishEvent(event, true);
     }
 }
