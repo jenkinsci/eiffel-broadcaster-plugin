@@ -51,11 +51,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.*;
+import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.hasBuildParameter;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_CREATED;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 public class BuildWithEiffelLinksActionTest {
     @Rule

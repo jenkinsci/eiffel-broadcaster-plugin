@@ -47,9 +47,15 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.*;
+import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.hasTrigger;
+import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.linksTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.emptyIterable;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 
 /**
  * Tests of the correctness of the events emitted from all listeners.

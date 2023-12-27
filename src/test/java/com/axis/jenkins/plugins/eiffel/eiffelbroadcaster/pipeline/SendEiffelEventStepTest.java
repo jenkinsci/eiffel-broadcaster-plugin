@@ -48,9 +48,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.*;
+import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.linksTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 
 public class SendEiffelEventStepTest {
     @Rule
