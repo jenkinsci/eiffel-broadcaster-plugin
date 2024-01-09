@@ -34,24 +34,24 @@ import static org.hamcrest.Matchers.*;
 public class SepiaRoutingKeyProviderTest {
     @Test
     public void testGetRoutingKey_UsesUnderscoreInsteadOfNull() {
-        SepiaRoutingKeyProvider rp = new SepiaRoutingKeyProvider();
-        EiffelEvent event = new EiffelArtifactCreatedEvent("pkg:generic/package");
+        var rp = new SepiaRoutingKeyProvider();
+        var event = new EiffelArtifactCreatedEvent("pkg:generic/package");
         assertThat(rp.getRoutingKey(event), is("eiffel._.EiffelArtifactCreatedEvent._._"));
     }
 
     @Test
     public void testGetRoutingKey_UsesDomainIdIfSet() {
-        SepiaRoutingKeyProvider rp = new SepiaRoutingKeyProvider();
-        EiffelEvent event = new EiffelArtifactCreatedEvent("pkg:generic/package");
+        var rp = new SepiaRoutingKeyProvider();
+        var event = new EiffelArtifactCreatedEvent("pkg:generic/package");
         event.getMeta().getSource().setDomainId("some-domainid");
         assertThat(rp.getRoutingKey(event), is("eiffel._.EiffelArtifactCreatedEvent._.some-domainid"));
     }
 
     @Test
     public void testGetRoutingKey_UsesTagIfSet() {
-        SepiaRoutingKeyProvider rp = new SepiaRoutingKeyProvider();
+        var rp = new SepiaRoutingKeyProvider();
         rp.setTag("some-tag");
-        EiffelEvent event = new EiffelArtifactCreatedEvent("pkg:generic/package");
+        var event = new EiffelArtifactCreatedEvent("pkg:generic/package");
         assertThat(rp.getRoutingKey(event), is("eiffel._.EiffelArtifactCreatedEvent.some-tag._"));
     }
 }

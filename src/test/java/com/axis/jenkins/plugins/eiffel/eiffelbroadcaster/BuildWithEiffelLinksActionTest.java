@@ -62,10 +62,10 @@ public class BuildWithEiffelLinksActionTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     public WebResponse postBuildRequest(final Job job, final String jsonPayload) throws IOException {
-        JenkinsRule.WebClient wc = jenkins.createWebClient();
+        var wc = jenkins.createWebClient();
         wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
-        URL url = wc.createCrumbedUrl(job.getUrl() + BuildWithEiffelLinksAction.URL_SUFFIX + "/build");
-        WebRequest req = new WebRequest(url, HttpMethod.POST);
+        var url = wc.createCrumbedUrl(job.getUrl() + BuildWithEiffelLinksAction.URL_SUFFIX + "/build");
+        var req = new WebRequest(url, HttpMethod.POST);
         if (jsonPayload != null) {
             req.setRequestParameters(Arrays.asList(new NameValuePair("json", jsonPayload)));
         }
@@ -74,62 +74,62 @@ public class BuildWithEiffelLinksActionTest {
 
     @Test
     public void testNonParameterizedFreestyleBuild_WithoutParams() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
 
-        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
 
-        WebResponse resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
         jenkins.waitUntilNoActivity();
 
         assertThat(resp.getStatusCode(), is(SC_CREATED));
 
-        AbstractBuild build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(notNullValue()));
 
-        EiffelCause cause = (EiffelCause) build.getCause(EiffelCause.class);
+        var cause = (EiffelCause) build.getCause(EiffelCause.class);
         assertThat(cause, is(notNullValue()));
         assertThat(cause.getLinks(), is(reqParams.links));
 
-        ParametersAction paramAction = build.getAction(ParametersAction.class);
+        var paramAction = build.getAction(ParametersAction.class);
         assertThat(paramAction, is(nullValue()));
     }
 
     @Test
     public void testNonParameterizedFreestyleBuild_WithoutParams_WithoutLinks() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
         // Clear the links that are added by the constructor. The empty list
         // will be omitted when the object is serialized to JSON.
         reqParams.links.clear();
 
-        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
 
-        WebResponse resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
         jenkins.waitUntilNoActivity();
 
         assertThat(resp.getStatusCode(), is(SC_BAD_REQUEST));
 
-        AbstractBuild build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(nullValue()));
     }
 
     @Test
     public void testParameterizedFreestyleBuild_WithParams() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
 
-        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
-        StringParameterDefinition stringParam = new StringParameterDefinition("STRING_PARAM", "value");
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
+        var stringParam = new StringParameterDefinition("STRING_PARAM", "value");
         job.addProperty(new ParametersDefinitionProperty(stringParam));
         reqParams.buildParams.add(new NameValuePair(stringParam.getName(), "overridden value"));
 
-        WebResponse resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
         jenkins.waitUntilNoActivity();
 
         assertThat(resp.getStatusCode(), is(SC_CREATED));
 
-        AbstractBuild build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(notNullValue()));
 
-        EiffelCause cause = (EiffelCause) build.getCause(EiffelCause.class);
+        var cause = (EiffelCause) build.getCause(EiffelCause.class);
         assertThat(cause, is(notNullValue()));
         assertThat(cause.getLinks(), is(reqParams.links));
 
@@ -138,23 +138,23 @@ public class BuildWithEiffelLinksActionTest {
 
     @Test
     public void testParameterizedWorkflowBuild_WithParams() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
 
-        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");
+        var job = jenkins.createProject(WorkflowJob.class, "test");
         job.setDefinition(new CpsFlowDefinition("node { echo 'hello' }", true));
-        StringParameterDefinition stringParam = new StringParameterDefinition("STRING_PARAM", "value");
+        var stringParam = new StringParameterDefinition("STRING_PARAM", "value");
         job.addProperty(new ParametersDefinitionProperty(stringParam));
         reqParams.buildParams.add(new NameValuePair(stringParam.getName(), "overridden value"));
 
-        WebResponse resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
         jenkins.waitUntilNoActivity();
 
         assertThat(resp.getStatusCode(), is(SC_CREATED));
 
-        WorkflowRun build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(notNullValue()));
 
-        EiffelCause cause = (EiffelCause) build.getCause(EiffelCause.class);
+        var cause = (EiffelCause) build.getCause(EiffelCause.class);
         assertThat(cause, is(notNullValue()));
         assertThat(cause.getLinks(), is(reqParams.links));
 
@@ -163,31 +163,31 @@ public class BuildWithEiffelLinksActionTest {
 
     @Test
     public void testParameterizedFreestyleBuild_WithBadJsonPayload() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
 
-        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
-        StringParameterDefinition stringParam = new StringParameterDefinition("STRING_PARAM", "value");
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
+        var stringParam = new StringParameterDefinition("STRING_PARAM", "value");
         job.addProperty(new ParametersDefinitionProperty(stringParam));
 
-        WebResponse resp = postBuildRequest(job, "this is not valid JSON");
+        var resp = postBuildRequest(job, "this is not valid JSON");
         jenkins.waitUntilNoActivity();
 
         assertThat(resp.getStatusCode(), is(SC_BAD_REQUEST));
 
-        AbstractBuild build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(nullValue()));
     }
 
     @Test
     public void testParameterizedFreestyleBuild_WithBadParameterJson() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
 
-        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
-        StringParameterDefinition stringParam = new StringParameterDefinition("STRING_PARAM", "value");
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
+        var stringParam = new StringParameterDefinition("STRING_PARAM", "value");
         job.addProperty(new ParametersDefinitionProperty(stringParam));
         reqParams.buildParams.add(new NameValuePair(stringParam.getName(), "overridden value"));
 
-        WebResponse resp = postBuildRequest(job, String.format(
+        var resp = postBuildRequest(job, String.format(
                 "{\"%s\": [], \"%s\": [[\"this can't be deserialized\"]]}",
                 BuildWithEiffelLinksAction.FORM_PARAM_EIFFELLINKS,
                 BuildWithEiffelLinksAction.FORM_PARAM_PARAMETERS));
@@ -195,47 +195,47 @@ public class BuildWithEiffelLinksActionTest {
 
         assertThat(resp.getStatusCode(), is(SC_BAD_REQUEST));
 
-        AbstractBuild build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(nullValue()));
     }
 
     @Test
     public void testParameterizedFreestyleBuild_WithBadEiffelLinksJson() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
 
-        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
-        StringParameterDefinition stringParam = new StringParameterDefinition("STRING_PARAM", "value");
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
+        var stringParam = new StringParameterDefinition("STRING_PARAM", "value");
         job.addProperty(new ParametersDefinitionProperty(stringParam));
         reqParams.buildParams.add(new NameValuePair(stringParam.getName(), "overridden value"));
 
-        WebResponse resp = postBuildRequest(job, String.format(
+        var resp = postBuildRequest(job, String.format(
                 "{\"%s\": [[\"this can't be deserialized\"]]}",
                 BuildWithEiffelLinksAction.FORM_PARAM_EIFFELLINKS));
         jenkins.waitUntilNoActivity();
 
         assertThat(resp.getStatusCode(), is(SC_BAD_REQUEST));
 
-        AbstractBuild build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(nullValue()));
     }
 
     @Test
     public void testParameterizedFreestyleBuild_WithoutParams() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
 
-        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
-        StringParameterDefinition stringParam = new StringParameterDefinition("STRING_PARAM", "value");
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
+        var stringParam = new StringParameterDefinition("STRING_PARAM", "value");
         job.addProperty(new ParametersDefinitionProperty(stringParam));
 
-        WebResponse resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
         jenkins.waitUntilNoActivity();
 
         assertThat(resp.getStatusCode(), is(SC_CREATED));
 
-        AbstractBuild build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(notNullValue()));
 
-        EiffelCause cause = (EiffelCause) build.getCause(EiffelCause.class);
+        var cause = (EiffelCause) build.getCause(EiffelCause.class);
         assertThat(cause, is(notNullValue()));
         assertThat(cause.getLinks(), is(reqParams.links));
 
@@ -244,24 +244,24 @@ public class BuildWithEiffelLinksActionTest {
 
     @Test
     public void testParameterizedFreestyleBuild_WithParamSubset() throws Exception {
-        BuildRequestParams reqParams = new BuildRequestParams();
+        var reqParams = new BuildRequestParams();
 
         // Define two parameters, GIVEN_PARAM and EXTRA_PARAM, but include only the former in the build request.
-        FreeStyleProject job = jenkins.createProject(FreeStyleProject.class, "test");
-        StringParameterDefinition givenParam = new StringParameterDefinition("GIVEN_PARAM", "value");
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
+        var givenParam = new StringParameterDefinition("GIVEN_PARAM", "value");
         reqParams.buildParams.add(new NameValuePair(givenParam.getName(), "overridden value"));
-        StringParameterDefinition extraParam = new StringParameterDefinition("EXTRA_PARAM", "value");
+        var extraParam = new StringParameterDefinition("EXTRA_PARAM", "value");
         job.addProperty(new ParametersDefinitionProperty(givenParam, extraParam));
 
-        WebResponse resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
         jenkins.waitUntilNoActivity();
 
         assertThat(resp.getStatusCode(), is(SC_CREATED));
 
-        AbstractBuild build = job.getBuildByNumber(1);
+        var build = job.getBuildByNumber(1);
         assertThat(build, is(notNullValue()));
 
-        EiffelCause cause = (EiffelCause) build.getCause(EiffelCause.class);
+        var cause = (EiffelCause) build.getCause(EiffelCause.class);
         assertThat(cause, is(notNullValue()));
         assertThat(cause.getLinks(), is(reqParams.links));
 

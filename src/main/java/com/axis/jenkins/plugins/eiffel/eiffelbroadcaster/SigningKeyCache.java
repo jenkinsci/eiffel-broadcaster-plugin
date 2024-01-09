@@ -35,7 +35,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.UnrecoverableKeyException;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
@@ -76,7 +75,7 @@ public class SigningKeyCache {
     public synchronized @NonNull Item get(@NonNull final String credentialsId)
             throws InvalidCertificateConfigurationException, KeyStoreException, NoSuchAlgorithmException,
             UnrecoverableKeyException {
-        Item cachedItem = cache.get(credentialsId);
+        var cachedItem = cache.get(credentialsId);
         if (cachedItem != null && !cachedItem.hasExpired()) {
             return cachedItem;
         }
@@ -84,7 +83,7 @@ public class SigningKeyCache {
         if (StringUtils.isEmpty(credentialsId)) {
             throw new InvalidCertificateConfigurationException("No certificate credential has been configured.");
         }
-        StandardCertificateCredentials cred = CredentialsMatchers.firstOrNull(
+        var cred = CredentialsMatchers.firstOrNull(
                 CredentialsProvider.lookupCredentials(
                         StandardCertificateCredentials.class, (ItemGroup) null, null, List.of()),
                 CredentialsMatchers.allOf(CredentialsMatchers.withId(credentialsId)));
@@ -92,7 +91,7 @@ public class SigningKeyCache {
             throw new InvalidCertificateConfigurationException(String.format(
                     "No certificate credential with the id \"%s\" was found.", credentialsId));
         }
-        Item newCacheItem = new Item(cred);
+        var newCacheItem = new Item(cred);
         cache.put(credentialsId, newCacheItem);
         return newCacheItem;
     }
@@ -132,17 +131,17 @@ public class SigningKeyCache {
 
             // Extract the first private key in the key store, then extract
             // the subject DN from the certificate associated with that key.
-            KeyStore keyStore = cred.getKeyStore();
+            var keyStore = cred.getKeyStore();
             if (!keyStore.aliases().hasMoreElements()) {
                 throw new InvalidCertificateConfigurationException("The keystore in the credential object was empty.");
             }
-            String alias = keyStore.aliases().nextElement();
+            var alias = keyStore.aliases().nextElement();
             if (keyStore.isKeyEntry(alias)) {
                 key = (PrivateKey) keyStore.getKey(alias, cred.getPassword().getPlainText().toCharArray());
             }
-            Certificate[] certificateChain = keyStore.getCertificateChain(alias);
+            var certificateChain = keyStore.getCertificateChain(alias);
             if (certificateChain != null && certificateChain.length > 0) {
-                Certificate certificate = certificateChain[0];
+                var certificate = certificateChain[0];
                 if (certificate instanceof X509Certificate) {
                     identity = ((X509Certificate) certificate).getSubjectX500Principal().getName();
                 }

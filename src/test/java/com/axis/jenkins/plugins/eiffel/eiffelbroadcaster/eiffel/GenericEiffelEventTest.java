@@ -35,7 +35,7 @@ import static org.hamcrest.Matchers.*;
 public class GenericEiffelEventTest {
     @Test
     public void testJsonDeserialization() throws IOException {
-        EiffelEvent event = new ObjectMapper().readValue(
+        var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelCompositionDefinedEvent.json"), EiffelEvent.class);
 
         // Basic metadata assertions. Make sure to include value apart from
@@ -54,7 +54,7 @@ public class GenericEiffelEventTest {
 
         // Make sure we get the expected concrete generic type and that its data is correct.
         assertThat(event, instanceOf(GenericEiffelEvent.class));
-        GenericEiffelEvent genericEvent = (GenericEiffelEvent) event;
+        var genericEvent = (GenericEiffelEvent) event;
         assertThat(genericEvent.getData().path("name").asText(), is("myCompositionName"));
         assertThat(genericEvent.getData().path("version").asText(), is("42.0.7"));
     }

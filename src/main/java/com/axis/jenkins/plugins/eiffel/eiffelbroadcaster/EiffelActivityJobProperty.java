@@ -75,7 +75,7 @@ public class EiffelActivityJobProperty extends OptionalJobProperty<Job<?, ?>> {
         public OptionalJobProperty newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             // The form uses a textarea for the categories but we split out the lines and store
             // them individually in a list so we need to override the Stapler's default behavior.
-            List<String> categories = Util.getLinesInString(formData.getString("categories"));
+            var categories = Util.getLinesInString(formData.getString("categories"));
             return new EiffelActivityJobProperty(categories);
         }
     }

@@ -29,11 +29,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -60,10 +57,10 @@ public class EventValidator {
      */
     public void validate(String eventName, String eventVersion, @NonNull final JsonNode eventJson)
             throws EventValidationFailedException, SchemaUnavailableException {
-        EventVersionKey key = new EventVersionKey(eventName, eventVersion);
-        JsonSchema schema = schemaCache.get(key);
+        var key = new EventVersionKey(eventName, eventVersion);
+        var schema = schemaCache.get(key);
         if (schema == null) {
-            try (InputStream schemaStream = schemaProvider.getSchema(eventName, eventVersion)) {
+            try (var schemaStream = schemaProvider.getSchema(eventName, eventVersion)) {
                 if (schemaStream == null) {
                     throw new SchemaUnavailableException(
                             String.format("Unable to locate a schema for %s@%s", eventName, eventVersion));
@@ -75,7 +72,7 @@ public class EventValidator {
             }
             schemaCache.put(key, schema);
         }
-        Set<ValidationMessage> result = schema.validate(eventJson);
+        var result = schema.validate(eventJson);
         if (!result.isEmpty()) {
             throw new EventValidationFailedException(result, eventJson);
         }

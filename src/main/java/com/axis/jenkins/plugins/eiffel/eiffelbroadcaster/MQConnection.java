@@ -200,7 +200,7 @@ public final class MQConnection implements ShutdownListener {
      */
     public void addMessageToQueue(String exchange, String routingKey, AMQP.BasicProperties props, byte[] body) {
         startMessageQueueThread();
-        MessageData messageData = new MessageData(exchange, routingKey, props, body);
+        var messageData = new MessageData(exchange, routingKey, props, body);
         if (!messageQueue.offer(messageData)) {
             logger.error("addMessageToQueue() failed, internal RabbitMQ queue is full!");
         }
@@ -219,8 +219,7 @@ public final class MQConnection implements ShutdownListener {
                     channel.confirmSelect();
                     addMessageConfirmListener(channel);
                 }
-                MessageData messageData = (MessageData)messageQueue.poll(SENDMESSAGE_TIMEOUT,
-                                                                         TimeUnit.MILLISECONDS);
+                var messageData = (MessageData)messageQueue.poll(SENDMESSAGE_TIMEOUT, TimeUnit.MILLISECONDS);
                 if (messageData != null) {
                     validateExchange(channel, messageData.getExchange());
                     getInstance().sendOnChannel(messageData, channel);
@@ -293,7 +292,7 @@ public final class MQConnection implements ShutdownListener {
 
         // Signature is addConfirmListener(successCallback, errorCallback)
         channel.addConfirmListener(cleanOutstandingConfirms, (sequenceNumber, multiple) -> {
-            MessageData message = outstandingConfirms.get(sequenceNumber);
+            var message = outstandingConfirms.get(sequenceNumber);
             messageQueue.offer(message);
             cleanOutstandingConfirms.handle(sequenceNumber, multiple);
         });

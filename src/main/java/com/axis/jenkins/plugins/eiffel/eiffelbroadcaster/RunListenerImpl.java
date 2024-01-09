@@ -28,12 +28,9 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFi
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
-import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
-import java.net.URI;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,18 +61,18 @@ public class RunListenerImpl extends RunListener<Run> {
 
     @Override
     public void onStarted(Run r, TaskListener listener) {
-        UUID targetEvent = EiffelJobTable.getInstance().getAndClearEventTrigger(r.getQueueId());
+        var targetEvent = EiffelJobTable.getInstance().getAndClearEventTrigger(r.getQueueId());
         if (targetEvent == null) {
             logger.warn("The newly started {} could not be mapped to an emitted ActT event", r);
             return;
         }
-        EiffelActivityStartedEvent event = new EiffelActivityStartedEvent(targetEvent);
+        var event = new EiffelActivityStartedEvent(targetEvent);
 
-        URI runUri = Util.getRunUri(r);
+        var runUri = Util.getRunUri(r);
         if (runUri != null) {
             event.getData().setExecutionUri(runUri);
         }
-        URI logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
+        var logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
         if (logUri != null) {
             event.getData().getLiveLogs().add(
                     new EiffelActivityStartedEvent.Data.LiveLogs(CONSOLE_LOG_NAME, logUri));
@@ -92,14 +89,13 @@ public class RunListenerImpl extends RunListener<Run> {
 
     @Override
     public void onCompleted(Run r, TaskListener listener) {
-        Result res = r.getResult();
-        EiffelActivityFinishedEvent.Data.Outcome.Conclusion conclusion =
-                EiffelActivityFinishedEvent.Data.Outcome.Conclusion.INCONCLUSIVE;
+        var res = r.getResult();
+        var conclusion = EiffelActivityFinishedEvent.Data.Outcome.Conclusion.INCONCLUSIVE;
         if (res != null) {
             conclusion = Util.translateStatus(res.toString());
         }
 
-        EiffelActivityAction activityAction = r.getAction(EiffelActivityAction.class);
+        var activityAction = r.getAction(EiffelActivityAction.class);
         if (activityAction == null) {
             logger.warn("Unable to locate {} for {}, skipping sending of ActF event",
                     EiffelActivityAction.class.getSimpleName(), r);
@@ -116,7 +112,7 @@ public class RunListenerImpl extends RunListener<Run> {
             return;
         }
 
-        URI logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
+        var logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
         if (logUri != null) {
             event.getData().getPersistentLogs().add(
                     new EiffelActivityFinishedEvent.Data.PersistentLogs(CONSOLE_LOG_NAME, logUri));

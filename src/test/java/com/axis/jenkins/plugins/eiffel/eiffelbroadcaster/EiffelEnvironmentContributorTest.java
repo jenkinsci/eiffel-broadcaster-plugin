@@ -50,13 +50,13 @@ public class EiffelEnvironmentContributorTest {
 
     @Test
     public void testEnvironmentVariablesAreAvailable_FreeStyle() throws Exception {
-        FreeStyleProject job = jenkins.createFreeStyleProject("test");
-        CaptureEnvironmentBuilder capture = new CaptureEnvironmentBuilder();
+        var job = jenkins.createFreeStyleProject("test");
+        var capture = new CaptureEnvironmentBuilder();
         job.getBuildersList().add(capture);
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        FreeStyleBuild run = job.getBuildByNumber(1);
-        EiffelActivityAction activityAction = run.getAction(EiffelActivityAction.class);
+        var run = job.getBuildByNumber(1);
+        var activityAction = run.getAction(EiffelActivityAction.class);
         assertThat(activityAction, is(notNullValue()));
 
         assertThat(capture.getEnvVars().get(EiffelEnvironmentContributor.ACTIVITY_STARTED),
@@ -67,8 +67,8 @@ public class EiffelEnvironmentContributorTest {
 
     @Test
     public void testEnvironmentVariablesAreAvailable_Pipeline() throws Exception {
-        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");
-        String pipelineCode = String.format(
+        var job = jenkins.createProject(WorkflowJob.class, "test");
+        var pipelineCode = String.format(
                 "node {" +
                         "  if (isUnix()) {" +
                         "    sh('echo STARTED=$%s ; echo TRIGGER=$%s')" +
@@ -83,8 +83,8 @@ public class EiffelEnvironmentContributorTest {
         job.setDefinition(new CpsFlowDefinition(pipelineCode, true));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        WorkflowRun run = job.getBuildByNumber(1);
-        EiffelActivityAction activityAction = run.getAction(EiffelActivityAction.class);
+        var run = job.getBuildByNumber(1);
+        var activityAction = run.getAction(EiffelActivityAction.class);
         assertThat(activityAction, is(notNullValue()));
 
         jenkins.assertLogContains(String.format("STARTED=%s", activityAction.getStartedEventJSON()), run);

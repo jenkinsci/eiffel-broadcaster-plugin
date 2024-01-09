@@ -28,7 +28,6 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.type.CollectionType;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.Action;
 import hudson.model.Cause;
@@ -46,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.servlet.ServletException;
@@ -122,7 +120,7 @@ public class BuildWithEiffelLinksAction<
             delay = new TimeDuration(TimeUnit.MILLISECONDS.convert(job.getQuietPeriod(), TimeUnit.SECONDS));
         }
 
-        List<Action> actions = new ArrayList<>();
+        var actions = new ArrayList<Action>();
         JSONObject formData;
         try {
             formData = req.getSubmittedForm();
@@ -133,16 +131,16 @@ public class BuildWithEiffelLinksAction<
                             "Missing or invalid contents of \"json\" form field: " + e.toString(), e));
         }
         try {
-            ParametersDefinitionProperty pp = job.getProperty(ParametersDefinitionProperty.class);
+            var pp = job.getProperty(ParametersDefinitionProperty.class);
             if (pp != null) {
-                Action paramAction = getParametersAction(req, formData, pp);
+                var paramAction = getParametersAction(req, formData, pp);
                 if (paramAction != null) {
                     actions.add(paramAction);
                 }
             }
 
-            List<Cause> causes = new ArrayList<>(Arrays.asList(getCallerCause(req)));
-            EiffelCause eiffelCause = getEiffelCause(formData);
+            var causes = new ArrayList<>(Arrays.asList(getCallerCause(req)));
+            var eiffelCause = getEiffelCause(formData);
             if (eiffelCause != null) {
                 causes.add(eiffelCause);
             }
@@ -152,7 +150,7 @@ public class BuildWithEiffelLinksAction<
             throw HttpResponses.error(SC_BAD_REQUEST, e);
         }
 
-        Queue.Item queuedBuild = Jenkins.get().getQueue().schedule2(job, delay.getTimeInSeconds(), actions).getItem();
+        var queuedBuild = Jenkins.get().getQueue().schedule2(job, delay.getTimeInSeconds(), actions).getItem();
         if (queuedBuild != null) {
             rsp.sendRedirect(SC_CREATED, req.getContextPath() + '/' + queuedBuild.getUrl());
         } else {
@@ -170,10 +168,10 @@ public class BuildWithEiffelLinksAction<
      */
     public Cause getCallerCause(StaplerRequest req) {
         @SuppressWarnings("deprecation")
-        hudson.model.BuildAuthorizationToken authToken = job.getAuthToken();
+        var authToken = job.getAuthToken();
         if (authToken != null && authToken.getToken() != null && req.getParameter("token") != null) {
             // Optional additional cause text when starting via token
-            String causeText = req.getParameter("cause");
+            var causeText = req.getParameter("cause");
             return new Cause.RemoteCause(req.getRemoteAddr(), causeText);
         } else {
             return new Cause.UserIdCause();
@@ -191,9 +189,9 @@ public class BuildWithEiffelLinksAction<
         // This mixing of different parsed JSON representation isn't great, but the StaplerRequest
         // provides us a JSONObject and we want to use Jackson for the events themselves.
         try {
-            JSONArray eiffelLinks = formData.getJSONArray(FORM_PARAM_EIFFELLINKS);
-            ObjectMapper mapper = new ObjectMapper();
-            CollectionType listType = mapper.getTypeFactory().constructCollectionType(
+            var eiffelLinks = formData.getJSONArray(FORM_PARAM_EIFFELLINKS);
+            var mapper = new ObjectMapper();
+            var listType = mapper.getTypeFactory().constructCollectionType(
                     List.class, EiffelEvent.Link.class);
             List<EiffelEvent.Link> links = mapper.readValue(eiffelLinks.toString(), listType);
             return links.isEmpty() ? null : new EiffelCause(links);
@@ -220,14 +218,14 @@ public class BuildWithEiffelLinksAction<
     private ParametersAction getParametersAction(final StaplerRequest req,
                                                  final JSONObject formData,
                                                  final ParametersDefinitionProperty pp) {
-        List<ParameterValue> values = new ArrayList<>();
+        var values = new ArrayList<ParameterValue>();
 
         // Collect parameters given in this request.
-        List<JSONObject> givenParams = new ArrayList<>();
+        var givenParams = new ArrayList<JSONObject>();
         try {
-            Object inputParams = formData.get(FORM_PARAM_PARAMETERS);
+            var inputParams = formData.get(FORM_PARAM_PARAMETERS);
             if (inputParams != null) {
-                for (Object paramObject : JSONArray.fromObject(inputParams)) {
+                for (var paramObject : JSONArray.fromObject(inputParams)) {
                     givenParams.add((JSONObject) paramObject);
                 }
             }
@@ -239,7 +237,7 @@ public class BuildWithEiffelLinksAction<
         }
 
         // Did the request include any parameters that haven't been defined for this job?
-        Set<String> missingParamDefs = givenParams.stream()
+        var missingParamDefs = givenParams.stream()
                 .map(p -> p.getString("name"))
                 .filter(n -> pp.getParameterDefinition(n) == null)
                 .collect(Collectors.toSet());
@@ -250,15 +248,15 @@ public class BuildWithEiffelLinksAction<
         }
 
         // Add parameter values for all given parameters.
-        for (JSONObject param : givenParams) {
-            String name = param.getString("name");
-            ParameterDefinition parameterDef = pp.getParameterDefinition(name);
+        for (var param : givenParams) {
+            var name = param.getString("name");
+            var parameterDef = pp.getParameterDefinition(name);
             if (parameterDef == null) {
                 // We've already checked that all given parameters have definitions in this job,
                 // but if the job definition changes after that check was done we're off to the races.
                 continue;
             }
-            ParameterValue parameterValue = parameterDef.createValue(req, param);
+            var parameterValue = parameterDef.createValue(req, param);
             if (parameterValue == null) {
                 throw new IllegalArgumentException(String.format(
                         "Cannot initialize the '%s' parameter with the given value", name));
@@ -267,7 +265,7 @@ public class BuildWithEiffelLinksAction<
         }
 
         // Add default parameter values for parameters that haven't been given values above.
-        Set<String> paramsWithValues = values.stream()
+        var paramsWithValues = values.stream()
                 .map(ParameterValue::getName)
                 .collect(Collectors.toSet());
         values.addAll(pp.getParameterDefinitions().stream()

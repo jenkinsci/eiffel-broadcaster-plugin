@@ -438,7 +438,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
 
     public ListBoxModel doFillSystemSigningCredentialsIdItems(@AncestorInPath Item item,
                                                               @QueryParameter String credentialsId) {
-        StandardListBoxModel result = new StandardListBoxModel();
+        var result = new StandardListBoxModel();
         if (item == null) {
             if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                 return result.includeCurrentValue(credentialsId);
@@ -473,12 +473,12 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
                                            @QueryParameter(USERNAME) final String name,
                                            @QueryParameter(PASSWORD) final Secret pw) throws ServletException {
         Jenkins.get().checkPermission(Jenkins.ADMINISTER);
-        UrlValidator urlValidator = new UrlValidator(ALLOWED_URL_SCHEMES, UrlValidator.ALLOW_LOCAL_URLS);
-        FormValidation result = FormValidation.ok();
+        var urlValidator = new UrlValidator(ALLOWED_URL_SCHEMES, UrlValidator.ALLOW_LOCAL_URLS);
+        var result = FormValidation.ok();
         if (urlValidator.isValid(uri)) {
             Connection conn = null;
             try {
-                ConnectionFactory connFactory = new ConnectionFactory();
+                var connFactory = new ConnectionFactory();
                 connFactory.setUri(uri);
                 if (StringUtils.isNotEmpty(name)) {
                     connFactory.setUsername(name);

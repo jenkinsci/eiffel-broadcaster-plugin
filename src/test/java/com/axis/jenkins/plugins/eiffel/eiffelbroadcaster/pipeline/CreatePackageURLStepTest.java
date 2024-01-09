@@ -36,7 +36,7 @@ public class CreatePackageURLStepTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     private WorkflowJob createJob(String purlCreationSnippet) throws Exception {
-        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");
+        var job = jenkins.createProject(WorkflowJob.class, "test");
         job.setDefinition(new CpsFlowDefinition(
                 String.format("node { def purl = %s\necho \"PURL=${purl}\" }", purlCreationSnippet),
                 true));
@@ -45,7 +45,7 @@ public class CreatePackageURLStepTest {
 
     @Test
     public void testReturnsCorrectPurl() throws Exception {
-        WorkflowJob job = createJob(
+        var job = createJob(
                 "createPackageURL type: 'generic', namespace: 'name/space', " +
                         "name: 'pkgname', version: '1.0', subpath: 'some/path', qualifiers: [a: 'b']");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
@@ -58,7 +58,7 @@ public class CreatePackageURLStepTest {
     @Test
     public void testFailsOnMissingRequiredParam() throws Exception {
         // Leaving out the required "name" argument
-        WorkflowJob job = createJob("createPackageURL type: 'generic'");
+        var job = createJob("createPackageURL type: 'generic'");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains("Error creating package URL", job.getBuildByNumber(1));

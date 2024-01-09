@@ -56,7 +56,7 @@ public class ConfigurationAsCodeTest {
     @Test
     @ConfiguredWithCode("jcasc-input-with-legacy-routing-key.yml")
     public void testSupportsConfigurationAsCode_WithLegacyRoutingKey() throws Exception {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        var config = EiffelBroadcasterConfig.getInstance();
         assertThat(config.getAppId(), is("random-appid"));
         assertThat(config.getEnableBroadcaster(), is(true));
         assertThat(config.getExchangeName(), is("eiffel-exchange"));
@@ -73,7 +73,7 @@ public class ConfigurationAsCodeTest {
     @Test
     @ConfiguredWithCode("jcasc-input-without-routing-key-provider.yml")
     public void testSupportsConfigurationAsCode_WithoutRoutingKeyProvider() throws Exception {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        var config = EiffelBroadcasterConfig.getInstance();
         assertThat(config.getAppId(), is("random-appid"));
         assertThat(config.getEnableBroadcaster(), is(true));
         assertThat(config.getExchangeName(), is("eiffel-exchange"));
@@ -88,7 +88,7 @@ public class ConfigurationAsCodeTest {
     @Test
     @ConfiguredWithCode("jcasc-input-with-fixed-routing-key-provider.yml")
     public void testSupportsConfigurationAsCode_WithFixedRoutingKeyProvider() throws Exception {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        var config = EiffelBroadcasterConfig.getInstance();
         assertThat(config.getAppId(), is("random-appid"));
         assertThat(config.getEnableBroadcaster(), is(true));
         assertThat(config.getExchangeName(), is("eiffel-exchange"));
@@ -105,7 +105,7 @@ public class ConfigurationAsCodeTest {
     @Test
     @ConfiguredWithCode("jcasc-input-with-sepia-routing-key-provider.yml")
     public void testSupportsConfigurationAsCode_WithSepiaRoutingKeyProvider() throws Exception {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        var config = EiffelBroadcasterConfig.getInstance();
         assertThat(config.getAppId(), is("random-appid"));
         assertThat(config.getEnableBroadcaster(), is(true));
         assertThat(config.getExchangeName(), is("eiffel-exchange"));
@@ -122,11 +122,10 @@ public class ConfigurationAsCodeTest {
     @Test
     @ConfiguredWithCode("jcasc-input-with-sepia-routing-key-provider.yml")
     public void testSupportsConfigurationExport() throws Exception {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
-        ConfigurationContext context = new ConfigurationContext(ConfiguratorRegistry.get());
-        String pluginShortName = EiffelBroadcasterConfig.class.getAnnotation(Symbol.class).value()[0];
-        CNode pluginNode = getUnclassifiedRoot(context).get(pluginShortName);
-        String sanitizedYAML = toYamlString(pluginNode)
+        var context = new ConfigurationContext(ConfiguratorRegistry.get());
+        var pluginShortName = EiffelBroadcasterConfig.class.getAnnotation(Symbol.class).value()[0];
+        var pluginNode = getUnclassifiedRoot(context).get(pluginShortName);
+        var sanitizedYAML = toYamlString(pluginNode)
                 .replaceFirst("(?m)^userPassword: .*(?:\\r?\\n)?", "")
                 .replaceFirst("(?m)^    dummy: .*(?:\\r?\\n)?", "");
         assertThat(sanitizedYAML, is(toStringFromYamlFile(this, "jcasc-expected-output.yml")));

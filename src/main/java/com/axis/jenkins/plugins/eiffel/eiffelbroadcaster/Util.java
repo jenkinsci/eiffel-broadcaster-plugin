@@ -105,10 +105,10 @@ public final class Util {
      * @return the URI asked for, or null if a URI couldn't be resolved
      */
     public static URI getRunUri(final Run r, String... pathSuffix) {
-        Jenkins jenkins = Jenkins.get();
+        var jenkins = Jenkins.get();
         if (jenkins.getRootUrl() != null) {
             try {
-                String uri = Functions.joinPath(jenkins.getRootUrl(), r.getUrl());
+                var uri = Functions.joinPath(jenkins.getRootUrl(), r.getUrl());
                 if (pathSuffix.length == 0) {
                     return new URI(uri);
                 }
@@ -145,19 +145,19 @@ public final class Util {
             throws EventValidationFailedException, InvalidCertificateConfigurationException, InvalidKeyException,
             JsonCanonicalizationException, JsonProcessingException, KeyStoreException, NoSuchAlgorithmException,
             SchemaUnavailableException, SignatureException, UnsupportedAlgorithmException, UnrecoverableKeyException {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        var config = EiffelBroadcasterConfig.getInstance();
         if (config == null || !config.getEnableBroadcaster()) {
             return null;
         }
 
         if (allowSystemSignature && config.isSystemSigningEnabled()) {
-            SigningKeyCache.Item sigData = SigningKeyCache.getInstance().get(config.getSystemSigningCredentialsId());
+            var sigData = SigningKeyCache.getInstance().get(config.getSystemSigningCredentialsId());
             event.sign(sigData.getKey(), sigData.getIdentity(), config.getSystemSigningHashAlg());
         }
 
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode eventJson = mapper.valueToTree(event);
-        AMQP.BasicProperties props = new AMQP.BasicProperties.Builder()
+        var mapper = new ObjectMapper();
+        var eventJson = mapper.valueToTree(event);
+        var props = new AMQP.BasicProperties.Builder()
                 .appId(config.getAppId())
                 .deliveryMode(config.getPersistentDelivery() ? PERSISTENT_DELIVERY : NON_PERSISTENT_DELIVERY)
                 .contentType("application/json")
@@ -199,9 +199,9 @@ public final class Util {
      * @param s the line to split
      */
     public static List<String> getLinesInString(String s) {
-        List<String> result = new ArrayList<>();
-        for (String line : s.split("\\R")) {  // \R is "any Unicode linebreak sequence"
-            String trimmed = line.trim();
+        var result = new ArrayList<String>();
+        for (var line : s.split("\\R")) {  // \R is "any Unicode linebreak sequence"
+            var trimmed = line.trim();
             if (!trimmed.isEmpty()) {
                 result.add(trimmed);
             }

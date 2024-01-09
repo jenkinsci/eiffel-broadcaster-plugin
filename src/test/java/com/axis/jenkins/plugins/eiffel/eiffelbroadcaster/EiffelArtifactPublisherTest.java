@@ -49,26 +49,24 @@ public class EiffelArtifactPublisherTest {
 
     @Test(expected = EmptyArtifactException.class)
     public void testPrepareEvent_WithNoFilesInArtC() throws Exception {
-        URI jobURI = new URI("http://jenkins/job/MyJob/");
-        EiffelArtifactCreatedEvent artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
-        EiffelActivityTriggeredEvent actT = new EiffelActivityTriggeredEvent("dummy activity name");
-        EiffelArtifactPublisher publisher = new EiffelArtifactPublisher(actT, jobURI,
-                VirtualFile.forFile(tempDir.getRoot()));
+        var jobURI = new URI("http://jenkins/job/MyJob/");
+        var artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
+        var actT = new EiffelActivityTriggeredEvent("dummy activity name");
+        var publisher = new EiffelArtifactPublisher(actT, jobURI, VirtualFile.forFile(tempDir.getRoot()));
 
         publisher.prepareEvent(artC);
     }
 
     @Test
     public void testPrepareEvent_HasExpectedLinks() throws Exception {
-        ArtifactFiles files = new ArtifactFiles("filename.zip");
-        URI jobURI = new URI("http://jenkins/job/MyJob/");
-        EiffelArtifactCreatedEvent artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
+        var files = new ArtifactFiles("filename.zip");
+        var jobURI = new URI("http://jenkins/job/MyJob/");
+        var artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
         files.addFilesToEvent(artC);
-        EiffelActivityTriggeredEvent actT = new EiffelActivityTriggeredEvent("dummy activity name");
-        EiffelArtifactPublisher publisher = new EiffelArtifactPublisher(actT, jobURI,
-                VirtualFile.forFile(tempDir.getRoot()));
+        var actT = new EiffelActivityTriggeredEvent("dummy activity name");
+        var publisher = new EiffelArtifactPublisher(actT, jobURI, VirtualFile.forFile(tempDir.getRoot()));
 
-        EiffelArtifactPublishedEvent artP = publisher.prepareEvent(artC);
+        var artP = publisher.prepareEvent(artC);
 
         assertThat(artP, linksTo(actT, EiffelEvent.Link.Type.CONTEXT));
         assertThat(artP, linksTo(artC, EiffelEvent.Link.Type.ARTIFACT));
@@ -76,31 +74,29 @@ public class EiffelArtifactPublisherTest {
 
     @Test
     public void testPrepareEvent_WithFilesMatchingArtC() throws Exception {
-        ArtifactFiles files = new ArtifactFiles("filename.zip", "subdir/filename2.zip");
-        URI jobURI = new URI("http://jenkins/job/MyJob/");
-        EiffelArtifactCreatedEvent artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
+        var files = new ArtifactFiles("filename.zip", "subdir/filename2.zip");
+        var jobURI = new URI("http://jenkins/job/MyJob/");
+        var artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
         files.addFilesToEvent(artC);
-        EiffelActivityTriggeredEvent actT = new EiffelActivityTriggeredEvent("dummy activity name");
-        EiffelArtifactPublisher publisher = new EiffelArtifactPublisher(actT, jobURI,
-                VirtualFile.forFile(tempDir.getRoot()));
+        var actT = new EiffelActivityTriggeredEvent("dummy activity name");
+        var publisher = new EiffelArtifactPublisher(actT, jobURI, VirtualFile.forFile(tempDir.getRoot()));
 
-        EiffelArtifactPublishedEvent artP = publisher.prepareEvent(artC);
+        var artP = publisher.prepareEvent(artC);
 
         assertThat(artP.getData().getLocations(), containsInAnyOrder(files.getLocations(jobURI).toArray()));
     }
 
     @Test(expected = MissingArtifactException.class)
     public void testPrepareEvent_WithMissingFile() throws Exception {
-        ArtifactFiles files = new ArtifactFiles("filename.zip");
-        URI jobURI = new URI("http://jenkins/job/MyJob/");
-        EiffelArtifactCreatedEvent artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
+        var files = new ArtifactFiles("filename.zip");
+        var jobURI = new URI("http://jenkins/job/MyJob/");
+        var artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
         // Add an extra artifact file directly to the event. This won't have a physical counterpart in tempDir.
         artC.getData().getFileInformation().add(
                 new EiffelArtifactCreatedEvent.Data.FileInformation("otherfile.txt"));
         files.addFilesToEvent(artC);
-        EiffelActivityTriggeredEvent actT = new EiffelActivityTriggeredEvent("dummy activity name");
-        EiffelArtifactPublisher publisher = new EiffelArtifactPublisher(actT, jobURI,
-                VirtualFile.forFile(tempDir.getRoot()));
+        var actT = new EiffelActivityTriggeredEvent("dummy activity name");
+        var publisher = new EiffelArtifactPublisher(actT, jobURI, VirtualFile.forFile(tempDir.getRoot()));
 
         publisher.prepareEvent(artC);
     }
@@ -115,22 +111,22 @@ public class EiffelArtifactPublisherTest {
         public ArtifactFiles(@NonNull final String... filenames) throws IOException {
             for (String filename : filenames) {
                 this.filenames.add(filename);
-                File file = new File(tempDir.getRoot(), filename);
+                var file = new File(tempDir.getRoot(), filename);
                 file.getParentFile().mkdirs();
                 file.createNewFile();
             }
         }
 
         public void addFilesToEvent(@NonNull final EiffelArtifactCreatedEvent event) {
-            for (String filename : filenames) {
+            for (var filename : filenames) {
                 event.getData().getFileInformation().add(new EiffelArtifactCreatedEvent.Data.FileInformation(filename));
             }
         }
 
         public List<EiffelArtifactPublishedEvent.Data.Location> getLocations(@NonNull final URI baseURI) {
-            List<EiffelArtifactPublishedEvent.Data.Location> result = new ArrayList<>();
-            for (String filename : filenames) {
-                EiffelArtifactPublishedEvent.Data.Location location = new EiffelArtifactPublishedEvent.Data.Location(
+            var result = new ArrayList<EiffelArtifactPublishedEvent.Data.Location>();
+            for (var filename : filenames) {
+                var location = new EiffelArtifactPublishedEvent.Data.Location(
                         EiffelArtifactPublishedEvent.Data.Location.Type.PLAIN, baseURI.resolve("artifact/" + filename));
                 location.setName(filename);
                 result.add(location);

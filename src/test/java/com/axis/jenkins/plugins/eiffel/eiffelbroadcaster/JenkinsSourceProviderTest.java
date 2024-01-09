@@ -47,11 +47,11 @@ public class JenkinsSourceProviderTest {
 
     @Test
     public void testEventHasCorrectSource() throws Exception {
-        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent("activity name");
+        var event = new EiffelActivityTriggeredEvent("activity name");
         assertThat(event.getMeta().getSource(), is(notNullValue()));
         assertThat(event.getMeta().getSource().getName(), is("Eiffel Broadcaster Plugin"));
         assertThat(event.getMeta().getSource().getSerializer(), is(notNullValue()));
-        PackageURL purl = new PackageURL(event.getMeta().getSource().getSerializer());
+        var purl = new PackageURL(event.getMeta().getSource().getSerializer());
         assertThat(purl.getType(), is("maven"));
         assertThat(purl.getNamespace(), is("com.axis.jenkins.plugins.eiffel"));
         assertThat(purl.getName(), is("eiffel-broadcaster"));
@@ -61,7 +61,7 @@ public class JenkinsSourceProviderTest {
 
     @Test
     public void testSourceNameIsNotOverwritten() throws Exception {
-        EiffelEvent event = new ObjectMapper().readValue(
+        var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelActivityTriggeredEvent.json"), EiffelEvent.class);
         // We get the meta.source.name value from the JSON file
         assertThat(event.getMeta().getSource().getName(), is("Custom meta.source.name"));
