@@ -180,6 +180,7 @@ def event = [
 ]
 def sent = sendEiffelEvent event: event
 echo "This event was sent: ${sent}"
+echo "The event had the id ${sent.meta.id}"
 
 // Make the activity link a CAUSE link
 sendEiffelEvent event: event, activityLinkType: "CAUSE"
@@ -190,8 +191,10 @@ sendEiffelEvent event: event, linkToActivity: false
 
 This step returns immediately as soon as the event has been validated and put
 in the internal outbound queue. The actual delivery of the event to the broker
-might not have happened at the time of the return. The validation supports all
-events and event versions up to and including the
+might not have happened at the time of the return. The step's return value is
+the event that was enqueued, expressed as a map (see example above).
+
+The validation supports all events and event versions up to and including the
 [Orizaba edition](https://github.com/eiffel-community/eiffel/releases/tag/edition-orizaba).
 
 ## API
