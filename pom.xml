@@ -20,22 +20,24 @@
     </licenses>
     <developers>
         <developer>
+            <id>GLundh</id>
+            <name>Gustaf Lundh</name>
+            <email>gustaf.lundh@axis.com</email>
+        </developer>
+        <developer>
             <id>isacholm</id>
             <name>Isac Holm</name>
             <email>isac.holm@axis.com</email>
-            <roles>
-                <role>architect</role>
-                <role>developer</role>
-            </roles>
         </developer>
         <developer>
             <id>magnusbaeck</id>
             <name>Magnus Bäck</name>
             <email>magnus.back@axis.com</email>
-            <roles>
-                <role>architect</role>
-                <role>developer</role>
-            </roles>
+        </developer>
+        <developer>
+            <id>TWestling</id>
+            <name>Tomas Westling</name>
+            <email>tomas.westling@axis.com</email>
         </developer>
     </developers>
     <scm>
