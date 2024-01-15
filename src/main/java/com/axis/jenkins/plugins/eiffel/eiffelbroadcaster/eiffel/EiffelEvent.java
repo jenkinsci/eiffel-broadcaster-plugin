@@ -30,7 +30,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -96,15 +95,15 @@ public class EiffelEvent {
             UnsupportedAlgorithmException {
         // Prepare the event for signing by initializing the meta.security fields,
         // including an empty signature string.
-        EiffelEvent.Meta.Security.IntegrityProtection.Alg alg = getAlgorithm(key.getAlgorithm(), hashAlg);
-        EiffelEvent.Meta.Security sec = new EiffelEvent.Meta.Security(identity);
+        var alg = getAlgorithm(key.getAlgorithm(), hashAlg);
+        var sec = new EiffelEvent.Meta.Security(identity);
         sec.setIntegrityProtection(new EiffelEvent.Meta.Security.IntegrityProtection("", alg));
         getMeta().setSecurity(sec);
 
         // Serialize the event to canonical JSON form, compute the signature,
         // and update the signature field with the Base64-encoded signature.
-        ObjectMapper mapper = new ObjectMapper();
-        Signature sig = Signature.getInstance(alg.getSignatureAlgorithm());
+        var mapper = new ObjectMapper();
+        var sig = Signature.getInstance(alg.getSignatureAlgorithm());
         sig.initSign(key);
         try {
             sig.update(new JsonCanonicalizer(
@@ -738,15 +737,15 @@ public class EiffelEvent {
 
         @Override
         public Object deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-            TreeNode node = p.readValueAsTree();
+            var node = p.readValueAsTree();
 
             // Obtain event type from the meta.type member.
-            TreeNode typeNode = node.path("meta").path("type");
+            var typeNode = node.path("meta").path("type");
             if (typeNode.isMissingNode()) {
                 throw new InvalidJsonPayloadException(
                         "Unable to figure out type of Eiffel event: no 'meta.type' key found");
             }
-            String eventType = p.getCodec().treeToValue(typeNode, String.class);
+            var eventType = p.getCodec().treeToValue(typeNode, String.class);
 
             // Attempt to deserialize the TreeNode into a class in this package
             // with the same name as the event type. If that fails, deserialize

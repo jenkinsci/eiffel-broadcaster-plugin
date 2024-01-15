@@ -51,8 +51,8 @@ public class PublishEiffelArtifactsStepTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     private WorkflowJob createJob(String pipelineCodeResourceFile) throws Exception {
-        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");
-        String pipelineCode = new String(
+        var job = jenkins.createProject(WorkflowJob.class, "test");
+        var pipelineCode = new String(
                 Files.readAllBytes(Paths.get(getClass().getResource(pipelineCodeResourceFile).toURI())),
                 StandardCharsets.UTF_8.name());
         job.setDefinition(new CpsFlowDefinition(pipelineCode, true));
@@ -79,12 +79,12 @@ public class PublishEiffelArtifactsStepTest {
 
     @Test
     public void testSuccessful_PublishesArtifacts() throws Exception {
-        WorkflowJob job = createJob("successful_publish_artifact_step.groovy");
+        var job = createJob("successful_publish_artifact_step.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        Run run = job.getBuildByNumber(1);
+        var run = job.getBuildByNumber(1);
         // We have pretty thorough tests of the ArtP contents for a given ArtC so here it's enough to
         // verify that we get the correct number of events and that the filenames in the events are what
         // we expect (so we're not getting two copies of the same event).
@@ -93,12 +93,12 @@ public class PublishEiffelArtifactsStepTest {
 
     @Test
     public void testSuccessful_PublishesArtifactsFromFile() throws Exception {
-        WorkflowJob job = createJob("successful_publish_artifact_step_from_file.groovy");
+        var job = createJob("successful_publish_artifact_step_from_file.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        Run run = job.getBuildByNumber(1);
+        var run = job.getBuildByNumber(1);
         // We have pretty thorough tests of the ArtP contents for a given ArtC so here it's enough to
         // verify that we get the correct number of events and that the filenames in the events are what
         // we expect (so we're not getting two copies of the same event).
@@ -108,7 +108,7 @@ public class PublishEiffelArtifactsStepTest {
 
     @Test
     public void testFailed_EventFromFileWithWrongType() throws Exception {
-        WorkflowJob job = createJob("failed_publish_artifact_step_from_file_bad_type.groovy");
+        var job = createJob("failed_publish_artifact_step_from_file_bad_type.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(

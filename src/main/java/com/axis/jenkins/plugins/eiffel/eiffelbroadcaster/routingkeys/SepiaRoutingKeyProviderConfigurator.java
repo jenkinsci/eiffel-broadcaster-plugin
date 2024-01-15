@@ -55,7 +55,7 @@ public class SepiaRoutingKeyProviderConfigurator extends BaseConfigurator<SepiaR
 
     @Override
     protected SepiaRoutingKeyProvider instance(Mapping mapping, ConfigurationContext context) throws ConfiguratorException {
-        SepiaRoutingKeyProvider provider = new SepiaRoutingKeyProvider();
+        var provider = new SepiaRoutingKeyProvider();
         if (mapping == null) {
             return provider;
         }
@@ -71,7 +71,7 @@ public class SepiaRoutingKeyProviderConfigurator extends BaseConfigurator<SepiaR
     @CheckForNull
     @Override
     public CNode describe(SepiaRoutingKeyProvider instance, ConfigurationContext context) throws Exception {
-        Mapping mapping = new Mapping();
+        var mapping = new Mapping();
         mapping.put(KEY_DUMMY, "dummy value to make JCasC behave the way we want");
         mapping.put(KEY_TAG, StringUtils.defaultIfBlank(instance.getTag(), ""));
         return mapping;

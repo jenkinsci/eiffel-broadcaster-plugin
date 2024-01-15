@@ -32,8 +32,6 @@ import hudson.Functions;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import jenkins.util.VirtualFile;
@@ -85,11 +83,11 @@ public class EiffelArtifactPublisher {
 
         // Before creating an ArtP event, verify that all files specified in the ArtC (data.fileInformation)
         // actually exist as Jenkins artifacts for the Run in question.
-        SortedSet<String> missingArtifacts = new TreeSet<>();
-        List<String> artifactFilenames = creationEvent.getData().getFileInformation().stream()
+        var missingArtifacts = new TreeSet<String>();
+        var artifactFilenames = creationEvent.getData().getFileInformation().stream()
                 .map(EiffelArtifactCreatedEvent.Data.FileInformation::getName)
                 .collect(Collectors.toList());
-        for (String filename : artifactFilenames) {
+        for (var filename : artifactFilenames) {
             if (!artifactRoot.child(filename).isFile() ) {
                 missingArtifacts.add(filename);
             }
@@ -99,11 +97,11 @@ public class EiffelArtifactPublisher {
         }
 
         // Sanity check okay, continue with the construction of the ArtP event.
-        EiffelArtifactPublishedEvent publishEvent = new EiffelArtifactPublishedEvent(creationEvent.getMeta().getId());
+        var publishEvent = new EiffelArtifactPublishedEvent(creationEvent.getMeta().getId());
         publishEvent.getLinks().add(
                 new EiffelEvent.Link(EiffelEvent.Link.Type.CONTEXT, contextEvent.getMeta().getId()));
-        for (EiffelArtifactCreatedEvent.Data.FileInformation fileInfo : creationEvent.getData().getFileInformation()) {
-            EiffelArtifactPublishedEvent.Data.Location location = new EiffelArtifactPublishedEvent.Data.Location(
+        for (var fileInfo : creationEvent.getData().getFileInformation()) {
+            var location = new EiffelArtifactPublishedEvent.Data.Location(
                     EiffelArtifactPublishedEvent.Data.Location.Type.PLAIN,
                     new URI(Functions.joinPath(runURI.toString(), "artifact", fileInfo.getName())));
             location.setName(fileInfo.getName());

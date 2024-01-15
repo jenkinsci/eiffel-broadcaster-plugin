@@ -32,7 +32,6 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -159,18 +158,18 @@ public class SendEiffelEventStep extends Step {
         @Override
         protected Map run() throws Exception {
             try {
-                ObjectMapper mapper = new ObjectMapper();
-                EiffelEvent event = mapper.convertValue(step.getEvent(), EiffelEvent.class);
-                Run run = getContext().get(Run.class);
+                var mapper = new ObjectMapper();
+                var event = mapper.convertValue(step.getEvent(), EiffelEvent.class);
+                var run = getContext().get(Run.class);
                 if (step.getLinkToActivity()) {
-                    EiffelActivityAction action = run.getAction(EiffelActivityAction.class);
+                    var action = run.getAction(EiffelActivityAction.class);
                     // There should always be an EiffelActivityAction connected to the Run,
                     // but if not we can't do much than to crash the build.
                     event.getLinks().add(new EiffelEvent.Link(
                             step.getActivityLinkType(), action.getTriggerEvent().getMeta().getId()));
                 }
-                JsonNode sentJSON = Util.mustPublishEvent(event, false);
-                TaskListener taskListener = getContext().get(TaskListener.class);
+                var sentJSON = Util.mustPublishEvent(event, false);
+                var taskListener = getContext().get(TaskListener.class);
                 if (sentJSON != null && taskListener != null) {
                     taskListener.getLogger().format(
                             "Successfully sent %s with id %s%n",

@@ -30,23 +30,23 @@ import org.junit.Test;
 public class EventValidatorTest {
     @Test
     public void testValidateAcceptsValidEvent() throws Exception {
-        EventValidator validator = new EventValidator();
-        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent("activity name");
+        var validator = new EventValidator();
+        var event = new EiffelActivityTriggeredEvent("activity name");
         validator.validate(event.getMeta().getType(), event.getMeta().getVersion(),
                 new ObjectMapper().valueToTree(event));
     }
 
     @Test(expected = SchemaUnavailableException.class)
     public void testValidateRejectsUnknownEvent() throws Exception {
-        EventValidator validator = new EventValidator();
-        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent("activity name");
+        var validator = new EventValidator();
+        var event = new EiffelActivityTriggeredEvent("activity name");
         validator.validate("EiffelBogusEvent", "invalid.version",
                 new ObjectMapper().valueToTree(event));
     }
 
     @Test(expected = EventValidationFailedException.class)
     public void testValidateRejectsInvalidEvent() throws Exception {
-        EventValidator validator = new EventValidator();
+        var validator = new EventValidator();
         validator.validate("EiffelActivityTriggeredEvent", "4.0.0",
                 new ObjectMapper().readTree("{\"message\": \"this is an invalid event\"}"));
     }

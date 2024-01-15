@@ -58,8 +58,8 @@ public class SendEiffelEventStepTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     private WorkflowJob createJob(String pipelineCodeResourceFile) throws Exception {
-        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");
-        String pipelineCode = new String(
+        var job = jenkins.createProject(WorkflowJob.class, "test");
+        var pipelineCode = new String(
                 Files.readAllBytes(Paths.get(getClass().getResource(pipelineCodeResourceFile).toURI())),
                 StandardCharsets.UTF_8.name());
         job.setDefinition(new CpsFlowDefinition(pipelineCode, true));
@@ -79,25 +79,25 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testSuccessful_WithDefaultLinkType() throws Exception {
-        WorkflowJob job = createJob("successful_send_event_step_with_default_linktype.groovy");
+        var job = createJob("successful_send_event_step_with_default_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
-        GenericEiffelEvent cD = events.findNext(GenericEiffelEvent.class);
+        var actT = events.findNext(EiffelActivityTriggeredEvent.class);
+        var cD = events.findNext(GenericEiffelEvent.class);
         assertThat(cD.getMeta().getType(), is("EiffelCompositionDefinedEvent"));
         assertThat(cD, linksTo(actT, EiffelEvent.Link.Type.CONTEXT));
     }
 
     @Test
     public void testSuccessful_LogsEventDetails() throws Exception {
-        WorkflowJob job = createJob("successful_send_event_step_with_default_linktype.groovy");
+        var job = createJob("successful_send_event_step_with_default_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        GenericEiffelEvent cD = events.findNext(GenericEiffelEvent.class);
+        var cD = events.findNext(GenericEiffelEvent.class);
         jenkins.assertLogContains(
                 String.format("Successfully sent %s with id %s", cD.getMeta().getType(), cD.getMeta().getId()),
                 job.getBuildByNumber(1));
@@ -105,52 +105,52 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testSuccessful_WithCustomLinkType() throws Exception {
-        WorkflowJob job = createJob("successful_send_event_step_with_custom_linktype.groovy");
+        var job = createJob("successful_send_event_step_with_custom_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        EiffelActivityTriggeredEvent actT = events.findNext(EiffelActivityTriggeredEvent.class);
-        GenericEiffelEvent cD = events.findNext(GenericEiffelEvent.class);
+        var actT = events.findNext(EiffelActivityTriggeredEvent.class);
+        var cD = events.findNext(GenericEiffelEvent.class);
         assertThat(cD.getMeta().getType(), is("EiffelCompositionDefinedEvent"));
         assertThat(cD, linksTo(actT, EiffelEvent.Link.Type.CAUSE));
     }
 
     @Test
     public void testSuccessful_WithoutLink() throws Exception {
-        WorkflowJob job = createJob("successful_send_event_step_without_link.groovy");
+        var job = createJob("successful_send_event_step_without_link.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        GenericEiffelEvent cD = events.findNext(GenericEiffelEvent.class);
+        var cD = events.findNext(GenericEiffelEvent.class);
         assertThat(cD.getLinks(), hasSize(0));
     }
 
     @Test
     public void testSuccessful_ReturnsSentMessage() throws Exception {
-        WorkflowJob job = createJob("successful_send_event_step_with_payload_saved.groovy");
+        var job = createJob("successful_send_event_step_with_payload_saved.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
         // This job uses the writeJSON step to write the returned payload to event.json.
         // Deserialize that file and compare it against the event sent on the bus.
-        EiffelEvent eventWrittenToWorkspace = new ObjectMapper().readValue(
+        var eventWrittenToWorkspace = new ObjectMapper().readValue(
                 jenkins.jenkins.getWorkspaceFor(job).child("event.json").readToString(), EiffelEvent.class);
-        GenericEiffelEvent publishedEvent = events.findNext(GenericEiffelEvent.class);
+        var publishedEvent = events.findNext(GenericEiffelEvent.class);
         assertThat(publishedEvent, is(eventWrittenToWorkspace));
     }
 
     @Test
     public void testSuccessful_RecordsArtifacts() throws Exception {
-        WorkflowJob job = createJob("successful_send_event_step_with_artifacts.groovy");
+        var job = createJob("successful_send_event_step_with_artifacts.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        Run run = job.getBuildByNumber(1);
-        List<EiffelArtifactToPublishAction> savedArtifacts = run.getActions(EiffelArtifactToPublishAction.class);
+        var run = job.getBuildByNumber(1);
+        var savedArtifacts = run.getActions(EiffelArtifactToPublishAction.class);
         assertThat(savedArtifacts, hasSize(2));
         assertThat(events.findNext(EiffelArtifactCreatedEvent.class), is(savedArtifacts.get(0).getEvent()));
         assertThat(events.findNext(EiffelArtifactCreatedEvent.class), is(savedArtifacts.get(1).getEvent()));
@@ -158,7 +158,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testFailed_EventValidationError() throws Exception {
-        WorkflowJob job = createJob("failed_send_event_step_event_validation_error.groovy");
+        var job = createJob("failed_send_event_step_event_validation_error.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(
@@ -170,7 +170,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testFailed_EventWithoutType() throws Exception {
-        WorkflowJob job = createJob("failed_send_event_step_event_without_type.groovy");
+        var job = createJob("failed_send_event_step_event_without_type.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(
@@ -182,7 +182,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testFailed_EventWithInvalidLinkType() throws Exception {
-        WorkflowJob job = createJob("failed_send_event_step_event_with_invalid_linktype.groovy");
+        var job = createJob("failed_send_event_step_event_with_invalid_linktype.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(
