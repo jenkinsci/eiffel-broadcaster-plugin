@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2021 Axis Communications AB.
+ Copyright 2018-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,8 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityCanceledEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.EventSigner;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
 import hudson.model.BuildableItem;
@@ -49,6 +51,8 @@ import org.slf4j.LoggerFactory;
 @Extension
 public class QueueListenerImpl extends QueueListener {
     private static final Logger logger = LoggerFactory.getLogger(QueueListenerImpl.class);
+
+    private final EventSigner signer = new SystemEventSigner();
 
     @Override
     public void onEnterWaiting(Queue.WaitingItem wi) {
@@ -111,7 +115,7 @@ public class QueueListenerImpl extends QueueListener {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event, true);
+        Util.publishEvent(event, signer);
     }
 
     @Override
@@ -123,7 +127,7 @@ public class QueueListenerImpl extends QueueListener {
                 return;
             }
             var event = new EiffelActivityCanceledEvent(targetEvent);
-            Util.publishEvent(event, true);
+            Util.publishEvent(event, signer);
         }
     }
 

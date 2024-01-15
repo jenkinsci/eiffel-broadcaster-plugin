@@ -34,8 +34,17 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCr
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.GenericEiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.TestKeyStore;
+import com.cloudbees.hudson.plugins.folder.Folder;
+import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
+import com.cloudbees.plugins.credentials.Credentials;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.cloudbees.plugins.credentials.domains.Domain;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Result;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -43,8 +52,11 @@ import org.junit.Test;
 
 import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.linksTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.emptyOrNullString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class SendEiffelEventStepTest {
     @Rule
@@ -141,6 +153,27 @@ public class SendEiffelEventStepTest {
     }
 
     @Test
+    public void testSuccessful_WithFolderCredentialSignature() throws Exception {
+        var folder = jenkins.createProject(Folder.class, "testfolder");
+        var testKeyStore = new TestKeyStore();
+        addFolderCredential(folder, testKeyStore.createCredential("event_signing"));
+        var job = jenkins.createPipeline(folder,"send_event_step_with_signing.groovy");
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        var events = new EventSet(Mocks.messages);
+
+        // We're already testing elsewhere that the signing is done correctly, so here we
+        // just check that the event has been signed with the correct identity and algorithm.
+        var cD = events.findNext(EiffelArtifactCreatedEvent.class);
+        assertThat(cD.getMeta().getSecurity(), is(notNullValue()));
+        assertThat(cD.getMeta().getSecurity().getAuthorIdentity(), is(testKeyStore.getCertificateSubjectDN()));
+        assertThat(cD.getMeta().getSecurity().getIntegrityProtection(), is(notNullValue()));
+        assertThat(cD.getMeta().getSecurity().getIntegrityProtection().getAlg(),
+                is(EiffelEvent.Meta.Security.IntegrityProtection.Alg.RS512));
+        assertThat(cD.getMeta().getSecurity().getIntegrityProtection().getSignature(), not(emptyOrNullString()));
+    }
+
+    @Test
     public void testFailed_EventValidationError() throws Exception {
         var job = jenkins.createPipeline("failed_send_event_step_event_validation_error.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
@@ -173,5 +206,42 @@ public class SendEiffelEventStepTest {
                 String.format("%s: %s",
                         IllegalArgumentException.class.getSimpleName(), "The activity link type must be one of"),
                 job.getBuildByNumber(1));
+    }
+
+    @Test
+    public void testFailed_UseOfSystemCredential() throws Exception {
+        var credProvider = SystemCredentialsProvider.getInstance();
+        credProvider.getCredentials().add(new TestKeyStore().createCredential("event_signing"));
+        credProvider.save();
+        var job = jenkins.createPipeline("send_event_step_with_signing.groovy");
+        jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
+
+        var events = new EventSet(Mocks.messages);
+
+        jenkins.assertLogContains("No credentials with the id event_signing could be found",
+                job.getBuildByNumber(1));
+    }
+
+    @Test
+    public void testFailed_UseOfFolderCredentialsFromOtherFolder() throws Exception {
+        var jobFolder = jenkins.createProject(Folder.class, "jobFolder");
+        var credentialFolder = jenkins.createProject(Folder.class, "credentialFolder");
+        addFolderCredential(credentialFolder, new TestKeyStore().createCredential("event_signing"));
+        var job = jenkins.createPipeline(jobFolder,"send_event_step_with_signing.groovy");
+        jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
+
+        var events = new EventSet(Mocks.messages);
+
+        jenkins.assertLogContains("No credentials with the id event_signing could be found",
+                job.getBuildByNumber(1));
+    }
+
+    private void addFolderCredential(@NonNull final Folder folder, @NonNull final Credentials cred) throws IOException {
+        for (var store : CredentialsProvider.lookupStores(folder)) {
+            if (store.getProvider() instanceof FolderCredentialsProvider && store.getContext() == folder) {
+                store.addCredentials(Domain.global(), cred);
+                return;
+            }
+        }
     }
 }

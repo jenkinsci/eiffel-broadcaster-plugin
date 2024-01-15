@@ -22,7 +22,7 @@
  THE SOFTWARE.
  */
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 

@@ -25,6 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import eu.rekawek.toxiproxy.model.ToxicDirection;
 import eu.rekawek.toxiproxy.model.toxic.Timeout;
 import java.io.IOException;
@@ -124,7 +125,7 @@ public class ConnectionIntegrationTest {
      */
     private void publishSilently(final EiffelEvent event) {
         try {
-            Util.mustPublishEvent(event, false);
+            Util.mustPublishEvent(event, new SystemEventSigner());
         } catch (Exception e) {
             LOGGER.error("Unexpected exception", e);
         }

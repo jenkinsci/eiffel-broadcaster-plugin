@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,10 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Util;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.HashAlgorithm;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.EventSigner;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.UserEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
@@ -100,6 +103,10 @@ public class SendEiffelEventStep extends Step {
      *  */
     private boolean publishArtifact = false;
 
+    private String signatureCredentialsId = null;
+
+    private HashAlgorithm signatureHashAlgorithm = null;
+
     @DataBoundConstructor
     public SendEiffelEventStep(@NonNull final Map event) {
         this.event = event;
@@ -146,6 +153,24 @@ public class SendEiffelEventStep extends Step {
         this.publishArtifact = publishArtifact;
     }
 
+    public String getSignatureCredentialsId() {
+        return signatureCredentialsId;
+    }
+
+    @DataBoundSetter
+    public void setSignatureCredentialsId(String signatureCredentialsId) {
+        this.signatureCredentialsId = signatureCredentialsId;
+    }
+
+    public HashAlgorithm getSignatureHashAlgorithm() {
+        return signatureHashAlgorithm;
+    }
+
+    @DataBoundSetter
+    public void setSignatureHashAlgorithm(String signatureHashAlgorithm) {
+        this.signatureHashAlgorithm = HashAlgorithm.fromString(signatureHashAlgorithm);
+    }
+
     private static class Execution extends SynchronousStepExecution<Map> {
         private static final long serialVersionUID = 1L;
         private final transient SendEiffelEventStep step;
@@ -161,6 +186,7 @@ public class SendEiffelEventStep extends Step {
                 var mapper = new ObjectMapper();
                 var event = mapper.convertValue(step.getEvent(), EiffelEvent.class);
                 var run = getContext().get(Run.class);
+
                 if (step.getLinkToActivity()) {
                     var action = run.getAction(EiffelActivityAction.class);
                     // There should always be an EiffelActivityAction connected to the Run,
@@ -168,7 +194,19 @@ public class SendEiffelEventStep extends Step {
                     event.getLinks().add(new EiffelEvent.Link(
                             step.getActivityLinkType(), action.getTriggerEvent().getMeta().getId()));
                 }
-                var sentJSON = Util.mustPublishEvent(event, false);
+
+                EventSigner signer = null;
+                if (step.getSignatureCredentialsId() != null) {
+                    if (step.getSignatureHashAlgorithm() == null) {
+                        throw new AbortException(
+                                "If signatureCredentialsId is set to enable signing, signatureHashAlgorithm must " +
+                                        "be set too. See the plugin documentation for details.");
+                    }
+                    signer = new UserEventSigner(step.getSignatureCredentialsId(),
+                            step.getSignatureHashAlgorithm(), run);
+                }
+
+                var sentJSON = Util.mustPublishEvent(event, signer);
                 var taskListener = getContext().get(TaskListener.class);
                 if (sentJSON != null && taskListener != null) {
                     taskListener.getLogger().format(

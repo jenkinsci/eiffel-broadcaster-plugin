@@ -24,7 +24,7 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.JsonCanonicalizationException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.JsonCanonicalizationException;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
