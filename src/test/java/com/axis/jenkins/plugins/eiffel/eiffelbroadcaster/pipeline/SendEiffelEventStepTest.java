@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelArtifactToPublishAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EventSet;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.JobCreatingJenkinsRule;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
@@ -35,18 +36,10 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationF
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.GenericEiffelEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hudson.model.Result;
-import hudson.model.Run;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import static com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Matchers.linksTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -55,16 +48,7 @@ import static org.hamcrest.Matchers.is;
 
 public class SendEiffelEventStepTest {
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
-    private WorkflowJob createJob(String pipelineCodeResourceFile) throws Exception {
-        var job = jenkins.createProject(WorkflowJob.class, "test");
-        var pipelineCode = new String(
-                Files.readAllBytes(Paths.get(getClass().getResource(pipelineCodeResourceFile).toURI())),
-                StandardCharsets.UTF_8.name());
-        job.setDefinition(new CpsFlowDefinition(pipelineCode, true));
-        return job;
-    }
+    public JobCreatingJenkinsRule jenkins = new JobCreatingJenkinsRule();
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -79,7 +63,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testSuccessful_WithDefaultLinkType() throws Exception {
-        var job = createJob("successful_send_event_step_with_default_linktype.groovy");
+        var job = jenkins.createPipeline("successful_send_event_step_with_default_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
         var events = new EventSet(Mocks.messages);
@@ -92,7 +76,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testSuccessful_LogsEventDetails() throws Exception {
-        var job = createJob("successful_send_event_step_with_default_linktype.groovy");
+        var job = jenkins.createPipeline("successful_send_event_step_with_default_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
         var events = new EventSet(Mocks.messages);
@@ -105,7 +89,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testSuccessful_WithCustomLinkType() throws Exception {
-        var job = createJob("successful_send_event_step_with_custom_linktype.groovy");
+        var job = jenkins.createPipeline("successful_send_event_step_with_custom_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
         var events = new EventSet(Mocks.messages);
@@ -118,7 +102,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testSuccessful_WithoutLink() throws Exception {
-        var job = createJob("successful_send_event_step_without_link.groovy");
+        var job = jenkins.createPipeline("successful_send_event_step_without_link.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
         var events = new EventSet(Mocks.messages);
@@ -129,7 +113,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testSuccessful_ReturnsSentMessage() throws Exception {
-        var job = createJob("successful_send_event_step_with_payload_saved.groovy");
+        var job = jenkins.createPipeline("successful_send_event_step_with_payload_saved.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
         var events = new EventSet(Mocks.messages);
@@ -144,7 +128,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testSuccessful_RecordsArtifacts() throws Exception {
-        var job = createJob("successful_send_event_step_with_artifacts.groovy");
+        var job = jenkins.createPipeline("successful_send_event_step_with_artifacts.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
         var events = new EventSet(Mocks.messages);
@@ -158,7 +142,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testFailed_EventValidationError() throws Exception {
-        var job = createJob("failed_send_event_step_event_validation_error.groovy");
+        var job = jenkins.createPipeline("failed_send_event_step_event_validation_error.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(
@@ -170,7 +154,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testFailed_EventWithoutType() throws Exception {
-        var job = createJob("failed_send_event_step_event_without_type.groovy");
+        var job = jenkins.createPipeline("failed_send_event_step_event_without_type.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(
@@ -182,7 +166,7 @@ public class SendEiffelEventStepTest {
 
     @Test
     public void testFailed_EventWithInvalidLinkType() throws Exception {
-        var job = createJob("failed_send_event_step_event_with_invalid_linktype.groovy");
+        var job = jenkins.createPipeline("failed_send_event_step_event_with_invalid_linktype.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(
