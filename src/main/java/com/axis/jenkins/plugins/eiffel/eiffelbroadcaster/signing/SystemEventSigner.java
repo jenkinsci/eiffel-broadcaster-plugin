@@ -66,6 +66,6 @@ public class SystemEventSigner implements EventSigner {
         }
         var sigData = SigningKeyCache.getInstance().get(cred);
         event.sign(sigData.getKey(), sigData.getIdentity(), config.getSystemSigningHashAlg());
-        return false;
+        return true;
     }
 }
