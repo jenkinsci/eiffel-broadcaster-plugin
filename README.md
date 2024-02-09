@@ -160,12 +160,14 @@ The sendEiffelEvent pipeline step sends an Eiffel event from that's built in
 the Groovy code or read into a Groovy map from another location. It accepts
 the following parameters:
 
-| Argument          | Required | Description               |
-| ------------------|----------|---------------------------|
-| event             | ✔        | A map with the event payload. The `meta.id` and `meta.time` members will be populated automatically. |
-| linkToActivity    |          | If true (default) the event sent will automatically include link to the current build's EiffelActivityTriggeredEvent. |
-| activityLinkType  |          | The link type to use when linking to the EiffelActivityTriggeredEvent. Defaults to CONTEXT but can be set to CAUSE. |
-| publishArtifact   |          | If true and the event being sent is EiffelArtifactCreatedEvent it will be recorded for possible later use by the publishEiffelArtifacts step. |
+| Argument               | Required                         | Description                                                                                                                                                                                                                             |
+|------------------------|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| event                  | ✔                                | A map with the event payload. The `meta.id` and `meta.time` members will be populated automatically.                                                                                                                                    |
+| linkToActivity         |                                  | If true (default) the event sent will automatically include link to the current build's EiffelActivityTriggeredEvent.                                                                                                                   |
+| activityLinkType       |                                  | The link type to use when linking to the EiffelActivityTriggeredEvent. Defaults to CONTEXT but can be set to CAUSE.                                                                                                                     |
+| publishArtifact        |                                  | If true and the event being sent is EiffelArtifactCreatedEvent it will be recorded for possible later use by the publishEiffelArtifacts step.                                                                                           |
+| signatureCredentialsId |                                  | The id of the credentials containing the private key to use when signing. Set to an empty string (default) if the event shouldn't be signed.                                                                                            |
+| signatureHashAlgorithm | If signatureCredentialsId is set | The name of the hash algorithm to use when signing. Must match the key algorithm; see the table in [§3.1 of RFC 7518](https://datatracker.ietf.org/doc/html/rfc7518#section-3.1). Valid values are "SHA-256", "SHA-384", and "SHA-512". |
 
 Example:
 ```
@@ -187,6 +189,9 @@ sendEiffelEvent event: event, activityLinkType: "CAUSE"
 
 // Skip the activity link altogether
 sendEiffelEvent event: event, linkToActivity: false
+
+// Sign the event using the "event-signing" credentials, containing an ECDSA P-521 key.
+sendEiffelEvent event: event, linkToActivity: false, signatureCredentialsId: "event-signing", signatureHashAlgorithm: "SHA-512"
 ```
 
 This step returns immediately as soon as the event has been validated and put
@@ -225,17 +230,32 @@ trigger will be included in the EiffelActivityTriggeredEvent.
 
 The plugin supports signing of event payloads according to the [Eiffel
 protocol's signing specification](https://github.com/eiffel-community/eiffel/blob/master/eiffel-syntax-and-usage/security.md).
-For now, only system events, i.e. events sent by the plugin itself can
-be signed. Specifically, this includes activity events and the
-EiffelArtifactPublishedEvent sent as a result of the publishEiffelArtifacts
-pipeline step.
+Events are signed with the private key from certificates stored in
+PKCS #12 files, uploaded to certificate credentials in Jenkins.
+It's fine if the certificate is self-signed; the certificate chain
+isn't verified and only the subject name is used (for the
+`meta.security.authorIdentity` member).
 
-To enable signing, you first need to create a keypair with a certificate
-and upload it as a credential to the Jenkins instance. The certificate can
-be self-signed; only the subject name is used.
+For signing purposes, events come in two forms:
+
+- System events, i.e. events sent by the plugin itself. This includes
+activity events and the EiffelArtifactPublishedEvent sent as a result
+of the publishEiffelArtifacts pipeline step. These events are signed
+with a private key stored in a system certificate credential that's
+only accessible to administrators. After creating the credential,
+select it in the _Certificate to use for signing of system events_
+dropdown in the plugin configuration (visible when _Enable signing of
+system events_ is checked).
+- User events, i.e. events whose contents are materially influenced
+by a user. This currently applies to events sent by the sendEiffelEvent
+step. These events are signed with the private key from a credential
+added to a folder accessible to the build.
+
+### Certificate creation
 
 Here's an example of how to create an ECDSA P-521 keypair and convert it
-to the PKCS #12 format expected by the Credentials plugin:
+to the PKCS #12 format expected by the
+[Credentials plugin](https://plugins.jenkins.io/credentials/):
 
 ```
 openssl ecparam -name secp521r1 -genkey -noout -out system-signing.priv.pem
@@ -253,11 +273,6 @@ certificate credentials are listed.
 The `openssl pkcs12` command will prompt you for a password. You can choose
 any password you like, just make sure that you'll be able to input the same
 password when the resulting file is uploaded to Jenkins.
-
-Finally, create a new system certificate credential in Jenkins and upload
-the .pfx file you created. This credential can then be chosen from the
-_Certificate to use for signing of system events_ dropdown in the plugin
-configuration (visible when _Enable signing of system events_ is checked).
 
 ## How to build and install this plugin from source
 In the EiffelBroadcaster root folder, use maven to compile.

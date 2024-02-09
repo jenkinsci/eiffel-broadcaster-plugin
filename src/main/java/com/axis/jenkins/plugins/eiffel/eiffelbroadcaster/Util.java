@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2023 Axis Communications AB.
+ Copyright 2018-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +29,9 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.UnsupportedAlgorithmException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.EventSigner;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.InvalidCertificateConfigurationException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.JsonCanonicalizationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -124,8 +127,8 @@ public final class Util {
      * Publishes an {@link EiffelEvent} and raises an exception if an error occurs.
      *
      * @param event the Eiffel event to publish
-     * @param allowSystemSignature true if the plugin's global credentials may be used to sign the event
-     *                             before publishing (not to be used if the end user controls the event payload)
+     * @param signer the {@link EventSigner} that should be called to get the event signed
+     *               (if signing has been enabled), or <code>null</code> if signing should be disabled
      * @return the published event or null if event publishing is disabled
      * @throws EventValidationFailedException if the validation of the event against the JSON schema fails
      * @throws InvalidCertificateConfigurationException if the keystore in the certificate credential was entirely
@@ -141,7 +144,8 @@ public final class Util {
      *         by this implementation of the Eiffel protocol or the available cryptography provider
      */
     @CheckForNull
-    public static JsonNode mustPublishEvent(@NonNull final EiffelEvent event, final boolean allowSystemSignature)
+    public static JsonNode mustPublishEvent(@NonNull final EiffelEvent event,
+                                            @CheckForNull final EventSigner signer)
             throws EventValidationFailedException, InvalidCertificateConfigurationException, InvalidKeyException,
             JsonCanonicalizationException, JsonProcessingException, KeyStoreException, NoSuchAlgorithmException,
             SchemaUnavailableException, SignatureException, UnsupportedAlgorithmException, UnrecoverableKeyException {
@@ -150,9 +154,8 @@ public final class Util {
             return null;
         }
 
-        if (allowSystemSignature && config.isSystemSigningEnabled()) {
-            var sigData = SigningKeyCache.getInstance().get(config.getSystemSigningCredentialsId());
-            event.sign(sigData.getKey(), sigData.getIdentity(), config.getSystemSigningHashAlg());
+        if (signer != null) {
+            signer.sign(event);
         }
 
         var mapper = new ObjectMapper();
@@ -174,14 +177,14 @@ public final class Util {
      * Publishes an {@link EiffelEvent} and logs a message if there's an error.
      *
      * @param event the Eiffel event to publish
-     * @param allowSystemSignature true if the plugin's global credentials may be used to sign the event
-     *                             before publishing (not to be used if the end user controls the event payload)
+     * @param signer the {@link EventSigner} that should be called to get the event signed
+     *               (if signing has been enabled), or <code>null</code> if signing should be disabled
      * @return the published event or null if there was an error or event publishing is disabled
      */
     @CheckForNull
-    public static JsonNode publishEvent(@NonNull final EiffelEvent event, final boolean allowSystemSignature) {
+    public static JsonNode publishEvent(@NonNull final EiffelEvent event, @CheckForNull final EventSigner signer) {
         try {
-            return mustPublishEvent(event, allowSystemSignature);
+            return mustPublishEvent(event, signer);
         } catch (JsonCanonicalizationException | JsonProcessingException e) {
             logger.error("Unable to serialize object to JSON: {}: {}", e.getMessage(), event);
         } catch (SchemaUnavailableException | EventValidationFailedException e) {

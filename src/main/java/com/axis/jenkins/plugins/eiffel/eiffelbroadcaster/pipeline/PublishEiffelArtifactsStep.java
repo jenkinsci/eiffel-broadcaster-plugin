@@ -35,6 +35,7 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPu
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
@@ -124,7 +125,7 @@ public class PublishEiffelArtifactsStep extends Step {
         private void publishArtifact(@NonNull final EiffelArtifactPublisher artifactPublisher,
                                      @NonNull final EiffelArtifactCreatedEvent creationEvent) throws Exception {
             var event = artifactPublisher.prepareEvent(creationEvent);
-            var sentJSON = Util.mustPublishEvent(event, true);
+            var sentJSON = Util.mustPublishEvent(event, new SystemEventSigner());
             if (sentJSON != null) {
                 getContext().get(TaskListener.class).getLogger().format(
                         "Successfully sent %s with id %s for artifact with id %s%n",

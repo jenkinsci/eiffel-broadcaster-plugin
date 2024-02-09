@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2023 Axis Communications AB.
+ Copyright 2023-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,9 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 /**
  * The supported hash algorithms when signing events.
  */
@@ -38,7 +41,27 @@ public enum HashAlgorithm {
         this.displayName = displayName;
     }
 
+    /** Constructs a {@link HashAlgorithm} object by parsing a string. */
+    public static HashAlgorithm fromString(final String s) throws IllegalArgumentException {
+        for (var value : HashAlgorithm.values()) {
+            if (value.getDisplayName().equals(s)) {
+                return value;
+            }
+        }
+        var availableValues = Arrays.stream(HashAlgorithm.values())
+                .map(HashAlgorithm::getDisplayName)
+                .collect(Collectors.joining(", "));
+        throw new IllegalArgumentException(String.format(
+                "The string \"%s\" isn't a supported hash algorithm. Please choose one of the following: %s",
+                s, availableValues));
+    }
+
     public String getDisplayName() {
+        return displayName;
+    }
+
+    @Override
+    public String toString() {
         return displayName;
     }
 }

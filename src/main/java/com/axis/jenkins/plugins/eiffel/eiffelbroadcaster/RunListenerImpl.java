@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2021 Axis Communications AB.
+ Copyright 2018-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,8 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFinishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.EventSigner;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
 import hudson.model.Run;
@@ -51,6 +53,8 @@ public class RunListenerImpl extends RunListener<Run> {
 
     /** The URI path to the plain console log of a {@link Run}, relative to the URI of the Run. */
     public static final String CONSOLE_URI_PATH = "consoleText";
+
+    private final EventSigner signer = new SystemEventSigner();
 
     /**
      * Constructor for RunListenerImpl.
@@ -84,7 +88,7 @@ public class RunListenerImpl extends RunListener<Run> {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event, true);
+        Util.publishEvent(event, signer);
     }
 
     @Override
@@ -124,6 +128,6 @@ public class RunListenerImpl extends RunListener<Run> {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event, true);
+        Util.publishEvent(event, signer);
     }
 }
