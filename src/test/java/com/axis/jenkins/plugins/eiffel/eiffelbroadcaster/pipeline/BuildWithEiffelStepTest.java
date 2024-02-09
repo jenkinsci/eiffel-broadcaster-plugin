@@ -27,11 +27,9 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelActivityAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import hudson.model.Result;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -51,8 +49,8 @@ public class BuildWithEiffelStepTest {
     public JenkinsRule jenkins = new JenkinsRule();
 
     private WorkflowJob createJob(String pipelineCodeResourceFile, String name) throws Exception {
-        WorkflowJob job = jenkins.createProject(WorkflowJob.class, name);
-        String pipelineCode = new String(
+        var job = jenkins.createProject(WorkflowJob.class, name);
+        var pipelineCode = new String(
                 Files.readAllBytes(Paths.get(getClass().getResource(pipelineCodeResourceFile).toURI())),
                 StandardCharsets.UTF_8.name());
         job.setDefinition(new CpsFlowDefinition(pipelineCode, true));
@@ -72,19 +70,19 @@ public class BuildWithEiffelStepTest {
 
     @Test
     public void testSuccessful_customActivityName() throws Exception {
-        WorkflowJob upstreamJob = createJob("success_build_with_eiffel_step.groovy", "upstream");
-        WorkflowJob downstreamJob = createJob("triggered_build.groovy", "downstream");
+        var upstreamJob = createJob("success_build_with_eiffel_step.groovy", "upstream");
+        var downstreamJob = createJob("triggered_build.groovy", "downstream");
         jenkins.assertBuildStatus(Result.SUCCESS, upstreamJob.scheduleBuild2(0));
         jenkins.assertBuildStatus(Result.SUCCESS, downstreamJob.getBuildByNumber(1));
 
-        WorkflowRun run = downstreamJob.getBuildByNumber(1);
-        EiffelActivityTriggeredEvent actT = run.getAction(EiffelActivityAction.class).getTriggerEvent();
+        var run = downstreamJob.getBuildByNumber(1);
+        var actT = run.getAction(EiffelActivityAction.class).getTriggerEvent();
         assertThat(actT.getData().getName(), is("my_custom_activity"));
     }
 
     @Test
     public void testFailure_activityNameMissing() throws Exception {
-        WorkflowJob job = createJob("failed_build_with_eiffel_step_empty_name.groovy", "upstream");
+        var job = createJob("failed_build_with_eiffel_step_empty_name.groovy", "upstream");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(

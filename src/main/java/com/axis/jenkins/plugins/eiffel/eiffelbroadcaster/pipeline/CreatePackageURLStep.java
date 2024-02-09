@@ -137,7 +137,7 @@ public class CreatePackageURLStep extends Step {
                     .withName(step.getName())
                     .withVersion(step.getVersion())
                     .withSubpath(step.getSubpath());
-            for (Map.Entry<String, String> entry : step.getQualifiers().entrySet()) {
+            for (var entry : step.getQualifiers().entrySet()) {
                 purlBuilder.withQualifier(entry.getKey(), entry.getValue());
             }
             try {

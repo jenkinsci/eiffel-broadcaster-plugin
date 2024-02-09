@@ -50,7 +50,7 @@ public class ItemListenerImpl extends ItemListener {
     @Override
     public final void onLoaded() {
         logger.info("All jobs have been loaded.");
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        var config = EiffelBroadcasterConfig.getInstance();
         if (config != null && config.getEnableBroadcaster()) {
             MQConnection.getInstance().initialize(config.getUserName(), config.getUserPassword(),
                     config.getServerUri(), config.getVirtualHost());

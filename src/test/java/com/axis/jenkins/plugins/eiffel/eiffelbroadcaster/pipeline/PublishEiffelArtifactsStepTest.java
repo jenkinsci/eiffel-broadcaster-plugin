@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,38 +26,23 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EventSet;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.JobCreatingJenkinsRule;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent;
 import hudson.model.Result;
-import hudson.model.Run;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class PublishEiffelArtifactsStepTest {
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
-    private WorkflowJob createJob(String pipelineCodeResourceFile) throws Exception {
-        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "test");
-        String pipelineCode = new String(
-                Files.readAllBytes(Paths.get(getClass().getResource(pipelineCodeResourceFile).toURI())),
-                StandardCharsets.UTF_8.name());
-        job.setDefinition(new CpsFlowDefinition(pipelineCode, true));
-        return job;
-    }
+    public JobCreatingJenkinsRule jenkins = new JobCreatingJenkinsRule();
 
     private List<String> getLocationNames(EventSet events) {
         return events.all(EiffelArtifactPublishedEvent.class).stream()
@@ -79,12 +64,12 @@ public class PublishEiffelArtifactsStepTest {
 
     @Test
     public void testSuccessful_PublishesArtifacts() throws Exception {
-        WorkflowJob job = createJob("successful_publish_artifact_step.groovy");
+        var job = jenkins.createPipeline("successful_publish_artifact_step.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        Run run = job.getBuildByNumber(1);
+        var run = job.getBuildByNumber(1);
         // We have pretty thorough tests of the ArtP contents for a given ArtC so here it's enough to
         // verify that we get the correct number of events and that the filenames in the events are what
         // we expect (so we're not getting two copies of the same event).
@@ -93,12 +78,12 @@ public class PublishEiffelArtifactsStepTest {
 
     @Test
     public void testSuccessful_PublishesArtifactsFromFile() throws Exception {
-        WorkflowJob job = createJob("successful_publish_artifact_step_from_file.groovy");
+        var job = jenkins.createPipeline("successful_publish_artifact_step_from_file.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        EventSet events = new EventSet(Mocks.messages);
+        var events = new EventSet(Mocks.messages);
 
-        Run run = job.getBuildByNumber(1);
+        var run = job.getBuildByNumber(1);
         // We have pretty thorough tests of the ArtP contents for a given ArtC so here it's enough to
         // verify that we get the correct number of events and that the filenames in the events are what
         // we expect (so we're not getting two copies of the same event).
@@ -108,7 +93,7 @@ public class PublishEiffelArtifactsStepTest {
 
     @Test
     public void testFailed_EventFromFileWithWrongType() throws Exception {
-        WorkflowJob job = createJob("failed_publish_artifact_step_from_file_bad_type.groovy");
+        var job = jenkins.createPipeline("failed_publish_artifact_step_from_file_bad_type.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(

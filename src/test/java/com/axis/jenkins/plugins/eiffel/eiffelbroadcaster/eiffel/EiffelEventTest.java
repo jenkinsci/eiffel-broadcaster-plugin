@@ -38,14 +38,14 @@ public class EiffelEventTest {
     public void testJsonDeserialization_ChoosesCorrectSubclass() throws JsonProcessingException {
         // We instantiate an arbitrary concrete EiffelEvent subclass and make sure that when we
         // deserialize the string back into an EiffelEvent we get an instance of the same class.
-        EiffelActivityTriggeredEvent originalEvent = new EiffelActivityTriggeredEvent("activity name");
-        EiffelEvent deserializedEvent = new ObjectMapper().readValue(originalEvent.toJSON(), EiffelEvent.class);
+        var originalEvent = new EiffelActivityTriggeredEvent("activity name");
+        var deserializedEvent = new ObjectMapper().readValue(originalEvent.toJSON(), EiffelEvent.class);
         assertThat(deserializedEvent, instanceOf(originalEvent.getClass()));
     }
 
     @Test
     public void testJsonDeserialization_WithGenericEventType() throws IOException {
-        EiffelEvent event = new ObjectMapper().readValue(
+        var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelCompositionDefinedEvent.json"), EiffelEvent.class);
         assertThat(event, instanceOf(GenericEiffelEvent.class));
     }
@@ -54,7 +54,7 @@ public class EiffelEventTest {
     public void testJsonDeserialization_WithLyonEvent() throws IOException {
         // Make sure we can deserialize an event from the Lyon edition,
         // and that an attribute that was added in that version is picked up.
-        EiffelEvent event = new ObjectMapper().readValue(
+        var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelCompositionDefinedEvent_with_domainid_link.json"),
                 EiffelEvent.class);
         assertThat(event.getMeta().getVersion(), is("3.2.0"));
@@ -65,13 +65,12 @@ public class EiffelEventTest {
     public void testJsonDeserialization_WithAricaEvent() throws IOException {
         // Make sure we can deserialize an event from the Arica edition,
         // and that attributes that were added in that version are picked up.
-        EiffelArtifactCreatedEvent event = new ObjectMapper().readValue(
+        var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelArtifactCreatedEvent_with_digest_and_schemauri.json"),
                 EiffelArtifactCreatedEvent.class);
         assertThat(event.getMeta().getVersion(), is("3.3.0"));
         assertThat(event.getMeta().getSchemaUri(), is("https://example.com/schema.json"));
-        EiffelArtifactCreatedEvent.Data.FileInformation.IntegrityProtection ip =
-                event.getData().getFileInformation().get(0).getIntegrityProtection();
+        var ip = event.getData().getFileInformation().get(0).getIntegrityProtection();
         assertThat(ip.getAlg(), is(EiffelArtifactCreatedEvent.Data.FileInformation.IntegrityProtection.Alg.SHA256));
         assertThat(ip.getDigest(), is("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"));
     }
@@ -85,14 +84,14 @@ public class EiffelEventTest {
     @Test
     public void testSourceProvider_WithDirectConstruction() throws IOException {
         EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
-        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent("activity name");
+        var event = new EiffelActivityTriggeredEvent("activity name");
         assertThat(event.getMeta().getSource().getDomainId(), is(DummyDomainIdProvider.DOMAIN_ID));
     }
 
     @Test
     public void testSourceProvider_FromJsonToConcreteClass() throws IOException {
         EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
-        EiffelEvent event = new ObjectMapper().readValue(
+        var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelActivityTriggeredEvent.json"), EiffelEvent.class);
         assertThat(event.getMeta().getSource().getDomainId(), is(DummyDomainIdProvider.DOMAIN_ID));
     }
@@ -100,7 +99,7 @@ public class EiffelEventTest {
     @Test
     public void testSourceProvider_FromJsonToGenericClass() throws IOException {
         EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
-        EiffelEvent event = new ObjectMapper().readValue(
+        var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelCompositionDefinedEvent.json"), EiffelEvent.class);
         // First make sure we actually get a GenericEiffelEvent object. If we introduce a concrete
         // class for EiffelCompositionDefinedEvent this testcase must be updated to not follow

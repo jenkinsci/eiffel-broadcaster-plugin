@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2021 Axis Communications AB.
+ Copyright 2018-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,14 +26,13 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFinishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.EventSigner;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
-import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
-import java.net.URI;
-import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +54,8 @@ public class RunListenerImpl extends RunListener<Run> {
     /** The URI path to the plain console log of a {@link Run}, relative to the URI of the Run. */
     public static final String CONSOLE_URI_PATH = "consoleText";
 
+    private final EventSigner signer = new SystemEventSigner();
+
     /**
      * Constructor for RunListenerImpl.
      */
@@ -64,18 +65,18 @@ public class RunListenerImpl extends RunListener<Run> {
 
     @Override
     public void onStarted(Run r, TaskListener listener) {
-        UUID targetEvent = EiffelJobTable.getInstance().getAndClearEventTrigger(r.getQueueId());
+        var targetEvent = EiffelJobTable.getInstance().getAndClearEventTrigger(r.getQueueId());
         if (targetEvent == null) {
             logger.warn("The newly started {} could not be mapped to an emitted ActT event", r);
             return;
         }
-        EiffelActivityStartedEvent event = new EiffelActivityStartedEvent(targetEvent);
+        var event = new EiffelActivityStartedEvent(targetEvent);
 
-        URI runUri = Util.getRunUri(r);
+        var runUri = Util.getRunUri(r);
         if (runUri != null) {
             event.getData().setExecutionUri(runUri);
         }
-        URI logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
+        var logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
         if (logUri != null) {
             event.getData().getLiveLogs().add(
                     new EiffelActivityStartedEvent.Data.LiveLogs(CONSOLE_LOG_NAME, logUri));
@@ -87,19 +88,18 @@ public class RunListenerImpl extends RunListener<Run> {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event, true);
+        Util.publishEvent(event, signer);
     }
 
     @Override
     public void onCompleted(Run r, TaskListener listener) {
-        Result res = r.getResult();
-        EiffelActivityFinishedEvent.Data.Outcome.Conclusion conclusion =
-                EiffelActivityFinishedEvent.Data.Outcome.Conclusion.INCONCLUSIVE;
+        var res = r.getResult();
+        var conclusion = EiffelActivityFinishedEvent.Data.Outcome.Conclusion.INCONCLUSIVE;
         if (res != null) {
             conclusion = Util.translateStatus(res.toString());
         }
 
-        EiffelActivityAction activityAction = r.getAction(EiffelActivityAction.class);
+        var activityAction = r.getAction(EiffelActivityAction.class);
         if (activityAction == null) {
             logger.warn("Unable to locate {} for {}, skipping sending of ActF event",
                     EiffelActivityAction.class.getSimpleName(), r);
@@ -116,7 +116,7 @@ public class RunListenerImpl extends RunListener<Run> {
             return;
         }
 
-        URI logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
+        var logUri = Util.getRunUri(r, CONSOLE_URI_PATH);
         if (logUri != null) {
             event.getData().getPersistentLogs().add(
                     new EiffelActivityFinishedEvent.Data.PersistentLogs(CONSOLE_LOG_NAME, logUri));
@@ -128,6 +128,6 @@ public class RunListenerImpl extends RunListener<Run> {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event, true);
+        Util.publishEvent(event, signer);
     }
 }

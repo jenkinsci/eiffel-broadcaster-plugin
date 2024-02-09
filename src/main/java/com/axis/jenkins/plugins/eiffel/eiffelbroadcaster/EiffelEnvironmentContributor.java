@@ -62,14 +62,14 @@ public class EiffelEnvironmentContributor extends EnvironmentContributor {
     @Override
     public void buildEnvironmentFor(@NonNull Run r, @NonNull EnvVars envs, @NonNull TaskListener listener)
             throws IOException, InterruptedException {
-        EiffelActivityAction action = r.getAction(EiffelActivityAction.class);
+        var action = r.getAction(EiffelActivityAction.class);
         if (action != null) {
             envs.put(EiffelEnvironmentContributor.ACTIVITY_TRIGGERED, action.getTriggerEventJSON());
-            String startedEvent = action.getStartedEventJSON();
+            var startedEvent = action.getStartedEventJSON();
             if (startedEvent != null) {
                 envs.put(EiffelEnvironmentContributor.ACTIVITY_STARTED, startedEvent);
             }
-            String finishedEvent = action.getFinishedEventJSON();
+            var finishedEvent = action.getFinishedEventJSON();
             if (finishedEvent != null) {
                 envs.put(EiffelEnvironmentContributor.ACTIVITY_FINISHED, finishedEvent);
             }

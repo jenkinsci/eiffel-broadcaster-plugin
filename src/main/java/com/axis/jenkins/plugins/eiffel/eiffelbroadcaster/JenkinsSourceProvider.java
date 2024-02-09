@@ -31,7 +31,6 @@ import com.github.packageurl.PackageURL;
 import com.github.packageurl.PackageURLBuilder;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.PluginWrapper;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -69,10 +68,10 @@ public class JenkinsSourceProvider implements SourceProvider {
     private URI uri;
 
     public JenkinsSourceProvider() {
-        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        var jenkins = Jenkins.getInstanceOrNull();
         if (jenkins != null) {
-            String pluginShortName = EiffelBroadcasterConfig.class.getAnnotation(Symbol.class).value()[0];
-            PluginWrapper pluginWrapper = jenkins.getPluginManager().getPlugin(pluginShortName);
+            var pluginShortName = EiffelBroadcasterConfig.class.getAnnotation(Symbol.class).value()[0];
+            var pluginWrapper = jenkins.getPluginManager().getPlugin(pluginShortName);
             if (pluginWrapper != null) {
                 name = pluginWrapper.getDisplayName();
 
@@ -124,7 +123,7 @@ public class JenkinsSourceProvider implements SourceProvider {
      */
     @CheckForNull
     private synchronized String getHost() {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        var config = EiffelBroadcasterConfig.getInstance();
         if (config == null) {
             return null;
         }

@@ -35,8 +35,8 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPu
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationFailedException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -47,7 +47,6 @@ import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import java.io.BufferedReader;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
@@ -100,18 +99,18 @@ public class PublishEiffelArtifactsStep extends Step {
 
         @Override
         protected Void run() throws Exception {
-            Run run = getContext().get(Run.class);
-            EiffelActivityAction action = run.getAction(EiffelActivityAction.class);
-            EiffelArtifactPublisher artifactPublisher = new EiffelArtifactPublisher(
+            var run = getContext().get(Run.class);
+            var action = run.getAction(EiffelActivityAction.class);
+            var artifactPublisher = new EiffelArtifactPublisher(
                     action.getTriggerEvent(), Util.getRunUri(run), run.getArtifactManager().root());
 
             try {
-                for (EiffelArtifactToPublishAction savedArtifact : run.getActions(EiffelArtifactToPublishAction.class)) {
+                for (var savedArtifact : run.getActions(EiffelArtifactToPublishAction.class)) {
                     publishArtifact(artifactPublisher, savedArtifact.getEvent());
                 }
 
                 if (step.getArtifactEventFiles() != null) {
-                    for (FilePath file : getContext().get(FilePath.class).list(step.getArtifactEventFiles())) {
+                    for (var file : getContext().get(FilePath.class).list(step.getArtifactEventFiles())) {
                         publishArtifactsFromFile(artifactPublisher, file);
                     }
                 }
@@ -125,8 +124,8 @@ public class PublishEiffelArtifactsStep extends Step {
 
         private void publishArtifact(@NonNull final EiffelArtifactPublisher artifactPublisher,
                                      @NonNull final EiffelArtifactCreatedEvent creationEvent) throws Exception {
-            EiffelArtifactPublishedEvent event = artifactPublisher.prepareEvent(creationEvent);
-            JsonNode sentJSON = Util.mustPublishEvent(event, true);
+            var event = artifactPublisher.prepareEvent(creationEvent);
+            var sentJSON = Util.mustPublishEvent(event, new SystemEventSigner());
             if (sentJSON != null) {
                 getContext().get(TaskListener.class).getLogger().format(
                         "Successfully sent %s with id %s for artifact with id %s%n",
@@ -138,12 +137,12 @@ public class PublishEiffelArtifactsStep extends Step {
         private void publishArtifactsFromFile(@NonNull final EiffelArtifactPublisher artifactPublisher,
                                               @NonNull final FilePath file) throws Exception {
             getContext().get(TaskListener.class).getLogger().format("Reading events from %s%n", file.getRemote());
-            try (InputStream is = file.read()) {
-                try (InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
-                    try (BufferedReader br = new BufferedReader(isr)) {
+            try (var is = file.read()) {
+                try (var isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+                    try (var br = new BufferedReader(isr)) {
                         String line;
                         while ((line = br.readLine()) != null) {
-                            EiffelEvent event = new ObjectMapper().readValue(line, EiffelEvent.class);
+                            var event = new ObjectMapper().readValue(line, EiffelEvent.class);
                             if (!(event instanceof EiffelArtifactCreatedEvent)) {
                                 throw new AbortException(String.format(
                                         "%s: This event in %s was of the type %s but only " +

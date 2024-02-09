@@ -25,6 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import eu.rekawek.toxiproxy.model.ToxicDirection;
 import eu.rekawek.toxiproxy.model.toxic.Timeout;
 import java.io.IOException;
@@ -89,12 +90,12 @@ public class ConnectionIntegrationTest {
      */
     @Before
     public void createProxyConnection() {
-        EiffelBroadcasterConfig config = EiffelBroadcasterConfig.getInstance();
+        var config = EiffelBroadcasterConfig.getInstance();
         assertThat(config, is(notNullValue()));
         TestUtil.setDefaultConfig(config);
         config.setServerUri(formatProxyServerUri());
 
-        MQConnection conn = MQConnection.getInstance();
+        var conn = MQConnection.getInstance();
         conn.initialize(config.getUserName(), config.getUserPassword(), config.getServerUri(), config.getVirtualHost());
     }
 
@@ -111,8 +112,8 @@ public class ConnectionIntegrationTest {
      */
     private String formatProxyServerUri() {
         ToxiproxyContainer.ContainerProxy proxy = getProxy();
-        final String ipAddressViaToxiproxy = proxy.getContainerIpAddress();
-        final int portViaToxiproxy = proxy.getProxyPort();
+        final var ipAddressViaToxiproxy = proxy.getContainerIpAddress();
+        final var portViaToxiproxy = proxy.getProxyPort();
         return "amqp://" + ipAddressViaToxiproxy + ":" + portViaToxiproxy;
     }
 
@@ -124,7 +125,7 @@ public class ConnectionIntegrationTest {
      */
     private void publishSilently(final EiffelEvent event) {
         try {
-            Util.mustPublishEvent(event, false);
+            Util.mustPublishEvent(event, new SystemEventSigner());
         } catch (Exception e) {
             LOGGER.error("Unexpected exception", e);
         }
@@ -135,11 +136,11 @@ public class ConnectionIntegrationTest {
      */
     @Test
     public void testSentMessagesHaveCorrectFormat() throws InterruptedException, IOException {
-        MQConnection conn = MQConnection.getInstance();
-        int messageCount = 10;
-        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        var conn = MQConnection.getInstance();
+        var messageCount = 10;
+        var expectedMessages = TestUtil.createEvents(messageCount);
         expectedMessages.forEach(this::publishSilently);
-        ArrayList<EiffelEvent> actualMessages = TestUtil.waitForMessages(
+        var actualMessages = TestUtil.waitForMessages(
                 conn,
                 messageCount,
                 DEFAULT_MESSAGE_WAIT,
@@ -153,22 +154,22 @@ public class ConnectionIntegrationTest {
      */
     @Test
     public void testConcurrentMessagePublishingWorks() throws InterruptedException, IOException {
-        MQConnection conn = MQConnection.getInstance();
-        int batchSize = 1000;
-        int threadCount = 50;
+        var conn = MQConnection.getInstance();
+        var batchSize = 1000;
+        var threadCount = 50;
         // Just save the hashes of the events instead of the actual event objects to
         // save execution time. If there's a mismatch it's very unlikely we'll be able
         // to make sense of the diff between the giant collections anyway.
-        ArrayList<Integer> expectedMessageHashes = new ArrayList<>();
+        var expectedMessageHashes = new ArrayList<Integer>();
         // Prepare all publisher threads first, then start all of them at the same time (almost).
-        List<Thread> threads = new ArrayList<>();
-        for (int i = 0; i < threadCount; i++) {
-            ArrayList<EiffelEvent> batch = TestUtil.createEvents(batchSize);
+        var threads = new ArrayList<Thread>();
+        for (var i = 0; i < threadCount; i++) {
+            var batch = TestUtil.createEvents(batchSize);
             threads.add(new Thread(() -> batch.forEach(this::publishSilently)));
             expectedMessageHashes.addAll(batch.stream().map(EiffelEvent::hashCode).collect(Collectors.toList()));
         }
         threads.forEach(Thread::start);
-        List<Integer> actualMessageHashes = TestUtil.waitForMessages(
+        var actualMessageHashes = TestUtil.waitForMessages(
                 conn,
                 expectedMessageHashes.size(),
                 DEFAULT_MESSAGE_WAIT,
@@ -182,9 +183,9 @@ public class ConnectionIntegrationTest {
      */
     @Test
     public void testSentMessagesReceiveACKs() throws IOException, InterruptedException {
-        MQConnection conn = MQConnection.getInstance();
-        int messageCount = 25;
-        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        var conn = MQConnection.getInstance();
+        var messageCount = 25;
+        var expectedMessages = TestUtil.createEvents(messageCount);
         expectedMessages.forEach(this::publishSilently);
         TestUtil.waitForMessages(
                 conn,
@@ -201,9 +202,9 @@ public class ConnectionIntegrationTest {
      */
     @Test
     public void testSendMessagesHandlesClosedConnection() throws InterruptedException, IOException {
-        MQConnection conn = MQConnection.getInstance();
-        int messageCount = 1000;
-        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        var conn = MQConnection.getInstance();
+        var messageCount = 1000;
+        var expectedMessages = TestUtil.createEvents(messageCount);
 
         getProxy().setConnectionCut(true);
         executor.submit(() -> {
@@ -211,7 +212,7 @@ public class ConnectionIntegrationTest {
         });
         Thread.sleep(1000);
         getProxy().setConnectionCut(false);
-        ArrayList<EiffelEvent> actualMessages = TestUtil.waitForMessages(
+        var actualMessages = TestUtil.waitForMessages(
                 conn,
                 messageCount,
                 DEFAULT_MESSAGE_WAIT,
@@ -225,9 +226,9 @@ public class ConnectionIntegrationTest {
      */
     @Test
     public void testSendMessagesHandlesUpstreamTimeout() throws InterruptedException, IOException {
-        MQConnection conn = MQConnection.getInstance();
-        int messageCount = 1000;
-        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        var conn = MQConnection.getInstance();
+        var messageCount = 1000;
+        var expectedMessages = TestUtil.createEvents(messageCount);
         getProxy().toxics().timeout("timeout", ToxicDirection.UPSTREAM, 8000);
         executor.submit(() -> {
             expectedMessages.forEach(this::publishSilently);
@@ -248,9 +249,9 @@ public class ConnectionIntegrationTest {
      */
     @Test
     public void testSendMessagesHandlesConnectionFlicker() throws InterruptedException, IOException {
-        MQConnection conn = MQConnection.getInstance();
-        int messageCount = 1000;
-        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        var conn = MQConnection.getInstance();
+        var messageCount = 1000;
+        var expectedMessages = TestUtil.createEvents(messageCount);
         executor.submit(() -> {
             expectedMessages.subList(0,500).forEach(this::publishSilently);
             try {
@@ -264,7 +265,7 @@ public class ConnectionIntegrationTest {
         getProxy().setConnectionCut(true);
         Thread.sleep(5000);
         getProxy().setConnectionCut(false);
-        ArrayList<EiffelEvent> actualMessages = TestUtil.waitForMessages(
+        var actualMessages = TestUtil.waitForMessages(
                 conn,
                 messageCount,
                 DEFAULT_MESSAGE_WAIT,
@@ -278,14 +279,14 @@ public class ConnectionIntegrationTest {
      */
     @Test
     public void testSendMessagesHandlesLatency() throws InterruptedException, IOException {
-        MQConnection conn = MQConnection.getInstance();
-        int messageCount = 2;
-        ArrayList<EiffelEvent> expectedMessages = TestUtil.createEvents(messageCount);
+        var conn = MQConnection.getInstance();
+        var messageCount = 2;
+        var expectedMessages = TestUtil.createEvents(messageCount);
         getProxy().toxics().latency("latency", ToxicDirection.UPSTREAM, 2000).setJitter(2000);
         executor.submit(() -> {
             expectedMessages.forEach(this::publishSilently);
         });
-        ArrayList<EiffelEvent> actualMessages = TestUtil.waitForMessages(
+        var actualMessages = TestUtil.waitForMessages(
                 conn,
                 messageCount,
                 30,

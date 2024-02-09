@@ -50,7 +50,7 @@ public class EventSet {
      * the JSON string is malformed or if the mapping of the JSON object to a Java object fails
      */
     public EventSet(List<String> messages) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
+        var mapper = new ObjectMapper();
         for (String message : messages) {
             events.add(mapper.readValue(message, EiffelEvent.class));
         }

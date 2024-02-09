@@ -27,23 +27,20 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityCanceledEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.EventSigner;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import hudson.Extension;
 import hudson.model.BuildableItem;
 import hudson.model.Cause;
 import hudson.model.Job;
 import hudson.model.Queue;
-import hudson.model.Run;
 import hudson.model.queue.QueueListener;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
-import java.util.SortedSet;
 import java.util.TreeSet;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -55,9 +52,11 @@ import java.util.stream.Collectors;
 public class QueueListenerImpl extends QueueListener {
     private static final Logger logger = LoggerFactory.getLogger(QueueListenerImpl.class);
 
+    private final EventSigner signer = new SystemEventSigner();
+
     @Override
     public void onEnterWaiting(Queue.WaitingItem wi) {
-        String taskName = Util.getFullName(wi.task);
+        var taskName = Util.getFullName(wi.task);
 
         // Filter out queue items we're not interested in, e.g. pipeline steps (modeled as
         // ExecutorStepExecution$PlaceholderTask).
@@ -67,8 +66,8 @@ public class QueueListenerImpl extends QueueListener {
             return;
         }
 
-        EiffelActivityTriggeredEvent.Data data = new EiffelActivityTriggeredEvent.Data(taskName);
-        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent(data);
+        var data = new EiffelActivityTriggeredEvent.Data(taskName);
+        var event = new EiffelActivityTriggeredEvent(data);
         EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getMeta().getId());
 
         // Override activity name if item has action EiffelActivityDataAction
@@ -78,14 +77,14 @@ public class QueueListenerImpl extends QueueListener {
                 .ifPresent(action -> data.setName(((EiffelActivityDataAction)action).getName()));
 
         // Populate activity categories
-        SortedSet<String> categories = new TreeSet<>();
+        var categories = new TreeSet<String>();
 
         // ...with globally configured categories
         categories.addAll(EiffelBroadcasterConfig.getInstance().getActivityCategoriesList());
 
         // ...with job-specific categories
         if (wi.task instanceof Job<?, ?>) {
-            EiffelActivityJobProperty activityJobProperty =
+            var activityJobProperty =
                     ((Job<?, ?>) wi.task).getProperty(EiffelActivityJobProperty.class);
             if (activityJobProperty != null) {
                 categories.addAll(activityJobProperty.getCategories());
@@ -97,7 +96,7 @@ public class QueueListenerImpl extends QueueListener {
         // Populate causes
         for (Cause cause : wi.getCauses()) {
             // Default to OTHER as the default trigger type and override it for specific known causes.
-            EiffelActivityTriggeredEvent.Data.Trigger trigger = new EiffelActivityTriggeredEvent.Data.Trigger(
+            var trigger = new EiffelActivityTriggeredEvent.Data.Trigger(
                     EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER);
             trigger.setDescription(cause.getShortDescription());
 
@@ -122,19 +121,19 @@ public class QueueListenerImpl extends QueueListener {
             // If there's a problem serializing the event it'll get logged when we try
             // to publish the event. No need to log the same error message twice.
         }
-        Util.publishEvent(event, true);
+        Util.publishEvent(event, signer);
     }
 
     @Override
     public void onLeft(Queue.LeftItem li) {
         if (li.isCancelled()) {
-            UUID targetEvent = EiffelJobTable.getInstance().getAndClearEventTrigger(li.getId());
+            var targetEvent = EiffelJobTable.getInstance().getAndClearEventTrigger(li.getId());
             if (targetEvent == null) {
                 logger.debug("A cancelled queue item could not be mapped to an emitted ActT event: {}", li);
                 return;
             }
-            EiffelActivityCanceledEvent event = new EiffelActivityCanceledEvent(targetEvent);
-            Util.publishEvent(event, true);
+            var event = new EiffelActivityCanceledEvent(targetEvent);
+            Util.publishEvent(event, signer);
         }
     }
 
@@ -154,11 +153,11 @@ public class QueueListenerImpl extends QueueListener {
         event.getLinks().addAll(cause.getLinks());
 
         // Unless the EiffelCause contains a CAUSE link don't add an EIFFEL_EVENT trigger.
-        List<EiffelEvent.Link> causeEvents = cause.getLinks().stream()
+        var causeEvents = cause.getLinks().stream()
                 .filter(link -> link.getType() == EiffelEvent.Link.Type.CAUSE)
                 .collect(Collectors.toList());
         if (!causeEvents.isEmpty()) {
-            String causeEventCommaString = causeEvents.stream()
+            var causeEventCommaString = causeEvents.stream()
                     .map(link -> link.getTarget().toString())
                     .collect(Collectors.joining(", "));
             if (causeEvents.size() == 1) {
@@ -183,9 +182,9 @@ public class QueueListenerImpl extends QueueListener {
      */
     void addTriggerFromUpstreamCause(final Cause.UpstreamCause cause, final EiffelActivityTriggeredEvent event,
                                      final EiffelActivityTriggeredEvent.Data.Trigger trigger) {
-        Run upstreamRun = cause.getUpstreamRun();
+        var upstreamRun = cause.getUpstreamRun();
         if (upstreamRun != null) {
-            EiffelActivityAction upstreamAction = upstreamRun.getAction(EiffelActivityAction.class);
+            var upstreamAction = upstreamRun.getAction(EiffelActivityAction.class);
             if (upstreamAction != null) {
                 try {
                     event.getLinks().add(new EiffelEvent.Link(EiffelEvent.Link.Type.CAUSE,

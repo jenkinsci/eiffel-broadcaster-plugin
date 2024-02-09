@@ -25,10 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.spec.AlgorithmParameterSpec;
@@ -79,29 +76,28 @@ public class EiffelEventSigningTest {
 
     @Test
     public void testSigning() throws Exception {
-        KeyPairGenerator keyGen = KeyPairGenerator.getInstance(signingAlg);
+        var keyGen = KeyPairGenerator.getInstance(signingAlg);
         if (algParamSpec != null) {
             keyGen.initialize(algParamSpec, new SecureRandom());
         }
 
-        KeyPair pair = keyGen.generateKeyPair();
-        PrivateKey priv = pair.getPrivate();
-        PublicKey pub = pair.getPublic();
+        var pair = keyGen.generateKeyPair();
+        var priv = pair.getPrivate();
+        var pub = pair.getPublic();
 
-        EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent("activity name");
+        var event = new EiffelActivityTriggeredEvent("activity name");
         event.sign(priv, "CN=test", hashAlg);
 
         assertThat(event.getMeta().getSecurity(), is(notNullValue()));
         assertThat(event.getMeta().getSecurity().getAuthorIdentity(), is("CN=test"));
         assertThat(event.getMeta().getSecurity().getIntegrityProtection(), is(notNullValue()));
-        EiffelEvent.Meta.Security.IntegrityProtection.Alg actualEiffelAlg =
-                event.getMeta().getSecurity().getIntegrityProtection().getAlg();
+        var actualEiffelAlg = event.getMeta().getSecurity().getIntegrityProtection().getAlg();
         assertThat(actualEiffelAlg, is(eiffelAlg));
-        Signature sig = Signature.getInstance(actualEiffelAlg.getSignatureAlgorithm());
+        var sig = Signature.getInstance(actualEiffelAlg.getSignatureAlgorithm());
         sig.initVerify(pub);
 
-        ObjectMapper mapper = new ObjectMapper();
-        byte[] originalSignature = Base64.getDecoder().decode(
+        var mapper = new ObjectMapper();
+        var originalSignature = Base64.getDecoder().decode(
                 event.getMeta().getSecurity().getIntegrityProtection().getSignature());
         event.getMeta().getSecurity().getIntegrityProtection().setSignature("");
         sig.update(new JsonCanonicalizer(mapper.writeValueAsString(mapper.valueToTree(event))).getEncodedUTF8());
