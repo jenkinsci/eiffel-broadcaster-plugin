@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2021 Axis Communications AB.
+ Copyright 2018-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -37,13 +37,14 @@ import hudson.model.Run;
 import hudson.model.queue.QueueListener;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Receives notifications about when tasks are submitted to the
@@ -69,6 +70,12 @@ public class QueueListenerImpl extends QueueListener {
         EiffelActivityTriggeredEvent.Data data = new EiffelActivityTriggeredEvent.Data(taskName);
         EiffelActivityTriggeredEvent event = new EiffelActivityTriggeredEvent(data);
         EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getMeta().getId());
+
+        // Override activity name if item has action EiffelActivityDataAction
+        wi.getAllActions().stream()
+                .filter(action -> action instanceof EiffelActivityDataAction)
+                .findFirst()
+                .ifPresent(action -> data.setName(((EiffelActivityDataAction)action).getName()));
 
         // Populate activity categories
         SortedSet<String> categories = new TreeSet<>();

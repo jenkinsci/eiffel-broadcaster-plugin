@@ -121,12 +121,11 @@
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>matrix-project</artifactId>
-            <scope>test</scope>
+            <artifactId>pipeline-build-step</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>pipeline-build-step</artifactId>
+            <artifactId>matrix-project</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -175,6 +174,30 @@
             <artifactId>toxiproxy</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--Dependencies for regression of BuildWithEiffelStep-->
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>scm-api</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-support</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
+        </dependency>
+        <!--
+          workflow-cps:tests 3691.v28b_14c465a_b_b_ is used because
+          older versions are not compatible with parent pom.
+          -->
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-cps</artifactId>
+            <classifier>tests</classifier>
+            <version>3691.v28b_14c465a_b_b_</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -203,6 +226,9 @@
                     <argLine>
                         -javaagent:"${settings.localRepository}/org/jmockit/jmockit/${jmockit.version}/jmockit-${jmockit.version}.jar"
                     </argLine>
+                    <excludes>
+                        <exclude>**/BuildWithEiffelStepRegressionTest.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
