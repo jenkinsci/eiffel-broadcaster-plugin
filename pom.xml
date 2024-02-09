@@ -179,7 +179,7 @@
             <artifactId>toxiproxy</artifactId>
             <scope>test</scope>
         </dependency>
-        <!--Dependencies for regression of BuildWithEiffelStep-->
+        <!--Dependencies for regression testing of BuildWithEiffelStep-->
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>scm-api</artifactId>
