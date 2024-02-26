@@ -20,9 +20,9 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
 
 @Extension
-public class BuildWithEiffelListener extends RunListener<Run<?,?>>{
+public class BuildWithEiffelRunListener extends RunListener<Run<?,?>>{
 
-    private static final Logger LOGGER = Logger.getLogger(BuildWithEiffelListener.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(BuildWithEiffelRunListener.class.getName());
 
     @Override
     public void onStarted(Run<?, ?> run, TaskListener listener) {
