@@ -26,19 +26,13 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelActivityAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.JobCreatingJenkinsRule;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
 import hudson.model.Result;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -46,16 +40,7 @@ import static org.hamcrest.Matchers.is;
 
 public class BuildWithEiffelStepTest {
     @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
-
-    private WorkflowJob createJob(String pipelineCodeResourceFile, String name) throws Exception {
-        var job = jenkins.createProject(WorkflowJob.class, name);
-        var pipelineCode = new String(
-                Files.readAllBytes(Paths.get(getClass().getResource(pipelineCodeResourceFile).toURI())),
-                StandardCharsets.UTF_8.name());
-        job.setDefinition(new CpsFlowDefinition(pipelineCode, true));
-        return job;
-    }
+    public JobCreatingJenkinsRule jenkins = new JobCreatingJenkinsRule();
 
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
@@ -70,8 +55,8 @@ public class BuildWithEiffelStepTest {
 
     @Test
     public void testSuccessful_customActivityName() throws Exception {
-        var upstreamJob = createJob("success_build_with_eiffel_step.groovy", "upstream");
-        var downstreamJob = createJob("triggered_build.groovy", "downstream");
+        var upstreamJob = jenkins.createPipeline("success_build_with_eiffel_step.groovy", "upstream");
+        var downstreamJob = jenkins.createPipeline("triggered_build.groovy", "downstream");
         jenkins.assertBuildStatus(Result.SUCCESS, upstreamJob.scheduleBuild2(0));
         jenkins.assertBuildStatus(Result.SUCCESS, downstreamJob.getBuildByNumber(1));
 
@@ -82,7 +67,7 @@ public class BuildWithEiffelStepTest {
 
     @Test
     public void testFailure_activityNameMissing() throws Exception {
-        var job = createJob("failed_build_with_eiffel_step_empty_name.groovy", "upstream");
+        var job = jenkins.createPipeline("failed_build_with_eiffel_step_empty_name.groovy", "upstream");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         jenkins.assertLogContains(
