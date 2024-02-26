@@ -42,21 +42,23 @@ import org.jvnet.hudson.test.JenkinsRule;
  */
 public class JobCreatingJenkinsRule extends JenkinsRule {
     /**
-     * Create a pipeline job in a particular location and preload it with a pipeline
+     * Create a pipeline job with a particular name in a particular location and preload it with a pipeline
      * definition from a given resource file.
      *
      * @param itemGroup the location of the new job
      * @param sourceFile the filename of the resource file, relative to the test class,
      *                   from which to load the pipeline definition
+     * @param jobName the name of the pipeline job
      * @return the newly created job
      * @throws IOException when the resource can't be loaded
      * @throws URISyntaxException when the path to the resource can't be turned into a URL
      */
     public WorkflowJob createPipeline(@NonNull final ModifiableTopLevelItemGroup itemGroup,
-                                      @NonNull final String sourceFile)
+                                      @NonNull final String sourceFile,
+                                      @NonNull final String jobName)
             throws IOException, URISyntaxException {
         var job = (WorkflowJob) itemGroup.createProject(
-                (TopLevelItemDescriptor) Jenkins.get().getDescriptor(WorkflowJob.class), "test", true);
+                (TopLevelItemDescriptor) Jenkins.get().getDescriptor(WorkflowJob.class), jobName, true);
         var pipelineCode = Files.readString(
                 Paths.get(getTestDescription().getTestClass().getResource(sourceFile).toURI()));
         job.setDefinition(new CpsFlowDefinition(pipelineCode, true));
@@ -74,6 +76,20 @@ public class JobCreatingJenkinsRule extends JenkinsRule {
      */
     public WorkflowJob createPipeline(@NonNull final String sourceFile)
             throws IOException, URISyntaxException {
-        return createPipeline(Jenkins.get(), sourceFile);
+        return createPipeline(Jenkins.get(), sourceFile, "test");
+    }
+
+    /**
+     * Create a pipeline job with a particular name and preload it with a pipeline definition from a given resource file.
+     * @param sourceFile the filename of the resource file, relative to the test class,
+     *                   from which to load the pipeline definition
+     * @param jobName the name of the pipeline job
+     * @return the newly created job
+     * @throws IOException when the resource can't be loaded
+     * @throws URISyntaxException when the path to the resource can't be turned into a URL
+     */
+    public WorkflowJob createPipeline(@NonNull final String sourceFile, @NonNull final String jobName)
+            throws IOException, URISyntaxException {
+        return createPipeline(Jenkins.get(), sourceFile, jobName);
     }
 }
