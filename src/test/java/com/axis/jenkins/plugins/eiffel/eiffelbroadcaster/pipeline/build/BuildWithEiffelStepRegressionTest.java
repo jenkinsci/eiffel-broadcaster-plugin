@@ -1,9 +1,10 @@
 // The following code is copied from https://github.com/jenkinsci/pipeline-build-step-plugin
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Messages;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.build.BuildWithEiffelStepExecution;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelStep;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelStepExecution;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsParameterDefinition;
 import edu.umd.cs.findbugs.annotations.CheckForNull;

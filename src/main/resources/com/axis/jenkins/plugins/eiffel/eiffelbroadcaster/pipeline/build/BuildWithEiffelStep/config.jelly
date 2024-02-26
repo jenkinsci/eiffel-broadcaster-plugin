@@ -31,7 +31,7 @@ THE SOFTWARE.
     <f:entry field="job" title="Project to Build">
     <span class="textbox-params-reference-holder" data-id="${jobFieldId}"/>
         <f:textbox id="${jobFieldId}"/>
-        <st:adjunct includes="com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.BuildWithEiffelStep.configLoad"/>
+        <st:adjunct includes="com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelStep.configLoad"/>
     </f:entry>
     <f:entry field="wait">
         <f:checkbox default="true" title="Wait for completion"/>

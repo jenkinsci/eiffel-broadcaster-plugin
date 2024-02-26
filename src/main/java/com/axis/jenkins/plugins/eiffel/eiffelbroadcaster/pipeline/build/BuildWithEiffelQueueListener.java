@@ -1,6 +1,6 @@
 // The following code is copied from https://github.com/jenkinsci/pipeline-build-step-plugin
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.build;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 
 import hudson.AbortException;
 import hudson.Extension;

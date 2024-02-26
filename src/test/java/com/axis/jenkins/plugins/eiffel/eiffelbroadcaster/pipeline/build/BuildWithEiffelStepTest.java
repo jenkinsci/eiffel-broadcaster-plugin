@@ -22,7 +22,7 @@
  THE SOFTWARE.
  */
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelActivityAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;

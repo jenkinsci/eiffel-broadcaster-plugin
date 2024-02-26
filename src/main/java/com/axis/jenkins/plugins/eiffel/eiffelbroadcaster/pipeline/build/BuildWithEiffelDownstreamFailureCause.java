@@ -24,7 +24,7 @@
 
 // The following code is copied from https://github.com/jenkinsci/pipeline-build-step-plugin
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.build;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.console.ModelHyperlinkNote;

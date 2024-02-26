@@ -1,10 +1,9 @@
 // The following code is a modified copy from https://github.com/jenkinsci/pipeline-build-step-plugin
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.build;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelActivityDataAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Messages;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.BuildWithEiffelStep;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.CheckForNull;

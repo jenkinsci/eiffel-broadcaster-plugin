@@ -22,11 +22,10 @@
  THE SOFTWARE.
  */
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelActivityDataAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.QueueListenerImpl;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.build.BuildWithEiffelStepExecution;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
