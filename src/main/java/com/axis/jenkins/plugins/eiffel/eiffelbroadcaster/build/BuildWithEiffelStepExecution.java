@@ -40,6 +40,7 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerCancelledCause;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerStepExecution;
+import org.jenkinsci.plugins.workflow.support.steps.build.BuildUpstreamCause;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildUpstreamNodeAction;
 
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class BuildWithEiffelStepExecution extends AbstractStepExecutionImpl {
         }
 
         List<Action> actions = new ArrayList<>();
-        actions.add(new CauseAction(new BuildWithEiffelUpstreamCause(getContext().get(FlowNode.class), getContext().get(Run.class))));
+        actions.add(new CauseAction(new BuildUpstreamCause(getContext().get(FlowNode.class), getContext().get(Run.class))));
         actions.add(new BuildUpstreamNodeAction(getContext().get(FlowNode.class), getContext().get(Run.class)));
         actions.add(eiffelActivityDataAction);
 
