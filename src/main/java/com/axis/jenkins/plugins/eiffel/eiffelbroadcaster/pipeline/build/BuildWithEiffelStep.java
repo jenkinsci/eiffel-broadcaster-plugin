@@ -37,6 +37,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerStep;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
@@ -54,20 +55,20 @@ public class BuildWithEiffelStep extends BuildTriggerStep {
      * The activity name of the Eiffel activity event {@link EiffelActivityTriggeredEvent} ActT
      * for the triggered downstream build.
      * */
-    private final String activityName;
+    private String activityName;
 
     @DataBoundConstructor
-    public BuildWithEiffelStep(String job, String activityName) {
+    public BuildWithEiffelStep(String job) {
         super(job);
-        if (activityName.isEmpty()) {
-            throw new IllegalArgumentException("The activity name must not be empty");
-        }
-        this.activityName = activityName;
     }
 
-    @NonNull
     public String getActivityName() {
         return activityName;
+    }
+
+    @DataBoundSetter
+    public void setActivityName(String activityName) {
+        this.activityName = activityName;
     }
 
     @Extension

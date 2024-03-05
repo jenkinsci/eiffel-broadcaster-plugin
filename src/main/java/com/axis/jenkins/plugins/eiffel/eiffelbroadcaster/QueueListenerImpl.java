@@ -74,7 +74,11 @@ public class QueueListenerImpl extends QueueListener {
         wi.getAllActions().stream()
                 .filter(action -> action instanceof EiffelActivityDataAction)
                 .findFirst()
-                .ifPresent(action -> data.setName(((EiffelActivityDataAction)action).getName()));
+                .ifPresent(action -> {
+                    // This should be moved into a new method when more overrides are added to buildWithEiffelStep
+                    var activityName = ((EiffelActivityDataAction) action).getName();
+                    data.setName(activityName == null ? data.getName() : activityName);
+                });
 
         // Populate activity categories
         var categories = new TreeSet<String>();

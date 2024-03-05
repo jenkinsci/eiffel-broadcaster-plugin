@@ -66,14 +66,27 @@ public class BuildWithEiffelStepTest {
     }
 
     @Test
-    public void testFailure_activityNameMissing() throws Exception {
-        var job = jenkins.createPipeline("failed_build_with_eiffel_step_empty_name.groovy", "upstream");
-        jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
+    public void testSuccessful_activityNameEmpty() throws Exception {
+        var upstreamJob  = jenkins.createPipeline("success_build_with_eiffel_step_empty_name.groovy", "upstream");
+        var downstreamJob = jenkins.createPipeline("triggered_build.groovy", "downstream");
+        jenkins.assertBuildStatus(Result.SUCCESS, upstreamJob.scheduleBuild2(0));
+        jenkins.assertBuildStatus(Result.SUCCESS, downstreamJob.getBuildByNumber(1));
 
-        jenkins.assertLogContains(
-                String.format("%s: %s",
-                        IllegalArgumentException.class.getSimpleName(), "The activity name must not be empty"),
-                job.getBuildByNumber(1));
+        var run = downstreamJob.getBuildByNumber(1);
+        var actT = run.getAction(EiffelActivityAction.class).getTriggerEvent();
+        assertThat(actT.getData().getName(), is(""));
+    }
+
+    @Test
+    public void testSuccessful_without_activityName() throws Exception {
+        var upstreamJob  = jenkins.createPipeline("success_build_with_eiffel_step_without_activity_name.groovy", "upstream");
+        var downstreamJob = jenkins.createPipeline("triggered_build.groovy", "downstream");
+        jenkins.assertBuildStatus(Result.SUCCESS, upstreamJob.scheduleBuild2(0));
+        jenkins.assertBuildStatus(Result.SUCCESS, downstreamJob.getBuildByNumber(1));
+
+        var run = downstreamJob.getBuildByNumber(1);
+        var actT = run.getAction(EiffelActivityAction.class).getTriggerEvent();
+        assertThat(actT.getData().getName(), is("downstream"));
     }
 
 }

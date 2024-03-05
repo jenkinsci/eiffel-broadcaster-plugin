@@ -211,9 +211,9 @@ build queue. Currently, `data.name` can be overridden.
 In addition to the parameters in the base step (see [Pipeline: Build step](https://plugins.jenkins.io/pipeline-build-step/releases/#version_491.v1fec530da_858))
 it accepts the following parameters:
 
-| Argument     | Required                         | Description                                      |
-|--------------|----------------------------------|--------------------------------------------------|
-| activityName | ✔                                | The Eiffel activity name of the triggered build. |
+| Argument     | Required | Description                                      |
+|--------------|----------|--------------------------------------------------|
+| activityName |          | The Eiffel activity name of the triggered build. |
 
 Example:
 ```

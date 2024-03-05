@@ -693,14 +693,14 @@ public class BuildWithEiffelStepRegressionTest {
 
     @Test public void snippetizerRoundTrip() throws Exception {
         SnippetizerTester st = new SnippetizerTester(j);
-        BuildTriggerStep step = new BuildWithEiffelStep("downstream", "activity_name");
-        st.assertRoundTrip(step, "buildWithEiffel activityName: 'activity_name', job: 'downstream'");
+        BuildTriggerStep step = new BuildWithEiffelStep("downstream");
+        st.assertRoundTrip(step, "buildWithEiffel 'downstream'");
         step.setParameters(Arrays.asList(new StringParameterValue("branch", "default"), new BooleanParameterValue("correct", true)));
         // Note: This does not actually test the format of the JSON produced by the snippet generator for parameters, see generateSnippet* for tests of that behavior.
-        st.assertRoundTrip(step, "buildWithEiffel activityName: 'activity_name', job: 'downstream', parameters: [string(name: 'branch', value: 'default'), booleanParam(name: 'correct', value: true)]");
+        st.assertRoundTrip(step, "buildWithEiffel job: 'downstream', parameters: [string(name: 'branch', value: 'default'), booleanParam(name: 'correct', value: true)]");
         // Passwords parameters are handled specially via CustomDescribableModel
         step.setParameters(Collections.singletonList(new PasswordParameterValue("param-name", "secret")));
-        st.assertRoundTrip(step, "buildWithEiffel activityName: 'activity_name', job: 'downstream', parameters: [password(name: 'param-name', value: 'secret')]");
+        st.assertRoundTrip(step, "buildWithEiffel job: 'downstream', parameters: [password(name: 'param-name', value: 'secret')]");
     }
 
     @Issue("JENKINS-26093")
