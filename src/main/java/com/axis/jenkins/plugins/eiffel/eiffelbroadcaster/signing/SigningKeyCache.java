@@ -54,8 +54,13 @@ public class SigningKeyCache {
 
     private SigningKeyCache() { }
 
+    /** Clears the cache of all entries. */
+    public synchronized void clear() {
+        cache.clear();
+    }
+
     /**
-     * Looks up a credential by id and returns the identity (subject) of the certificate and the private key.
+     * Looks up a credential and returns the identity (subject) of the certificate and the private key.
      *
      * @param cred the credentials from which to extract the key and identity
      * @return an {@link Item} with the private key and identity
@@ -80,7 +85,7 @@ public class SigningKeyCache {
     }
 
     /** Returns the current number of (possibly expired) items in the cache. */
-    public int size() {
+    public synchronized int size() {
         return cache.size();
     }
 
