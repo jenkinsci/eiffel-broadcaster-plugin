@@ -38,10 +38,10 @@ import hudson.model.Queue;
 import hudson.model.queue.QueueListener;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 /**
  * Receives notifications about when tasks are submitted to the
@@ -69,6 +69,16 @@ public class QueueListenerImpl extends QueueListener {
         var data = new EiffelActivityTriggeredEvent.Data(taskName);
         var event = new EiffelActivityTriggeredEvent(data);
         EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getMeta().getId());
+
+        // Override activity name if item has action EiffelActivityDataAction
+        wi.getAllActions().stream()
+                .filter(action -> action instanceof EiffelActivityDataAction)
+                .findFirst()
+                .ifPresent(action -> {
+                    // This should be moved into a new method when more overrides are added to buildWithEiffelStep
+                    var activityName = ((EiffelActivityDataAction) action).getName();
+                    data.setName(activityName == null ? data.getName() : activityName);
+                });
 
         // Populate activity categories
         var categories = new TreeSet<String>();

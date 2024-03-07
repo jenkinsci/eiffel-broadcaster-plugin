@@ -157,7 +157,7 @@ public class SendEiffelEventStepTest {
         var folder = jenkins.createProject(Folder.class, "testfolder");
         var testKeyStore = new TestKeyStore();
         addFolderCredential(folder, testKeyStore.createCredential("event_signing"));
-        var job = jenkins.createPipeline(folder, "send_event_step_with_signing.groovy");
+        var job = jenkins.createPipeline(folder, "send_event_step_with_signing.groovy", "test");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
         var events = new EventSet(Mocks.messages);
@@ -227,7 +227,7 @@ public class SendEiffelEventStepTest {
         var jobFolder = jenkins.createProject(Folder.class, "jobFolder");
         var credentialFolder = jenkins.createProject(Folder.class, "credentialFolder");
         addFolderCredential(credentialFolder, new TestKeyStore().createCredential("event_signing"));
-        var job = jenkins.createPipeline(jobFolder, "send_event_step_with_signing.groovy");
+        var job = jenkins.createPipeline(jobFolder, "send_event_step_with_signing.groovy", "test");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
         var events = new EventSet(Mocks.messages);

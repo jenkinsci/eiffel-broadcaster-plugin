@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+The MIT License
+
+Copyright 2014 Jesse Glick.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+
+<!--The following code is copied from https://github.com/jenkinsci/pipeline-build-step-plugin-->
+
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler">
+    <j:set var="jobFieldId" value="${h.generateId()}"/>
+    <f:entry field="job" title="Project to Build">
+    <span class="textbox-params-reference-holder" data-id="${jobFieldId}"/>
+        <f:textbox id="${jobFieldId}"/>
+        <st:adjunct includes="com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelStep.configLoad"/>
+    </f:entry>
+    <f:entry field="wait">
+        <f:checkbox default="true" title="Wait for completion"/>
+    </f:entry>
+    <f:entry field="waitForStart">
+        <f:checkbox default="false" title="Wait until the build starts"/>
+    </f:entry>
+    <f:entry field="propagate">
+        <f:checkbox default="true" title="Propagate errors"/>
+    </f:entry>
+    <f:entry field="quietPeriod" title="Quiet period">
+        <f:number clazz="number"/>
+    </f:entry>
+    <f:entry field="parameters" title="Parameters">
+        <div id="params" data-jobfield = '${jobFieldId}' data-descriptor = '${descriptor.descriptorUrl}'/>
+    </f:entry>
+    <f:entry field="activityName" title="Eiffel activity name">
+        <f:textbox/>
+    </f:entry>
+</j:jelly>
