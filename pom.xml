@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.71</version>
+        <version>4.83</version>
         <relativePath />
     </parent>
     <groupId>com.axis.jenkins.plugins.eiffel</groupId>
@@ -59,13 +59,12 @@
         </pluginRepository>
     </pluginRepositories>
     <properties>
-        <jenkins.version>2.375.4</jenkins.version>
+        <jenkins.version>2.426.3</jenkins.version>
 
         <amqp.client.version>5.18.0</amqp.client.version>
         <commons.lang3.version>3.11</commons.lang3.version>
         <commons.validator.version>1.7</commons.validator.version>
         <java-json-canonicalization.version>1.1</java-json-canonicalization.version>
-        <jenkins-test-harness.version>2044.v03c87927ff5c</jenkins-test-harness.version>
         <jmockit.version>1.49</jmockit.version>
         <json-schema-validator.version>1.0.43</json-schema-validator.version>
         <packageurl.version>1.2.0</packageurl.version>
@@ -192,15 +191,10 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
-        <!--
-          workflow-cps:tests 3691.v28b_14c465a_b_b_ is used because
-          older versions are not compatible with parent pom.
-          -->
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-cps</artifactId>
             <classifier>tests</classifier>
-            <version>3691.v28b_14c465a_b_b_</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -208,8 +202,8 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.375.x</artifactId>
-                <version>2198.v39c76fc308ca</version>
+                <artifactId>bom-2.426.x</artifactId>
+                <version>3143.v347db_7c6db_6e</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
