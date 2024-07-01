@@ -124,6 +124,11 @@ The EiffelArtifactPublishedEvent will have two links; one ARTIFACT link to
 the EiffelArtifactCreatedEvent and one CONTEXT link to the parent build's
 EiffelActivityTriggeredEvent.
 
+This step returns immediately as soon as the event has been validated and put
+in the internal outbound queue. The actual delivery of the event to the broker
+might not have happened at the time of the return. The step's return value is
+a (possibly empty) list of enqueued events.
+
 | Argument            | Required | Description               |
 | --------------------|----------|---------------------------|
 | artifactEventFiles  |          | An Ant-style glob expression that selects files containing JSON representations (one per line) of EiffelArtifactCreatedEvent to publish. |
