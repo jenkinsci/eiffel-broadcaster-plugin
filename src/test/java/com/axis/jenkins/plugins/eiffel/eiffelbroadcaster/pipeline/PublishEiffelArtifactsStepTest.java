@@ -29,7 +29,10 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EventSet;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.JobCreatingJenkinsRule;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hudson.model.Result;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -39,6 +42,7 @@ import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 
 public class PublishEiffelArtifactsStepTest {
     @Rule
@@ -90,6 +94,23 @@ public class PublishEiffelArtifactsStepTest {
         assertThat(getLocationNames(events), containsInAnyOrder("a.txt", "b.txt", "c.txt", "d.txt"));
     }
 
+    @Test
+    public void testSuccessful_ReturnsSentEvents() throws Exception {
+        var job = jenkins.createPipeline("successful_publish_artifact_step_with_payloads_saved.groovy");
+        jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
+
+        var events = new EventSet(Mocks.messages);
+
+        // This job uses the writeFile step to write the returned payloads to events.json.
+        // Deserialize each line of that file and compare them against the events sent on the bus.
+        var eventFile = jenkins.jenkins.getWorkspaceFor(job).child("events.json").readToString();
+        var mapper = new ObjectMapper();
+        var savedEvents = new ArrayList<EiffelEvent>();
+        for (var line : eventFile.split("\\n")) {
+            savedEvents.add(mapper.readValue(line, EiffelEvent.class));
+        }
+        assertThat(savedEvents, is(events.all(EiffelArtifactPublishedEvent.class)));
+    }
 
     @Test
     public void testFailed_EventFromFileWithWrongType() throws Exception {

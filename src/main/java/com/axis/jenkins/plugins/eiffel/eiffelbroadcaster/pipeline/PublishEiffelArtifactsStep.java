@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -37,6 +37,7 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidationF
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.SchemaUnavailableException;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -49,6 +50,9 @@ import hudson.model.TaskListener;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -88,7 +92,7 @@ public class PublishEiffelArtifactsStep extends Step {
         this.artifactEventFiles = hudson.Util.fixEmptyAndTrim(artifactEventFiles);
     }
 
-    private static class Execution extends SynchronousStepExecution<Void> {
+    private static class Execution extends SynchronousStepExecution<List> {
         private static final long serialVersionUID = 1L;
         private final transient PublishEiffelArtifactsStep step;
 
@@ -98,7 +102,8 @@ public class PublishEiffelArtifactsStep extends Step {
         }
 
         @Override
-        protected Void run() throws Exception {
+        protected List run() throws Exception {
+            var result = new ArrayList<JsonNode>();
             var run = getContext().get(Run.class);
             var action = run.getAction(EiffelActivityAction.class);
             var artifactPublisher = new EiffelArtifactPublisher(
@@ -106,12 +111,12 @@ public class PublishEiffelArtifactsStep extends Step {
 
             try {
                 for (var savedArtifact : run.getActions(EiffelArtifactToPublishAction.class)) {
-                    publishArtifact(artifactPublisher, savedArtifact.getEvent());
+                    result.add(publishArtifact(artifactPublisher, savedArtifact.getEvent()));
                 }
 
                 if (step.getArtifactEventFiles() != null) {
                     for (var file : getContext().get(FilePath.class).list(step.getArtifactEventFiles())) {
-                        publishArtifactsFromFile(artifactPublisher, file);
+                        result.addAll(publishArtifactsFromFile(artifactPublisher, file));
                     }
                 }
             } catch (EmptyArtifactException | EventValidationFailedException | JsonProcessingException
@@ -119,11 +124,11 @@ public class PublishEiffelArtifactsStep extends Step {
                 throw new AbortException(String.format(
                         "%s (%s): %s", ERROR_MESSAGE_PREFIX, e.getClass().getSimpleName(), e.getMessage()));
             }
-            return null;
+            return new ObjectMapper().convertValue(result, List.class);
         }
 
-        private void publishArtifact(@NonNull final EiffelArtifactPublisher artifactPublisher,
-                                     @NonNull final EiffelArtifactCreatedEvent creationEvent) throws Exception {
+        private JsonNode publishArtifact(@NonNull final EiffelArtifactPublisher artifactPublisher,
+                                         @NonNull final EiffelArtifactCreatedEvent creationEvent) throws Exception {
             var event = artifactPublisher.prepareEvent(creationEvent);
             var sentJSON = Util.mustPublishEvent(event, new SystemEventSigner());
             if (sentJSON != null) {
@@ -132,10 +137,12 @@ public class PublishEiffelArtifactsStep extends Step {
                         event.getMeta().getType(), event.getMeta().getId(),
                         creationEvent.getMeta().getId());
             }
+            return sentJSON;
         }
 
-        private void publishArtifactsFromFile(@NonNull final EiffelArtifactPublisher artifactPublisher,
-                                              @NonNull final FilePath file) throws Exception {
+        private List<JsonNode> publishArtifactsFromFile(@NonNull final EiffelArtifactPublisher artifactPublisher,
+                                                        @NonNull final FilePath file) throws Exception {
+            var result = new ArrayList<JsonNode>();
             getContext().get(TaskListener.class).getLogger().format("Reading events from %s%n", file.getRemote());
             try (var is = file.read()) {
                 try (var isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
@@ -149,11 +156,12 @@ public class PublishEiffelArtifactsStep extends Step {
                                                 "EiffelArtifactCreatedEvent is supported: %s",
                                         ERROR_MESSAGE_PREFIX, file.getRemote(), event.getMeta().getType(), line));
                             }
-                            publishArtifact(artifactPublisher, (EiffelArtifactCreatedEvent) event);
+                            result.add(publishArtifact(artifactPublisher, (EiffelArtifactCreatedEvent) event));
                         }
                     }
                 }
             }
+            return result;
         }
     }
 
