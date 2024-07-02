@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Functions;
 import java.io.IOException;
@@ -97,7 +98,9 @@ public class EiffelArtifactPublisher {
         }
 
         // Sanity check okay, continue with the construction of the ArtP event.
-        var publishEvent = new EiffelArtifactPublishedEvent(creationEvent.getMeta().getId());
+        var publishEvent = EiffelEventFactory.getInstance().create(EiffelArtifactPublishedEvent.class);
+        publishEvent.getLinks().add(
+                new EiffelEvent.Link(EiffelEvent.Link.Type.ARTIFACT, creationEvent.getMeta().getId()));
         publishEvent.getLinks().add(
                 new EiffelEvent.Link(EiffelEvent.Link.Type.CONTEXT, contextEvent.getMeta().getId()));
         for (var fileInfo : creationEvent.getData().getFileInformation()) {

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +31,8 @@ public class EventValidatorTest {
     @Test
     public void testValidateAcceptsValidEvent() throws Exception {
         var validator = new EventValidator();
-        var event = new EiffelActivityTriggeredEvent("activity name");
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName("activity name");
         validator.validate(event.getMeta().getType(), event.getMeta().getVersion(),
                 new ObjectMapper().valueToTree(event));
     }
@@ -39,7 +40,8 @@ public class EventValidatorTest {
     @Test(expected = SchemaUnavailableException.class)
     public void testValidateRejectsUnknownEvent() throws Exception {
         var validator = new EventValidator();
-        var event = new EiffelActivityTriggeredEvent("activity name");
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName("activity name");
         validator.validate("EiffelBogusEvent", "invalid.version",
                 new ObjectMapper().valueToTree(event));
     }

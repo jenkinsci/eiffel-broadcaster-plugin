@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2022 Axis Communications AB.
+ Copyright 2018-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,7 +24,7 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EventValidator;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.HashAlgorithm;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys.FixedRoutingKeyProvider;
@@ -137,7 +137,7 @@ public final class EiffelBroadcasterConfig extends GlobalConfiguration {
 
     public EiffelBroadcasterConfig() {
         super.load();
-        EiffelEvent.setSourceProvider(new JenkinsSourceProvider());
+        EiffelEventFactory.getInstance().setSourceProvider(new JenkinsSourceProvider());
     }
 
     @Override
