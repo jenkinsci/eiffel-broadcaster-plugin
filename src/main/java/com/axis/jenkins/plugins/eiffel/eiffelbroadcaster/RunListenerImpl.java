@@ -26,6 +26,8 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityFinishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityStartedEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.EventSigner;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -70,7 +72,8 @@ public class RunListenerImpl extends RunListener<Run> {
             logger.warn("The newly started {} could not be mapped to an emitted ActT event", r);
             return;
         }
-        var event = new EiffelActivityStartedEvent(targetEvent);
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityStartedEvent.class);
+        event.getLinks().add(new EiffelEvent.Link(EiffelEvent.Link.Type.ACTIVITY_EXECUTION, targetEvent));
 
         var runUri = Util.getRunUri(r);
         if (runUri != null) {
@@ -107,8 +110,10 @@ public class RunListenerImpl extends RunListener<Run> {
         }
         EiffelActivityFinishedEvent event = null;
         try {
-            event = new EiffelActivityFinishedEvent(new EiffelActivityFinishedEvent.Data.Outcome(conclusion),
-                    activityAction.getTriggerEvent().getMeta().getId());
+            event = EiffelEventFactory.getInstance().create(EiffelActivityFinishedEvent.class);
+            event.getData().setOutcome(new EiffelActivityFinishedEvent.Data.Outcome(conclusion));
+            event.getLinks().add(new EiffelEvent.Link(EiffelEvent.Link.Type.ACTIVITY_EXECUTION,
+                    activityAction.getTriggerEvent().getMeta().getId()));
         } catch (JsonProcessingException e) {
             logger.warn("JSON deserialization of ActT event for {} unexpectedly failed, " +
                             "skipping sending of ActF event: {}",

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -86,7 +86,6 @@ public class EmittedEventsTest {
         var events = new EventSet(Mocks.messages);
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
-        var actTData = new EiffelActivityTriggeredEvent.Data("testfolder/test");
         assertThat(actT.getData().getName(), is("testfolder/test"));
         assertThat(actT,
                 hasTrigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER, "SYSTEM"));

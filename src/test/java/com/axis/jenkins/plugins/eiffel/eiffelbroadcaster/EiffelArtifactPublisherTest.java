@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -28,6 +28,7 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTr
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactPublishedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
@@ -50,8 +51,10 @@ public class EiffelArtifactPublisherTest {
     @Test(expected = EmptyArtifactException.class)
     public void testPrepareEvent_WithNoFilesInArtC() throws Exception {
         var jobURI = new URI("http://jenkins/job/MyJob/");
-        var artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
-        var actT = new EiffelActivityTriggeredEvent("dummy activity name");
+        var artC = EiffelEventFactory.getInstance().create(EiffelArtifactCreatedEvent.class);
+        artC.getData().setIdentity("pkg:generic/foo");
+        var actT = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        actT.getData().setName("dummy activity name");
         var publisher = new EiffelArtifactPublisher(actT, jobURI, VirtualFile.forFile(tempDir.getRoot()));
 
         publisher.prepareEvent(artC);
@@ -61,9 +64,11 @@ public class EiffelArtifactPublisherTest {
     public void testPrepareEvent_HasExpectedLinks() throws Exception {
         var files = new ArtifactFiles("filename.zip");
         var jobURI = new URI("http://jenkins/job/MyJob/");
-        var artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
+        var artC = EiffelEventFactory.getInstance().create(EiffelArtifactCreatedEvent.class);
+        artC.getData().setIdentity("pkg:generic/foo");
         files.addFilesToEvent(artC);
-        var actT = new EiffelActivityTriggeredEvent("dummy activity name");
+        var actT = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        actT.getData().setName("dummy activity name");
         var publisher = new EiffelArtifactPublisher(actT, jobURI, VirtualFile.forFile(tempDir.getRoot()));
 
         var artP = publisher.prepareEvent(artC);
@@ -76,9 +81,11 @@ public class EiffelArtifactPublisherTest {
     public void testPrepareEvent_WithFilesMatchingArtC() throws Exception {
         var files = new ArtifactFiles("filename.zip", "subdir/filename2.zip");
         var jobURI = new URI("http://jenkins/job/MyJob/");
-        var artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
+        var artC = EiffelEventFactory.getInstance().create(EiffelArtifactCreatedEvent.class);
+        artC.getData().setIdentity("pkg:generic/foo");
         files.addFilesToEvent(artC);
-        var actT = new EiffelActivityTriggeredEvent("dummy activity name");
+        var actT = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        actT.getData().setName("dummy activity name");
         var publisher = new EiffelArtifactPublisher(actT, jobURI, VirtualFile.forFile(tempDir.getRoot()));
 
         var artP = publisher.prepareEvent(artC);
@@ -90,12 +97,14 @@ public class EiffelArtifactPublisherTest {
     public void testPrepareEvent_WithMissingFile() throws Exception {
         var files = new ArtifactFiles("filename.zip");
         var jobURI = new URI("http://jenkins/job/MyJob/");
-        var artC = new EiffelArtifactCreatedEvent("pkg:generic/foo");
+        var artC = EiffelEventFactory.getInstance().create(EiffelArtifactCreatedEvent.class);
+        artC.getData().setIdentity("pkg:generic/foo");
         // Add an extra artifact file directly to the event. This won't have a physical counterpart in tempDir.
         artC.getData().getFileInformation().add(
                 new EiffelArtifactCreatedEvent.Data.FileInformation("otherfile.txt"));
         files.addFilesToEvent(artC);
-        var actT = new EiffelActivityTriggeredEvent("dummy activity name");
+        var actT = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        actT.getData().setName("dummy activity name");
         var publisher = new EiffelArtifactPublisher(actT, jobURI, VirtualFile.forFile(tempDir.getRoot()));
 
         publisher.prepareEvent(artC);

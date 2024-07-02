@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2022 Axis Communications AB.
+ Copyright 2022-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import hudson.Extension;
 import hudson.init.TermMilestone;
 import hudson.init.Terminator;
@@ -39,6 +40,6 @@ import hudson.init.Terminator;
 public class SourceProviderResetter {
     @Terminator(before=TermMilestone.COMPLETED)
     public static void resetSourceProvider() {
-        EiffelEvent.setSourceProvider(null);
+        EiffelEventFactory.getInstance().setSourceProvider(null);
     }
 }

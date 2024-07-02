@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.packageurl.PackageURL;
 import org.junit.BeforeClass;
@@ -48,7 +49,8 @@ public class JenkinsSourceProviderTest {
 
     @Test
     public void testEventHasCorrectSource() throws Exception {
-        var event = new EiffelActivityTriggeredEvent("activity name");
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName("activity name");
         assertThat(event.getMeta().getSource(), is(notNullValue()));
         assertThat(event.getMeta().getSource().getName(), is("Eiffel Broadcaster Plugin"));
         assertThat(event.getMeta().getSource().getSerializer(), is(notNullValue()));

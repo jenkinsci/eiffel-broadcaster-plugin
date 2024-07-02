@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +32,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
@@ -46,20 +45,23 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonDeserialize(using = JsonDeserializer.None.class)
 public class EiffelActivityFinishedEvent extends EiffelEvent {
     @JsonInclude(JsonInclude.Include.ALWAYS)
-    private final Data data;
+    private Data data = new Data();
 
-    public EiffelActivityFinishedEvent(@JsonProperty("data") Data data) {
-        super("EiffelActivityFinishedEvent", "3.0.0");
-        this.data = data;
+    public EiffelActivityFinishedEvent(final String version) {
+        super(EiffelActivityFinishedEvent.class.getSimpleName(), version);
     }
 
-    public EiffelActivityFinishedEvent(Data.Outcome outcome, UUID activityID) {
-        this(new EiffelActivityFinishedEvent.Data(outcome));
-        getLinks().add(new EiffelEvent.Link(Link.Type.ACTIVITY_EXECUTION, activityID));
+    /** Package-private constructor needed for JSON deserialization. */
+    EiffelActivityFinishedEvent() {
+        this("");
     }
 
     public Data getData() {
         return data;
+    }
+
+    public void setData(EiffelActivityFinishedEvent.Data data) {
+        this.data = data;
     }
 
     @Override
@@ -91,10 +93,6 @@ public class EiffelActivityFinishedEvent extends EiffelEvent {
         private Outcome outcome;
 
         private final List<PersistentLogs> persistentLogs = new ArrayList<>();
-
-        public Data(@JsonProperty("outcome") Outcome outcome) {
-            this.outcome = outcome;
-        }
 
         public Outcome getOutcome() {
             return outcome;

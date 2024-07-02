@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -32,13 +32,12 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 /**
  * A Java representation of an Eiffel event of the
  * <a href="https://github.com/eiffel-community/eiffel/blob/master/eiffel-vocabulary/EiffelArtifactPublishedEvent.md">
- * EiffelArtifactPublishedEvent</a> (ArtC) kind.
+ * EiffelArtifactPublishedEvent</a> (ArtP) kind.
  *
  * See the Eiffel event documentation for more on the meaning of the attributes.
  */
@@ -46,20 +45,22 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonDeserialize(using = JsonDeserializer.None.class)
 public class EiffelArtifactPublishedEvent extends EiffelEvent {
     @JsonInclude(JsonInclude.Include.ALWAYS)
-    private final EiffelArtifactPublishedEvent.Data data;
+    private Data data = new Data();
 
-    public EiffelArtifactPublishedEvent() {
-        super("EiffelArtifactPublishedEvent", "3.1.0");
-        this.data = new Data();
+    public EiffelArtifactPublishedEvent(final String version) {
+        super(EiffelArtifactPublishedEvent.class.getSimpleName(), version);
     }
 
-    public EiffelArtifactPublishedEvent(UUID artifactID) {
-        this();
-        getLinks().add(new Link(Link.Type.ARTIFACT, artifactID));
+    /** Package-private constructor needed for JSON deserialization. */
+    EiffelArtifactPublishedEvent() {
+        this("");
     }
-
     public EiffelArtifactPublishedEvent.Data getData() {
         return data;
+    }
+
+    public void setData(EiffelArtifactPublishedEvent.Data data) {
+        this.data = data;
     }
 
     @Override

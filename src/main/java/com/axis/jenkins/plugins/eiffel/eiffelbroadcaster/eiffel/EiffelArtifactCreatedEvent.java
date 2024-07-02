@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -45,19 +45,23 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 @JsonDeserialize(using = JsonDeserializer.None.class)
 public class EiffelArtifactCreatedEvent extends EiffelEvent {
     @JsonInclude(JsonInclude.Include.ALWAYS)
-    private final EiffelArtifactCreatedEvent.Data data;
+    private Data data = new Data();
 
-    public EiffelArtifactCreatedEvent(@JsonProperty("data") Data data) {
-        super("EiffelArtifactCreatedEvent", "3.0.0");
-        this.data = data;
+    public EiffelArtifactCreatedEvent(final String version) {
+        super(EiffelArtifactCreatedEvent.class.getSimpleName(), version);
     }
 
-    public EiffelArtifactCreatedEvent(String identity) {
-        this(new Data(identity));
+    /** Package-private constructor needed for JSON deserialization. */
+    EiffelArtifactCreatedEvent() {
+        this("");
     }
 
     public EiffelArtifactCreatedEvent.Data getData() {
         return data;
+    }
+
+    public void setData(EiffelArtifactCreatedEvent.Data data) {
+        this.data = data;
     }
 
     @Override
@@ -100,10 +104,6 @@ public class EiffelArtifactCreatedEvent extends EiffelEvent {
         private List<String> dependsOn = new ArrayList<>();;
 
         private String name;
-
-        public Data(@JsonProperty("identity") String identity) {
-            this.identity = identity;
-        }
 
         public String getIdentity() {
             return identity;
