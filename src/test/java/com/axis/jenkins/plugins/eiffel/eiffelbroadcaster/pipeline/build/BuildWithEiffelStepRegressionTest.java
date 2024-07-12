@@ -3,8 +3,6 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Messages;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelStep;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelStepExecution;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsParameterDefinition;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -693,7 +691,7 @@ public class BuildWithEiffelStepRegressionTest {
 
     @Test public void snippetizerRoundTrip() throws Exception {
         SnippetizerTester st = new SnippetizerTester(j);
-        BuildTriggerStep step = new BuildWithEiffelStep("downstream");
+        BuildWithEiffelStep step = new BuildWithEiffelStep("downstream");
         st.assertRoundTrip(step, "buildWithEiffel 'downstream'");
         step.setParameters(Arrays.asList(new StringParameterValue("branch", "default"), new BooleanParameterValue("correct", true)));
         // Note: This does not actually test the format of the JSON produced by the snippet generator for parameters, see generateSnippet* for tests of that behavior.

@@ -66,7 +66,7 @@ in each job. Duplicate entries will be eliminated.
 
 ### buildWithEiffel
 
-The buildWithEiffel pipeline step is an extension of [BuildTriggerStep](https://github.com/jenkinsci/pipeline-build-step-plugin/blob/491.v1fec530da_858/src/main/java/org/jenkinsci/plugins/workflow/support/steps/build/BuildTriggerStep.java)
+The buildWithEiffel pipeline step is a modified copy of [BuildTriggerStep](https://github.com/jenkinsci/pipeline-build-step-plugin/blob/491.v1fec530da_858/src/main/java/org/jenkinsci/plugins/workflow/support/steps/build/BuildTriggerStep.java)
 from [pipeline-build-step-plugin 491.v1fec530da_858](https://github.com/jenkinsci/pipeline-build-step-plugin/tree/491.v1fec530da_858) that can override event data in the EiffelActivityTriggeredEvent (ActT) that is sent when the triggered downstream build enters the
 build queue. Currently, `data.name` can be overridden.
 
