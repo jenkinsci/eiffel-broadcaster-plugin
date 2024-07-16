@@ -2,22 +2,25 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.console.ModelHyperlinkNote;
+import hudson.model.Cause;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import jenkins.util.Timer;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
+import org.jenkinsci.plugins.workflow.flow.FlowExecutionOwner;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.support.steps.build.RunWrapper;
+
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Extension
 public class BuildWithEiffelRunListener extends RunListener<Run<?,?>>{
@@ -44,10 +47,11 @@ public class BuildWithEiffelRunListener extends RunListener<Run<?,?>>{
                 LOGGER.log(Level.FINE, "{0} unavailable in {1}", new Object[] {stepContext, run});
             }
         }
+        Timer.get().submit(() -> updateBuildWithEiffelDownstreamBuildAction(run));
     }
 
     @Override
-    public void onCompleted(Run<?,?> run, @NonNull TaskListener listener) {
+    public void onFinalized(Run<?,?> run) {
         for (BuildWithEiffelAction.Trigger trigger : BuildWithEiffelAction.triggersFor(run)) {
             if (!trigger.waitForStart) {
                 StepContext stepContext = trigger.context;
@@ -84,6 +88,24 @@ public class BuildWithEiffelRunListener extends RunListener<Run<?,?>>{
     public void onDeleted(final Run<?,?> run) {
         for (final BuildWithEiffelAction.Trigger trigger : BuildWithEiffelAction.triggersFor(run)) {
             Timer.get().submit(() -> trigger.context.onFailure(new AbortException(run.getFullDisplayName() + " was deleted")));
+        }
+    }
+
+    private void updateBuildWithEiffelDownstreamBuildAction(Run<?, ?> downstream) {
+        for (Cause cause : downstream.getCauses()) {
+            if (cause instanceof BuildWithEiffelUpstreamCause) {
+                BuildWithEiffelUpstreamCause buildWithEiffelUpstreamCause = (BuildWithEiffelUpstreamCause) cause;
+                Run<?, ?> upstream = buildWithEiffelUpstreamCause.getUpstreamRun();
+                if (upstream instanceof FlowExecutionOwner.Executable) {
+                    String flowNodeId = buildWithEiffelUpstreamCause.getNodeId();
+                    BuildWithEiffelDownstreamBuildAction.getOrCreate(upstream, flowNodeId, downstream.getParent()).setBuild(downstream);
+                    try {
+                        upstream.save();
+                    } catch (IOException e) {
+                        LOGGER.log(Level.FINE, e, () -> "Unable to update BuildWithEiffelDownstreamBuildAction for " + upstream + " node " + buildWithEiffelUpstreamCause.getNodeId());
+                    }
+                }
+            }
         }
     }
 }

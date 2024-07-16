@@ -66,11 +66,11 @@ in each job. Duplicate entries will be eliminated.
 
 ### buildWithEiffel
 
-The buildWithEiffel pipeline step is a modified copy of [BuildTriggerStep](https://github.com/jenkinsci/pipeline-build-step-plugin/blob/491.v1fec530da_858/src/main/java/org/jenkinsci/plugins/workflow/support/steps/build/BuildTriggerStep.java)
-from [pipeline-build-step-plugin 491.v1fec530da_858](https://github.com/jenkinsci/pipeline-build-step-plugin/tree/491.v1fec530da_858) that can override event data in the EiffelActivityTriggeredEvent (ActT) that is sent when the triggered downstream build enters the
+The buildWithEiffel pipeline step is a modified copy of [BuildTriggerStep](https://github.com/jenkinsci/pipeline-build-step-plugin/blob/540.vb_e8849e1a_b_d8/src/main/java/org/jenkinsci/plugins/workflow/support/steps/build/BuildTriggerStep.java)
+from [pipeline-build-step-plugin 540.vb_e8849e1a_b_d8](https://github.com/jenkinsci/pipeline-build-step-plugin/tree/540.vb_e8849e1a_b_d8) that can override event data in the EiffelActivityTriggeredEvent (ActT) that is sent when the triggered downstream build enters the
 build queue. Currently, `data.name` can be overridden.
 
-In addition to the parameters in the base step (see [Pipeline: Build step](https://plugins.jenkins.io/pipeline-build-step/releases/#version_491.v1fec530da_858))
+In addition to the parameters in the base step (see [Pipeline: Build step](https://plugins.jenkins.io/pipeline-build-step/releases/#version_540.vb_e8849e1a_b_d8))
 it accepts the following parameters:
 
 | Argument     | Required | Description                                      |

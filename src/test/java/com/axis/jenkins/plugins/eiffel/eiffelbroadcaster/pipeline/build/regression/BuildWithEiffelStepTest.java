@@ -1,8 +1,11 @@
 // The following code is copied from https://github.com/jenkinsci/pipeline-build-step-plugin
 
-package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
+package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.regression;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Messages;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelStep;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelStepExecution;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build.BuildWithEiffelUpstreamCause;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsParameterDefinition;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -56,7 +59,6 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerStep;
-import org.jenkinsci.plugins.workflow.support.steps.build.BuildUpstreamCause;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildUpstreamNodeAction;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Before;
@@ -104,7 +106,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * Test that {@link BuildWithEiffelStep} has not broken any functionality in {@link BuildTriggerStep}.
  */
-public class BuildWithEiffelStepRegressionTest {
+public class BuildWithEiffelStepTest {
 
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     @Rule public JenkinsRule j = new JenkinsRule();
@@ -194,17 +196,17 @@ public class BuildWithEiffelStepRegressionTest {
         // Wait for all downstream builds to complete
         j.waitUntilNoActivity();
 
-        List<BuildUpstreamCause> upstreamCauses = new ArrayList<>();
+        List<BuildWithEiffelUpstreamCause> upstreamCauses = new ArrayList<>();
         for (Run<FreeStyleProject, FreeStyleBuild> downstreamRun : downstream.getBuilds()) {
             upstreamCauses.addAll(downstreamRun.getCauses().stream()
-                    .filter(BuildUpstreamCause.class::isInstance)
-                    .map(BuildUpstreamCause.class::cast)
+                    .filter(BuildWithEiffelUpstreamCause.class::isInstance)
+                    .map(BuildWithEiffelUpstreamCause.class::cast)
                     .collect(Collectors.toList()));
         }
         assertThat("There should be as many upstream causes as upstream builds", upstreamCauses, hasSize(numberOfUpstreamBuilds));
 
         Set<WorkflowRun> ups = new HashSet<>();
-        for (BuildUpstreamCause up : upstreamCauses) {
+        for (BuildWithEiffelUpstreamCause up : upstreamCauses) {
             WorkflowRun upstreamRun = (WorkflowRun) up.getUpstreamRun();
             ups.add(upstreamRun);
             FlowExecution execution = upstreamRun.getExecution();
