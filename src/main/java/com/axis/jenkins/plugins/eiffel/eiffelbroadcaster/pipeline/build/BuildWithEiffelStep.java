@@ -166,6 +166,12 @@ public class BuildWithEiffelStep extends Step {
         this.propagate = propagate;
     }
 
+    // Use custom step execution with EiffelActivityDataAction being attached to the build
+    @Override
+    public StepExecution start(StepContext context) {
+        return new BuildWithEiffelStepExecution(this, context, new EiffelActivityDataAction(getActivityName()));
+    }
+
     @Extension
     public static class DescriptorImpl extends StepDescriptor implements CustomDescribableModel {
 
@@ -396,12 +402,5 @@ public class BuildWithEiffelStep extends Step {
             }
             return FormValidation.error(Messages.BuildWithEiffelStep_unsupported(item.getClass().getName()));
         }
-
     }
-
-    @Override
-    public StepExecution start(StepContext context) {
-        return new BuildWithEiffelStepExecution(this, context, new EiffelActivityDataAction(getActivityName()));
-    }
-
 }

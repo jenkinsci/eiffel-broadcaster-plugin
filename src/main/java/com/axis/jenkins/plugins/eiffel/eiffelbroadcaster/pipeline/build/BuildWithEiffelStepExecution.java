@@ -39,7 +39,6 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepExecutionImpl;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerCancelledCause;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildTriggerStepExecution;
-import org.jenkinsci.plugins.workflow.support.steps.build.BuildUpstreamCause;
 import org.jenkinsci.plugins.workflow.support.steps.build.BuildUpstreamNodeAction;
 
 import java.io.IOException;
@@ -82,7 +81,8 @@ public class BuildWithEiffelStepExecution extends AbstractStepExecutionImpl {
     @Override
     public boolean start() throws Exception {
         String job = step.getJob();
-        Item item = Jenkins.get().getItem(job, getContext().get(Run.class).getParent(), Item.class);
+        Run<?, ?> upstream = getContext().get(Run.class);
+        Item item = Jenkins.get().getItem(job, upstream.getParent(), Item.class);
         if (item == null) {
             throw new AbortException("No item named " + job + " found");
         }
@@ -92,16 +92,19 @@ public class BuildWithEiffelStepExecution extends AbstractStepExecutionImpl {
             throw new AbortException("Waiting for non-job items is not supported");
         }
 
+        FlowNode node = getContext().get(FlowNode.class);
+        BuildWithEiffelDownstreamBuildAction.getOrCreate(upstream, node.getId(), item);
+
         List<Action> actions = new ArrayList<>();
-        actions.add(new CauseAction(new BuildUpstreamCause(getContext().get(FlowNode.class), getContext().get(Run.class))));
-        actions.add(new BuildUpstreamNodeAction(getContext().get(FlowNode.class), getContext().get(Run.class)));
+        actions.add(new CauseAction(new BuildWithEiffelUpstreamCause(getContext().get(FlowNode.class), upstream)));
+        actions.add(new BuildUpstreamNodeAction(node, upstream));
         actions.add(eiffelActivityDataAction);
 
         if (item instanceof ParameterizedJobMixIn.ParameterizedJob) {
             final ParameterizedJobMixIn.ParameterizedJob project = (ParameterizedJobMixIn.ParameterizedJob) item;
             getContext().get(TaskListener.class).getLogger().println("Scheduling project: " + ModelHyperlinkNote.encodeTo(project));
 
-            getContext().get(FlowNode.class).addAction(new LabelAction(Messages.BuildWithEiffelStepExecution_building_(project.getFullDisplayName())));
+            node.addAction(new LabelAction(Messages.BuildWithEiffelStepExecution_building_(project.getFullDisplayName())));
 
             if (step.getWait() || step.getWaitForStart()) {
                 StepContext context = getContext();
@@ -127,7 +130,7 @@ public class BuildWithEiffelStepExecution extends AbstractStepExecutionImpl {
             }
             Queue.Task task = (Queue.Task) item;
             getContext().get(TaskListener.class).getLogger().println("Scheduling item: " + ModelHyperlinkNote.encodeTo(item));
-            getContext().get(FlowNode.class).addAction(new LabelAction(Messages.BuildWithEiffelStepExecution_building_(task.getFullDisplayName())));
+            node.addAction(new LabelAction(Messages.BuildWithEiffelStepExecution_building_(task.getFullDisplayName())));
             if (step.getWait() || step.getWaitForStart()) {
                 StepContext context = getContext();
                 actions.add(new BuildWithEiffelAction(context, step.isPropagate(), step.getWaitForStart()));
