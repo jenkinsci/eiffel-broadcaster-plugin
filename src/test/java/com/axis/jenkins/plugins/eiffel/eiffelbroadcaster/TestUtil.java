@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2020 Axis Communications AB.
+ Copyright 2020-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -36,8 +37,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import org.testcontainers.containers.RabbitMQContainer;
 
 /**
@@ -148,9 +147,13 @@ public final class TestUtil {
      * @return list of events
      */
     public static ArrayList<EiffelEvent> createEvents(int count) {
-        return IntStream.range(1, count + 1)
-                .mapToObj(i -> new EiffelArtifactCreatedEvent(String.format("pkg:test@%d", i)))
-                .collect(Collectors.toCollection(ArrayList::new));
+        var result = new ArrayList<EiffelEvent>();
+        for (int i = 0; i < count; i++) {
+            var artC = EiffelEventFactory.getInstance().create(EiffelArtifactCreatedEvent.class);
+            artC.getData().setIdentity(String.format("pkg:test@%d", i));
+            result.add(artC);
+        }
+        return result;
     }
 
 }

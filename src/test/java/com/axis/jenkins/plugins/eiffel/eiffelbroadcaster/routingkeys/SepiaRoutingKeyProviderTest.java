@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2023 Axis Communications AB.
+ Copyright 2023-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.routingkeys;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import org.junit.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -35,14 +35,14 @@ public class SepiaRoutingKeyProviderTest {
     @Test
     public void testGetRoutingKey_UsesUnderscoreInsteadOfNull() {
         var rp = new SepiaRoutingKeyProvider();
-        var event = new EiffelArtifactCreatedEvent("pkg:generic/package");
+        var event = EiffelEventFactory.getInstance().create(EiffelArtifactCreatedEvent.class);
         assertThat(rp.getRoutingKey(event), is("eiffel._.EiffelArtifactCreatedEvent._._"));
     }
 
     @Test
     public void testGetRoutingKey_UsesDomainIdIfSet() {
         var rp = new SepiaRoutingKeyProvider();
-        var event = new EiffelArtifactCreatedEvent("pkg:generic/package");
+        var event = EiffelEventFactory.getInstance().create(EiffelArtifactCreatedEvent.class);
         event.getMeta().getSource().setDomainId("some-domainid");
         assertThat(rp.getRoutingKey(event), is("eiffel._.EiffelArtifactCreatedEvent._.some-domainid"));
     }
@@ -51,7 +51,7 @@ public class SepiaRoutingKeyProviderTest {
     public void testGetRoutingKey_UsesTagIfSet() {
         var rp = new SepiaRoutingKeyProvider();
         rp.setTag("some-tag");
-        var event = new EiffelArtifactCreatedEvent("pkg:generic/package");
+        var event = EiffelEventFactory.getInstance().create(EiffelArtifactCreatedEvent.class);
         assertThat(rp.getRoutingKey(event), is("eiffel._.EiffelArtifactCreatedEvent.some-tag._"));
     }
 }

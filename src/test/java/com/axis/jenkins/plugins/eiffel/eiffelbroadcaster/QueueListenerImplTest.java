@@ -26,6 +26,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import java.util.Arrays;
 import java.util.UUID;
 import org.junit.Test;
@@ -44,7 +45,8 @@ public class QueueListenerImplTest {
                 new EiffelEvent.Link(EiffelEvent.Link.Type.CAUSE, UUID.randomUUID()),
                 new EiffelEvent.Link(EiffelEvent.Link.Type.FLOW_CONTEXT, UUID.randomUUID()));
         var cause = new EiffelCause(links);
-        var event = new EiffelActivityTriggeredEvent("activity name");
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName("activity name");
         var queueListener = new QueueListenerImpl();
         queueListener.addTriggerFromEiffelCause(cause, event,
                 new EiffelActivityTriggeredEvent.Data.Trigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER));
@@ -58,7 +60,8 @@ public class QueueListenerImplTest {
                 new EiffelEvent.Link(EiffelEvent.Link.Type.CONTEXT, UUID.randomUUID()),
                 new EiffelEvent.Link(EiffelEvent.Link.Type.FLOW_CONTEXT, UUID.randomUUID()));
         var cause = new EiffelCause(links);
-        var event = new EiffelActivityTriggeredEvent("activity name");
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName("activity name");
         var queueListener = new QueueListenerImpl();
         queueListener.addTriggerFromEiffelCause(cause, event,
                 new EiffelActivityTriggeredEvent.Data.Trigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER));
@@ -74,7 +77,8 @@ public class QueueListenerImplTest {
                 new EiffelEvent.Link(EiffelEvent.Link.Type.CAUSE, cause1),
                 new EiffelEvent.Link(EiffelEvent.Link.Type.CAUSE, cause2));
         var cause = new EiffelCause(links);
-        var event = new EiffelActivityTriggeredEvent("activity name");
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName("activity name");
         var queueListener = new QueueListenerImpl();
         queueListener.addTriggerFromEiffelCause(cause, event,
                 new EiffelActivityTriggeredEvent.Data.Trigger(EiffelActivityTriggeredEvent.Data.Trigger.Type.OTHER));

@@ -27,6 +27,7 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityCanceledEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.EventSigner;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.SystemEventSigner;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -38,10 +39,10 @@ import hudson.model.Queue;
 import hudson.model.queue.QueueListener;
 import hudson.triggers.SCMTrigger;
 import hudson.triggers.TimerTrigger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Receives notifications about when tasks are submitted to the
@@ -66,8 +67,9 @@ public class QueueListenerImpl extends QueueListener {
             return;
         }
 
-        var data = new EiffelActivityTriggeredEvent.Data(taskName);
-        var event = new EiffelActivityTriggeredEvent(data);
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName(taskName);
+
         EiffelJobTable.getInstance().setEventTrigger(wi.getId(), event.getMeta().getId());
 
         // Override activity name if item has action EiffelActivityDataAction
@@ -77,7 +79,9 @@ public class QueueListenerImpl extends QueueListener {
                 .ifPresent(action -> {
                     // This should be moved into a new method when more overrides are added to buildWithEiffelStep
                     var activityName = ((EiffelActivityDataAction) action).getName();
-                    data.setName(activityName == null ? data.getName() : activityName);
+                    if (activityName != null) {
+                        event.getData().setName(activityName);
+                    }
                 });
 
         // Populate activity categories
@@ -95,7 +99,7 @@ public class QueueListenerImpl extends QueueListener {
             }
         }
 
-        data.getCategories().addAll(categories);
+        event.getData().getCategories().addAll(categories);
 
         // Populate causes
         for (Cause cause : wi.getCauses()) {
@@ -106,16 +110,16 @@ public class QueueListenerImpl extends QueueListener {
 
             if (cause instanceof TimerTrigger.TimerTriggerCause) {
                 trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.TIMER);
-                data.getTriggers().add(trigger);
+                event.getData().getTriggers().add(trigger);
             } else if (cause instanceof SCMTrigger.SCMTriggerCause) {
                 trigger.setType(EiffelActivityTriggeredEvent.Data.Trigger.Type.SOURCE_CHANGE);
-                data.getTriggers().add(trigger);
+                event.getData().getTriggers().add(trigger);
             } else if (cause instanceof Cause.UpstreamCause) {
                 addTriggerFromUpstreamCause((Cause.UpstreamCause) cause, event, trigger);
             } else if (cause instanceof EiffelCause) {
                 addTriggerFromEiffelCause((EiffelCause) cause, event, trigger);
             } else {
-                data.getTriggers().add(trigger);
+                event.getData().getTriggers().add(trigger);
             }
         }
 
@@ -136,7 +140,8 @@ public class QueueListenerImpl extends QueueListener {
                 logger.debug("A cancelled queue item could not be mapped to an emitted ActT event: {}", li);
                 return;
             }
-            var event = new EiffelActivityCanceledEvent(targetEvent);
+            var event = EiffelEventFactory.getInstance().create(EiffelActivityCanceledEvent.class);
+            event.getLinks().add(new EiffelEvent.Link(EiffelEvent.Link.Type.ACTIVITY_EXECUTION, targetEvent));
             Util.publishEvent(event, signer);
         }
     }

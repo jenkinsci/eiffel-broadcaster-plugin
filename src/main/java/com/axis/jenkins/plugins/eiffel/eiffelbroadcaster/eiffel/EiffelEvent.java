@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021-2023 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.signing.JsonCanonicalizationException;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
@@ -67,12 +66,8 @@ public class EiffelEvent {
     @JsonInclude(JsonInclude.Include.ALWAYS)
     private final Meta meta;
 
-    @JsonIgnore
-    private static SourceProvider sourceProvider;
-
     public EiffelEvent(String type, String version) {
         this.meta = new Meta(type, version);
-        populateSource();
     }
 
     /**
@@ -120,14 +115,6 @@ public class EiffelEvent {
 
     public Meta getMeta() {
         return meta;
-    }
-
-    /**
-     * Provide a {@link SourceProvider} instance that will be request to provide a {@link Meta.Source}
-     * object for each event created after that point.
-     */
-    public static void setSourceProvider(final SourceProvider provider) {
-        sourceProvider = provider;
     }
 
     public String toJSON() throws JsonProcessingException {
@@ -194,15 +181,6 @@ public class EiffelEvent {
         }
         throw new UnsupportedAlgorithmException(String.format("The %s key algorithm isn't supported " +
                 "when signing events. See the documentation for a list of supported algorithms.", keyAlg));
-    }
-
-    private void populateSource() {
-        if (sourceProvider != null) {
-            if (getMeta().getSource() == null) {
-                getMeta().setSource(new Meta.Source());
-            }
-            sourceProvider.populateSource(getMeta().getSource());
-        }
     }
 
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
@@ -328,9 +306,6 @@ public class EiffelEvent {
         public Meta(@JsonProperty("type") String type, @JsonProperty("version") String version) {
             if (StringUtils.isBlank(type)) {
                 throw new IllegalArgumentException("The event type must be set to a non-empty string");
-            }
-            if (StringUtils.isBlank(version)) {
-                throw new IllegalArgumentException("The event version must be set to a non-empty string");
             }
             this.type = type;
             this.version = version;
@@ -757,7 +732,11 @@ public class EiffelEvent {
             } catch (ClassNotFoundException e) {
                 event = p.getCodec().treeToValue(node, GenericEiffelEvent.class);
             }
-            event.populateSource();
+            // It's dubious if we really should populate meta.source here. It's
+            // legitimate if this is an event we're going to send ourselves,
+            // but downright incorrect if we're unmarshaling an event from
+            // somewhere else.
+            EiffelEventFactory.getInstance().populateSource(event);
             return event;
         }
     }

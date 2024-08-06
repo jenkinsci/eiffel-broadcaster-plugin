@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -38,7 +38,8 @@ public class EiffelEventTest {
     public void testJsonDeserialization_ChoosesCorrectSubclass() throws JsonProcessingException {
         // We instantiate an arbitrary concrete EiffelEvent subclass and make sure that when we
         // deserialize the string back into an EiffelEvent we get an instance of the same class.
-        var originalEvent = new EiffelActivityTriggeredEvent("activity name");
+        var originalEvent = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        originalEvent.getData().setName("activity name");
         var deserializedEvent = new ObjectMapper().readValue(originalEvent.toJSON(), EiffelEvent.class);
         assertThat(deserializedEvent, instanceOf(originalEvent.getClass()));
     }
@@ -83,14 +84,15 @@ public class EiffelEventTest {
 
     @Test
     public void testSourceProvider_WithDirectConstruction() throws IOException {
-        EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
-        var event = new EiffelActivityTriggeredEvent("activity name");
+        EiffelEventFactory.getInstance().setSourceProvider(new DummyDomainIdProvider());
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName("activity name");
         assertThat(event.getMeta().getSource().getDomainId(), is(DummyDomainIdProvider.DOMAIN_ID));
     }
 
     @Test
     public void testSourceProvider_FromJsonToConcreteClass() throws IOException {
-        EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
+        EiffelEventFactory.getInstance().setSourceProvider(new DummyDomainIdProvider());
         var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelActivityTriggeredEvent.json"), EiffelEvent.class);
         assertThat(event.getMeta().getSource().getDomainId(), is(DummyDomainIdProvider.DOMAIN_ID));
@@ -98,7 +100,7 @@ public class EiffelEventTest {
 
     @Test
     public void testSourceProvider_FromJsonToGenericClass() throws IOException {
-        EiffelEvent.setSourceProvider(new DummyDomainIdProvider());
+        EiffelEventFactory.getInstance().setSourceProvider(new DummyDomainIdProvider());
         var event = new ObjectMapper().readValue(
                 getClass().getResourceAsStream("EiffelCompositionDefinedEvent.json"), EiffelEvent.class);
         // First make sure we actually get a GenericEiffelEvent object. If we introduce a concrete

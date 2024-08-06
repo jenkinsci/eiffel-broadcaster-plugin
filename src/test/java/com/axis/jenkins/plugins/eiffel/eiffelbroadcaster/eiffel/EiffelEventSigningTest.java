@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2023 Axis Communications AB.
+ Copyright 2023-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -85,7 +85,8 @@ public class EiffelEventSigningTest {
         var priv = pair.getPrivate();
         var pub = pair.getPublic();
 
-        var event = new EiffelActivityTriggeredEvent("activity name");
+        var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+        event.getData().setName("activity name");
         event.sign(priv, "CN=test", hashAlg);
 
         assertThat(event.getMeta().getSecurity(), is(notNullValue()));

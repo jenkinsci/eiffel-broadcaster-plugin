@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,17 +26,16 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.model.ParametersAction;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.model.StringParameterDefinition;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +45,6 @@ import org.htmlunit.WebResponse;
 import org.htmlunit.util.NameValuePair;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -284,10 +282,11 @@ public class BuildWithEiffelLinksActionTest {
         public final List<NameValuePair> buildParams = new ArrayList<>();
 
         BuildRequestParams() {
-            links.add(new EiffelEvent.Link(EiffelEvent.Link.Type.CAUSE,
-                    new EiffelActivityTriggeredEvent("activity name").getMeta().getId()));
-            links.add(new EiffelEvent.Link(EiffelEvent.Link.Type.CONTEXT,
-                    new EiffelActivityTriggeredEvent("activity name").getMeta().getId()));
+            for (EiffelEvent.Link.Type type : List.of(EiffelEvent.Link.Type.CAUSE, EiffelEvent.Link.Type.CONTEXT)) {
+                var event = EiffelEventFactory.getInstance().create(EiffelActivityTriggeredEvent.class);
+                event.getData().setName("activity name");
+                links.add(new EiffelEvent.Link(type, event.getMeta().getId()));
+            }
         }
     }
 }
