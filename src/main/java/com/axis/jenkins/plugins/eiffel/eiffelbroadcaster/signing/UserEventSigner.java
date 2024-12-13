@@ -41,7 +41,7 @@ import java.security.UnrecoverableKeyException;
  * Signs an event using credentials tied to a {@link Run}. This is
  * obviously only available during a specific build.
  */
-public class UserEventSigner implements EventSigner {
+public class UserEventSigner extends EventSigner {
     private final String credentialsId;
 
     private final HashAlgorithm hashAlgorithm;
@@ -78,7 +78,7 @@ public class UserEventSigner implements EventSigner {
             throw new InvalidCertificateConfigurationException(
                     String.format("No credentials with the id %s could be found", getCredentialsId()));
         }
-        SigningKeyCache.Item sigData = SigningKeyCache.getInstance().get(cred);
+        var sigData = new CertificateSigningInfo(cred);
         event.sign(sigData.getKey(), sigData.getIdentity(), getHashAlgorithm());
         return true;
     }

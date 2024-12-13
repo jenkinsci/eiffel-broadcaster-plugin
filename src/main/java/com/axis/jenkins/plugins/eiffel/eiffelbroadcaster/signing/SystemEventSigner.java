@@ -44,7 +44,7 @@ import java.util.List;
  * that isn't available to normal builds. Events signed with this class shouldn't be
  * under user control.
  */
-public class SystemEventSigner implements EventSigner {
+public class SystemEventSigner extends EventSigner {
     /** {@inheritDoc} */
     @Override
     public boolean sign(@NonNull EiffelEvent event)
@@ -64,7 +64,7 @@ public class SystemEventSigner implements EventSigner {
             throw new InvalidCertificateConfigurationException(
                     String.format("No credentials with the id %s could be found", config.getSystemSigningCredentialsId()));
         }
-        var sigData = SigningKeyCache.getInstance().get(cred);
+        var sigData = new CertificateSigningInfo(cred);
         event.sign(sigData.getKey(), sigData.getIdentity(), config.getSystemSigningHashAlg());
         return true;
     }

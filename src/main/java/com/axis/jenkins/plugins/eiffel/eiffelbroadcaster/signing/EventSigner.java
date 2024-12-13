@@ -37,7 +37,7 @@ import java.security.UnrecoverableKeyException;
  * Simple interface that performs in-place signing of an {@link EiffelEvent}.
  * The selection of the key to be used is left to the implementing classes.
  */
-public interface EventSigner {
+public abstract class EventSigner {
     /**
      * Request signing of the given event using a private key and identity.
      * Based on its configuration, the implementation may choose to not
@@ -57,7 +57,7 @@ public interface EventSigner {
      * @throws UnsupportedAlgorithmException if the credential's signature algorithm isn't supported
      *         by this implementation of the Eiffel protocol or the available cryptography provider
      */
-    boolean sign(@NonNull final EiffelEvent event)
+    public abstract boolean sign(@NonNull final EiffelEvent event)
             throws InvalidCertificateConfigurationException, InvalidKeyException, JsonCanonicalizationException,
             KeyStoreException, NoSuchAlgorithmException, SignatureException, UnrecoverableKeyException,
             UnsupportedAlgorithmException;
