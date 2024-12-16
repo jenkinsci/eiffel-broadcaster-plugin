@@ -1,8 +1,7 @@
-/*
+/**
  The MIT License
 
- Copyright 2015 Sony Mobile Communications Inc. All rights reserved.
- Copyright 2021 Axis Communications AB.
+ Copyright 2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -25,32 +24,30 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
-import com.rabbitmq.client.AMQP;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import mockit.Mock;
-import mockit.MockUp;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 /**
- * Test mocks.
- *
- * @author Örjan Percy &lt;orjan.percy@sonymobile.com&gt;
- * @author Magnus Bäck &lt;magnus.back@axis.com&gt;
+ * Simple rule to use for test classes that need to inspect events sent
+ * via {@link MQConnection}. Makes sure that the MQConnection's queue of
+ * outbound events is emptied before each test case.
  */
-public final class Mocks {
-    /** Stores received messages. */
-    public static final List<String> messages = new CopyOnWriteArrayList<>();
+public class MQConnectionEventCaptureRule implements TestRule {
+    @Override
+    public Statement apply(Statement base, Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                MQConnection.getInstance().clearQueue();
+                base.evaluate();
+            }
+        };
+    }
 
-    // Private constructor to avoid unnecessary instantiation of the class
-    private Mocks() { }
-
-    /**
-     * Mocks the {@link MQConnection} singleton and captures all received messages in {@link #messages}.
-     * */
-    public static final class RabbitMQConnectionMock extends MockUp<MQConnection> {
-        @Mock
-        public void addMessageToQueue(String exchangeName, String routingKey, AMQP.BasicProperties props, byte[] body) {
-            messages.add(new String(body));
-        }
+    /** Returns an {@link EventSet} with a snapshot of the currently sent events. */
+    public EventSet getEvents() throws JsonProcessingException {
+        return new EventSet(MQConnection.getInstance().getQueueSnapshot());
     }
 }

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,6 @@ import java.util.Collections;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -66,14 +65,11 @@ public class EmittedEventsTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        new Mocks.RabbitMQConnectionMock();
-    }
+    @Rule
+    public MQConnectionEventCaptureRule eventCapture = new MQConnectionEventCaptureRule();
 
     @Before
     public void setUp() {
-        Mocks.messages.clear();
         EiffelBroadcasterConfig.getInstance().setEnableBroadcaster(true);
     }
 
@@ -83,7 +79,7 @@ public class EmittedEventsTest {
                 .createProject(FreeStyleProject.class, "test");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0, new Cause.UserIdCause()).get());
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         var actTData = new EiffelActivityTriggeredEvent.Data("testfolder/test");
@@ -123,7 +119,7 @@ public class EmittedEventsTest {
         upstreamJob.scheduleBuild2(0);
         jenkins.waitUntilNoActivity();
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var upstreamActT = events.findNext(EiffelActivityTriggeredEvent.class);
         // Ignore the contents of the ActT event and the subsequent ActS and ActF events for
@@ -158,7 +154,7 @@ public class EmittedEventsTest {
         job.scheduleBuild2(0);
         jenkins.jenkins.getQueue().clear();
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         // Ignore the contents of the ActT event; we're verifying its contents elsewhere.
@@ -178,7 +174,7 @@ public class EmittedEventsTest {
         job.setAxes(new AxisList(new Axis("axislabel", axisValue)));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0, new Cause.UserIdCause()).get());
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         // First check the ActT/ActS/ActF sequence of the top-level build.
         var toplevelActT = events.findNext(EiffelActivityTriggeredEvent.class);
@@ -224,7 +220,7 @@ public class EmittedEventsTest {
         jenkins.assertBuildStatus(Result.SUCCESS,
                 job.scheduleBuild2(0, new CauseAction(new Cause.UserIdCause())).get());
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         assertThat(actT.getData().getName(), is("testfolder/test"));
@@ -260,7 +256,7 @@ public class EmittedEventsTest {
         upstreamJob.scheduleBuild2(0);
         jenkins.waitUntilNoActivity();
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var upstreamActT = events.findNext(EiffelActivityTriggeredEvent.class);
         // Ignore the contents of the ActT event and the subsequent ActS and ActF events for
@@ -287,7 +283,7 @@ public class EmittedEventsTest {
         job.setDefinition(new CpsFlowDefinition("node { error 'something went bad' }", true));
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         // Ignore the contents of the ActT event; we're verifying its contents elsewhere.
@@ -336,7 +332,7 @@ public class EmittedEventsTest {
         var job = jenkins.createProject(FreeStyleProject.class, "test");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         assertThat(actT.getData().getCategories(), is(Collections.emptyList()));
@@ -348,7 +344,7 @@ public class EmittedEventsTest {
         var job = jenkins.createProject(FreeStyleProject.class, "test");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         assertThat(actT.getData().getCategories(), is(Arrays.asList("global category")));
@@ -360,7 +356,7 @@ public class EmittedEventsTest {
         job.addProperty(new EiffelActivityJobProperty(Arrays.asList("job category")));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         assertThat(actT.getData().getCategories(), is(Arrays.asList("job category")));
@@ -373,7 +369,7 @@ public class EmittedEventsTest {
         job.addProperty(new EiffelActivityJobProperty(Arrays.asList("duplicate category", "job category")));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         assertThat(actT.getData().getCategories(),
@@ -387,7 +383,7 @@ public class EmittedEventsTest {
         job.addProperty(new EiffelActivityJobProperty(Arrays.asList("job category")));
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         assertThat(actT.getData().getCategories(), is(Arrays.asList("job category")));
