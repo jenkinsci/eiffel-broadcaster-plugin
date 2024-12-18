@@ -282,7 +282,8 @@ to the PKCS #12 format expected by the
 
 ```
 openssl ecparam -name secp521r1 -genkey -noout -out system-signing.priv.pem
-openssl req -new -x509 -key system-signing.priv.pem -out system-signing.cert.pem -subj /CN=some-identifier -days 365
+openssl req -new -x509 -key system-signing.priv.pem -out system-signing.cert.pem \
+    -subj /O=Acme/OU=Software/CN=bob-the-builder -days 365
 openssl x509 -noout -text -in system-signing.cert.pem
 openssl pkcs12 -export -inkey system-signing.priv.pem -in system-signing.cert.pem -out system-signing.pfx
 ```
@@ -292,6 +293,12 @@ and can be any distinguished name that makes sense to you. If you omit that
 flag you'll be prompted for the values that can make up a distinguished name.
 The subject is what's going to be displayed in the Jenkins interface when
 certificate credentials are listed.
+
+Note that OpenSSL not only uses slashes instead of commas to separate the
+RDNs in the distinguished name, it also expects the reverse RDN order compared
+to [RFC 4514](https://www.rfc-editor.org/rfc/rfc4514) (the common order used
+in e.g. LDAP and Jenkins), i.e. the example above will result in a certificate
+issued to CN=bob-the-builder,OU=Software,O=Acme.
 
 The `openssl pkcs12` command will prompt you for a password. You can choose
 any password you like, just make sure that you'll be able to input the same
