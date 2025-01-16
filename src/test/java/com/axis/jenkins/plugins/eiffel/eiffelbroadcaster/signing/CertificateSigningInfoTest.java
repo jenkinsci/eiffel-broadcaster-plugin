@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2023 Axis Communications AB.
+ Copyright 2023-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -33,8 +33,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-/** Rudimentary happy path tests for {@link SigningKeyCache}. */
-public class SigningKeyCacheTest {
+/** Rudimentary happy path tests for {@link CertificateSigningInfo}. */
+public class CertificateSigningInfoTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
@@ -48,11 +48,9 @@ public class SigningKeyCacheTest {
         credProvider.getCredentials().add(cred);
         credProvider.save();
 
-        var cache = SigningKeyCache.getInstance();
-        var item = cache.get(cred);
+        var signingInfo = new CertificateSigningInfo(cred);
 
-        assertThat(item.getIdentity(), is(testKeyStore.getCertificateSubjectDN()));
-        assertThat(item.getKey(), notNullValue());
-        assertThat(cache.size(), is(1));
+        assertThat(signingInfo.getIdentity(), is(testKeyStore.getCertificateSubjectDN()));
+        assertThat(signingInfo.getKey(), notNullValue());
     }
 }

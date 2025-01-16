@@ -26,9 +26,8 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline;
 
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelArtifactToPublishAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EventSet;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.JobCreatingJenkinsRule;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
+import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.MQConnectionEventCaptureRule;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelActivityTriggeredEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelArtifactCreatedEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
@@ -46,7 +45,6 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Result;
 import java.io.IOException;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -62,14 +60,11 @@ public class SendEiffelEventStepTest {
     @Rule
     public JobCreatingJenkinsRule jenkins = new JobCreatingJenkinsRule();
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        new Mocks.RabbitMQConnectionMock();
-    }
+    @Rule
+    public MQConnectionEventCaptureRule eventCapture = new MQConnectionEventCaptureRule();
 
     @Before
     public void setUp() {
-        Mocks.messages.clear();
         EiffelBroadcasterConfig.getInstance().setEnableBroadcaster(true);
     }
 
@@ -78,7 +73,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline("successful_send_event_step_with_default_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         var cD = events.findNext(GenericEiffelEvent.class);
@@ -91,7 +86,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline("successful_send_event_step_with_default_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var cD = events.findNext(GenericEiffelEvent.class);
         jenkins.assertLogContains(
@@ -104,7 +99,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline("successful_send_event_step_with_custom_linktype.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var actT = events.findNext(EiffelActivityTriggeredEvent.class);
         var cD = events.findNext(GenericEiffelEvent.class);
@@ -117,7 +112,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline("successful_send_event_step_without_link.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var cD = events.findNext(GenericEiffelEvent.class);
         assertThat(cD.getLinks(), hasSize(0));
@@ -128,7 +123,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline("successful_send_event_step_with_payload_saved.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         // This job uses the writeJSON step to write the returned payload to event.json.
         // Deserialize that file and compare it against the event sent on the bus.
@@ -143,7 +138,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline("successful_send_event_step_with_artifacts.groovy");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         var run = job.getBuildByNumber(1);
         var savedArtifacts = run.getActions(EiffelArtifactToPublishAction.class);
@@ -160,7 +155,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline(folder, "send_event_step_with_signing.groovy", "test");
         jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         // We're already testing elsewhere that the signing is done correctly, so here we
         // just check that the event has been signed with the correct identity and algorithm.
@@ -216,7 +211,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline("send_event_step_with_signing.groovy");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         jenkins.assertLogContains("No credentials with the id event_signing could be found",
                 job.getBuildByNumber(1));
@@ -230,7 +225,7 @@ public class SendEiffelEventStepTest {
         var job = jenkins.createPipeline(jobFolder, "send_event_step_with_signing.groovy", "test");
         jenkins.assertBuildStatus(Result.FAILURE, job.scheduleBuild2(0));
 
-        var events = new EventSet(Mocks.messages);
+        var events = eventCapture.getEvents();
 
         jenkins.assertLogContains("No credentials with the id event_signing could be found",
                 job.getBuildByNumber(1));

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2021 Axis Communications AB.
+ Copyright 2021-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -24,13 +24,9 @@
 
 package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster;
 
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.CaptureEnvironmentBuilder;
@@ -43,11 +39,6 @@ import static org.hamcrest.Matchers.notNullValue;
 public class EiffelEnvironmentContributorTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
-
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        new Mocks.RabbitMQConnectionMock();
-    }
 
     @Test
     public void testEnvironmentVariablesAreAvailable_FreeStyle() throws Exception {

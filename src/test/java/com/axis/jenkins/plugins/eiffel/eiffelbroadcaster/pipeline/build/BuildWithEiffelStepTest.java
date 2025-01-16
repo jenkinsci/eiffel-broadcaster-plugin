@@ -27,10 +27,8 @@ package com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.pipeline.build;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelActivityAction;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.EiffelBroadcasterConfig;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.JobCreatingJenkinsRule;
-import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.Mocks;
 import hudson.model.Result;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,14 +40,8 @@ public class BuildWithEiffelStepTest {
     @Rule
     public JobCreatingJenkinsRule jenkins = new JobCreatingJenkinsRule();
 
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        new Mocks.RabbitMQConnectionMock();
-    }
-
     @Before
     public void setUp() {
-        Mocks.messages.clear();
         EiffelBroadcasterConfig.getInstance().setEnableBroadcaster(true);
     }
 
