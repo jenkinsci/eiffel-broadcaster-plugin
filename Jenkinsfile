@@ -2,7 +2,7 @@ buildPlugin(
     configurations: [
         [
             platform: 'linux',
-            jdk: '11',
+            jdk: '17',
         ],
     ]
 )

@@ -1,7 +1,7 @@
 /**
  The MIT License
 
- Copyright 2018-2021 Axis Communications AB.
+ Copyright 2018-2024 Axis Communications AB.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -37,11 +37,14 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,9 +68,22 @@ public final class MQConnection implements ShutdownListener {
     private String virtualHost;
     private Connection connection = null;
 
-    private volatile LinkedBlockingQueue messageQueue = new LinkedBlockingQueue(MESSAGE_QUEUE_SIZE);
+    private volatile LinkedBlockingQueue<MessageData> messageQueue = new LinkedBlockingQueue<>(MESSAGE_QUEUE_SIZE);
     private volatile ConcurrentNavigableMap<Long, MessageData> outstandingConfirms = new ConcurrentSkipListMap<>();
     private Thread messageQueueThread;
+
+    /** Gets a snapshot of the current contents of the queue of outbound events. */
+    public List<String> getQueueSnapshot() {
+        return Arrays.stream(messageQueue.toArray(new MessageData[0]))
+                .map(data -> data.body)
+                .map(String::new)
+                .collect(Collectors.toList());
+    }
+
+    /** Clears the queue of outbound events by discarding all events in it. */
+    public void clearQueue() {
+        messageQueue.clear();
+    }
 
     /**
      * Throw on exceptions when creating a channel
@@ -219,7 +235,7 @@ public final class MQConnection implements ShutdownListener {
                     channel.confirmSelect();
                     addMessageConfirmListener(channel);
                 }
-                var messageData = (MessageData)messageQueue.poll(SENDMESSAGE_TIMEOUT, TimeUnit.MILLISECONDS);
+                var messageData = messageQueue.poll(SENDMESSAGE_TIMEOUT, TimeUnit.MILLISECONDS);
                 if (messageData != null) {
                     validateExchange(channel, messageData.getExchange());
                     getInstance().sendOnChannel(messageData, channel);

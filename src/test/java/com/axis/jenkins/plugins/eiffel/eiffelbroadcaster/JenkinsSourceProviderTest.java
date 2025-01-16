@@ -29,7 +29,6 @@ import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEvent;
 import com.axis.jenkins.plugins.eiffel.eiffelbroadcaster.eiffel.EiffelEventFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.packageurl.PackageURL;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -41,11 +40,6 @@ import static org.hamcrest.Matchers.notNullValue;
 public class JenkinsSourceProviderTest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
-
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        new Mocks.RabbitMQConnectionMock();
-    }
 
     @Test
     public void testEventHasCorrectSource() throws Exception {
