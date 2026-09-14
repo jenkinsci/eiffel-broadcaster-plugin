@@ -280,8 +280,12 @@ public final class MQConnection implements ShutdownListener {
         try {
             connection = getConnection();
             if (connection != null) {
+                Channel channel = connection.createChannel();
+                if (channel == null) {
+                    throw new ChannelCreationException("Cannot create channel, channel limit reached");
+                }
                 logger.debug("Channel successfully created");
-                return connection.createChannel();
+                return channel;
             }
             throw new ChannelCreationException("Cannot create channel, no connection found");
         } catch (IOException | ShutdownSignalException e) {
