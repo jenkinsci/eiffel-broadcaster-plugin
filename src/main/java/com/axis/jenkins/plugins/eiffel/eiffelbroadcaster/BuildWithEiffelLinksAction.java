@@ -132,12 +132,11 @@ public class BuildWithEiffelLinksAction<
         }
         try {
             var pp = job.getProperty(ParametersDefinitionProperty.class);
-            if (pp != null) {
-                var paramAction = getParametersAction(req, formData, pp);
-                if (paramAction != null) {
-                    actions.add(paramAction);
-                }
+            var paramAction = getParametersAction(req, formData, pp);
+            if (paramAction != null) {
+                actions.add(paramAction);
             }
+
 
             var causes = new ArrayList<>(Arrays.asList(getCallerCause(req)));
             var eiffelCause = getEiffelCause(formData);
@@ -217,7 +216,7 @@ public class BuildWithEiffelLinksAction<
     @CheckForNull
     private ParametersAction getParametersAction(final StaplerRequest req,
                                                  final JSONObject formData,
-                                                 final ParametersDefinitionProperty pp) {
+                                                 @CheckForNull final ParametersDefinitionProperty pp) {
         var values = new ArrayList<ParameterValue>();
 
         // Collect parameters given in this request.
@@ -239,12 +238,15 @@ public class BuildWithEiffelLinksAction<
         // Did the request include any parameters that haven't been defined for this job?
         var missingParamDefs = givenParams.stream()
                 .map(p -> p.getString("name"))
-                .filter(n -> pp.getParameterDefinition(n) == null)
+                .filter(n ->pp==null ||pp.getParameterDefinition(n) == null)
                 .collect(Collectors.toSet());
         if (!missingParamDefs.isEmpty()) {
             throw new IllegalArgumentException(String.format(
                     "Build request provided values for the following parameters that aren't defined in the job: %s'",
                     missingParamDefs));
+        }
+        if(pp==null){
+            return null;
         }
 
         // Add parameter values for all given parameters.
