@@ -268,6 +268,60 @@ public class BuildWithEiffelLinksActionTest {
         assertThat(build, hasBuildParameter(givenParam.getName(), "overridden value"));
         assertThat(build, hasBuildParameter(extraParam.getName(), "value"));
     }
+    @Test
+    public void testNonParameterizedFreestyleBuild_WithParams() throws Exception {
+        var reqParams = new BuildRequestParams();
+        reqParams.buildParams.add(new NameValuePair("UNDEFINED_PARAM", "value"));
+
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
+
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        jenkins.waitUntilNoActivity();
+
+        assertThat(resp.getStatusCode(), is(SC_BAD_REQUEST));
+
+        var build = job.getBuildByNumber(1);
+        assertThat(build, is(nullValue()));
+    }
+
+    @Test
+    public void testParameterizedFreestyleBuild_WithUndefinedParam() throws Exception {
+        var reqParams = new BuildRequestParams();
+
+        var job = jenkins.createProject(FreeStyleProject.class, "test");
+        var definedParam = new StringParameterDefinition("DEFINED_PARAM", "value");
+        job.addProperty(new ParametersDefinitionProperty(definedParam));
+        reqParams.buildParams.add(new NameValuePair(definedParam.getName(), "overridden value"));
+        reqParams.buildParams.add(new NameValuePair("UNDEFINED_PARAM", "value"));
+
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        jenkins.waitUntilNoActivity();
+
+        assertThat(resp.getStatusCode(), is(SC_BAD_REQUEST));
+
+        var build = job.getBuildByNumber(1);
+        assertThat(build, is(nullValue()));
+    }
+
+    @Test
+    public void testParameterizedWorkflowBuild_WithUndefinedParam() throws Exception {
+        var reqParams = new BuildRequestParams();
+
+        var job = jenkins.createProject(WorkflowJob.class, "test");
+        job.setDefinition(new CpsFlowDefinition("node { echo 'hello' }", true));
+        var definedParam = new StringParameterDefinition("DEFINED_PARAM", "value");
+        job.addProperty(new ParametersDefinitionProperty(definedParam));
+        reqParams.buildParams.add(new NameValuePair(definedParam.getName(), "overridden value"));
+        reqParams.buildParams.add(new NameValuePair("UNDEFINED_PARAM", "value"));
+
+        var resp = postBuildRequest(job, new ObjectMapper().writeValueAsString(reqParams));
+        jenkins.waitUntilNoActivity();
+
+        assertThat(resp.getStatusCode(), is(SC_BAD_REQUEST));
+
+        var build = job.getBuildByNumber(1);
+        assertThat(build, is(nullValue()));
+    }
 
     /**
      * Helper to construct the JSON object posted in the "json" form parameter. By default populated
